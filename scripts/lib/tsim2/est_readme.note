@@ -1,0 +1,71 @@
++ Hidden state estimation test.
+  Hidden state == material2 (viscosity, bouncy parameter, etc.)
+
+We use dynamics models learned in simulation.
+Ultimate goal is estimating hidden states of real situations with dynamics models learned in simulation.
+
+Generate samples to estimate hidden state (one or more):
+> tsim2.est01
+  Comment out {{{Replay:...}}} section.
+  We use a common material type (i.e. material2 is the same) and random mouth size of the source container and random receiver position.
+  Currently the material type chosen randomly from viscous presets.
+Estimate samples:
+> tsim2.est01a
+  Estimate the hidden state from the data.
+  Number of samples should be 1
+> tsim2.est01b
+  Estimate the hidden state from the data.
+  Number of samples can vary.
+  material2 should be common (the same value) among the samples.
+Replay:
+> tsim2.est01
+  Change opt_conf['hidden_st']= {'material2': ...}
+
+
++ Scenario of simulation experiments.
+Environments:
+  Simulation A: simulation setup where dynamics models are learned.
+    Note that there are parameters to change the setup, such as
+    material type (viscosity, bounce, etc.), container shapes, and container poses.
+    These variations are learned as dynamics models.
+  Simulation B: simulation setup for testing which is different from simulation A.
+    Simulation B is out of the parameter variations of simulation A.
+    For example, particle shape (e.g. A: sphere, B: cube) and size.
+  Real world: pouring with a real (Baxter) robot.  Much different from simulations.
+    Should be able to use the dynamics models learned in simulations.
+
+Questions to be answered:
+  Q1: Can we estimate hidden parameters in the same environments?
+  Q2: Can we estimate hidden parameters in different environments?
+  Q3: Can we estimate hidden parameters in real world?
+  Q4: What does "can estimate" mean?
+    1: A correct (true) value is identified.
+    2: The value might be different, but behavior reasoned with the estimated value has an equivalent quality (rewards).
+    Theoretically 1 is the best.  2 is practically okay.  We can use 1 only in the same environments (A (learning) and A (testing)).
+  For each Q1,Q2,Q3,
+    Q10: How many samples are necessary?
+      If not 1, how many? 3? 10?
+      What variations should be included? (e.g. various container shapes, various skills)
+    Q11: How should we gather NE samples and estimate hidden states?
+      1 (Off-line): Repeat NE times: { Planning action parameters with default hidden parameters (e.g. material2=[0,0,0,0]).  Execute actions.  Append the sample to data set. }
+      2 (Off-line): Repeat NE times: { Planning action parameters with random hidden parameters.  Execute actions.  Append the sample to data set. }
+      3 (On-line): Initialize hidden parameters to a default value. Repeat NE times: { Planning action parameters with current hidden parameters.  Execute actions.  Append the same to data set.  Update hidden states with the data set. }
+      Issue of 1: Testing different skills may not happen since the robot assumes a fixed material (and it is a default material).  2 and 3 are better to deal with this issue.  Random (2) will not be adequate.
+    Q12: How should we evaluate the estimated hidden states?
+      (Following Q4-2) Gathering NT samples and taking average rewards.
+      For (Environment, Hidden parameters) in (E1 with correct hidden parameters, E2 with default hidden parameters, E2 with estimated hidden parameters) ((E1: environment 1 where dynamics models are learned, E2: environment for testing)):
+        In Environment, Repeat NT times: { Planning action parameters with Hidden parameters.  Execute actions.  Append reward to data set. }  Take average of the data set.
+
+Setup 1:
+  E1 = Simulation A, E2 = Simulation A
+  NE = 5, NT = 10
+
+Setup 2:
+  E1 = Simulation A, E2 = Simulation B
+  NE = 5, NT = 10
+
+Setup 3:
+  E1 = Simulation A, E2 = Real world
+  NE = 5, NT = 10
+
+

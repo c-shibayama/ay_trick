@@ -1,0 +1,16 @@
+<package>
+  <description brief="ay_trick">
+
+     ay_trick
+
+  </description>
+  <author>Akihiko Yamaguchi</author>
+  <license>Not decided</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://akihikoy.net</url>
+  <depend package="ay_py"/>
+  <depend package="rospy"/>
+
+</package>
+
+

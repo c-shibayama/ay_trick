@@ -1,0 +1,82 @@
+#Grippers of Baxter
+#FIXME: Change names: wrist_* --> grip_*
+
+#Left gripper (Robotiq gripper)
+wrist_l:
+  #Kinematics information:
+  kinematics_chain:
+    #Right or left arm:
+    parent_arm: l
+  #Gripper pose (Q=QFromAxisAngle([0.,1.,0.],-math.pi/2.0))
+  ##lx: [0.0,0.0,0.115, 0.0,-0.70710678,0.0,0.70710678]
+  ##lx: [0.0,0.0,0.105, 0.0,-0.70710678,0.0,0.70710678]
+  #lx: [0.0,0.0,0.131, 0.0,-0.70710678,0.0,0.70710678]
+  #lx: [0.0,0.0,0.191, 0.0,-0.70710678,0.0,0.70710678]  #Optical skin
+  lx: [0.0,0.0,0.180, 0.0,-0.70710678,0.0,0.70710678]  #Optical skin
+  #Bounding box is attached to the local frame of 'lx'.
+  bound_box:
+    #mid= viz.AddCube(xe-((0.06*ex).tolist()+[0.0]*4), [0.12,0.08,0.02], rgb=viz.ICol(3), alpha=0.5, mid=mid)
+    #dim: [0.12,0.08,0.02]
+    #center: [-0.06,0.0,0.0, 0.0,0.0,0.0,1.0]
+    #Optical skin:
+    dim: [0.18,0.08,0.02]  
+    center: [-0.09,0.0,0.0, 0.0,0.0,0.0,1.0]
+
+#Right gripper (Electric parallel gripper)
+wrist_r:
+  #Kinematics information:
+  kinematics_chain:
+    #Right or left arm:
+    parent_arm: r
+  #Gripper pose (Q=QFromAxisAngle([0.,1.,0.],-math.pi/2.0))
+  #lx: [0.0,0.0,0.09, 0.0,-0.70710678,0.0,0.70710678]
+  lx: [0.0,0.0,0.12, 0.0,-0.70710678,0.0,0.70710678]  #Optical skin
+  #Bounding box is attached to the local frame of 'lx'.
+  bound_box:
+    #mid= viz.AddCube(xe-((0.06*ex).tolist()+[0.0]*4), [0.12,0.08,0.02], rgb=viz.ICol(3), alpha=0.5, mid=mid)
+    #dim: [0.12,0.08,0.02]
+    #center: [-0.06,0.0,0.0, 0.0,0.0,0.0,1.0]
+    #Optical skin:
+    dim: [0.15,0.08,0.02]
+    center: [-0.075,0.0,0.0, 0.0,0.0,0.0,1.0]
+
+#Sentis M100 sensor on left gripper
+wl_m100:
+  #Kinematics information:
+  kinematics_chain:
+    #Right or left arm:
+    parent_arm: l
+  #Local vector of the left gripper, calculated by
+  ## [-0.08315, 0.00, 0.0]+MultiplyQ(QFromAxisAngle([0.,1.,0.],-math.pi/2.0),MultiplyQ(QFromAxisAngle([0,1,0],DegToRad(88.)),QFromAxisAngle([0,0,1],DegToRad(90.)))).tolist()
+  #lx: [-0.08315, 0.0, 0.0, -0.012340714939826858, -0.012340714939826913, 0.7069990853988242, 0.7069990853988243]
+  ## [-0.08315, 0.00, 0.0]+MultiplyQ(QFromAxisAngle([0.,1.,0.],-math.pi/2.0),MultiplyQ(QFromAxisAngle([0,1,0],DegToRad(85.)),QFromAxisAngle([0,0,1],DegToRad(90.)))).tolist()
+  #lx: [-0.08315, 0.0, 0.0, -0.03084356459723192, -0.030843564597231865, 0.706433772212892, 0.7064337722128922]
+  # [-0.08315, 0.00, -0.008]+MultiplyQ(QFromAxisAngle([0.,1.,0.],-math.pi/2.0),MultiplyQ(QFromAxisAngle([0,1,0],DegToRad(85.)),QFromAxisAngle([0,0,1],DegToRad(90.)))).tolist()
+  #lx: [-0.08315, 0.0, -0.008, -0.03084356459723192, -0.030843564597231865, 0.706433772212892, 0.7064337722128922]
+  #roslaunch ay_util bx_calib_wl_m100.launch
+  lx: [-0.1217, -0.0024, 0.0156, -0.0083, -0.0107, 0.7046, 0.7095]
+  #Bounding box is attached to the local frame of 'lx'.
+  bound_box:
+    #mid= viz.AddMarker(x_sensor, scale=[0.06,0.06,0.012], alpha=0.8, mid=mid)
+    dim: [0.06,0.06,0.012]
+    center: [0.0,0.0,0.0, 0.0,0.0,0.0,1.0]
+
+#Stereo camera on right gripper
+wr_stereo:
+  #Kinematics information:
+  kinematics_chain:
+    #Right or left arm:
+    parent_arm: r
+  #Local vector of the left gripper, calculated by
+  # [-0.074, -0.10074/2, -0.025]+MultiplyQ(QFromAxisAngle([0.,0.,1.],-math.pi/2.0),QFromAxisAngle([1.,0.,0.],DegToRad(10.))).tolist()
+  #lx: [-0.074, 0.05037, -0.025, 0.06162841671621935, -0.061628416716219346, -0.7044160264027586, 0.7044160264027587]
+  #roslaunch ay_util bx_calib_wr_stereo.launch
+  #usbcam2s2:
+  #lx: [-0.0498, -0.002, -0.0323, 0.0394, -0.0599, -0.6942, 0.7162]
+  #usbcam2s2f:
+  lx: [-0.0498, -0.002, -0.0323, 0.0042, -0.0258, -0.6963, 0.7173]
+  #Bounding box is attached to the local frame of 'lx'.
+  bound_box:
+    #mid= viz.AddMarker(x_sensor, scale=[0.06,0.06,0.012], alpha=0.8, mid=mid)
+    dim: [0.12,0.06,0.012]
+    center: [0.05037,0.0,0.0, 0.0,0.0,0.0,1.0]
