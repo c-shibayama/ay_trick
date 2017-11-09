@@ -62,9 +62,8 @@ class TCUITool(object):
       ct.Run('_exit')
       print 'TCoreTool.Cleanup...'
       ct.Cleanup()
+      rospy.signal_shutdown('quit...')
       self.done_exit_proc= True
-
-    rospy.signal_shutdown('quit...')
 
   def SaveHistory(self):
     print 'Save history into ',self.hist_file

@@ -2,14 +2,15 @@
 from core_tool import *
 SmartImportReload('lib.keyctrl3')
 from lib.keyctrl3 import Callback
+import sensor_msgs.msg
 
 def Help():
-  return '''Joystick controller for RobotiqNB.
+  return '''Joystick controller for RobotiqNB and DxlGripper.
   Usage: keyctrlrq'''
 
 def Run(ct,*args):
-  if not ct.robot.Is('RobotiqNB'):
-    CPrint(4,'This program works only with RobotiqNB.')
+  if not (ct.robot.Is('RobotiqNB') or ct.robot.Is('DxlGripper')):
+    CPrint(4,'This program works only with RobotiqNB and DxlGripper.')
     return
 
   arm= ct.robot.Arm
@@ -140,8 +141,6 @@ Command:
         if gstate[arm]>gstate_range[arm][1]:  gstate[arm]= gstate_range[arm][1]
         #print rospy.Time.now(),LRToStr(arm),ct.robot.GripperPos(arm),gstate[arm]
         ct.robot.MoveGripper(gstate[arm],max_effort=100.0,speed=100.0,arm=arm)
-        if ct.robot.Is('Baxter') and isinstance(ct.robot.grippers[arm], baxter_interface.Gripper):
-          rospy.sleep(0.01)  #Without this, ct.robot.GripperPos(arm) is not updated.
         #gsteps[0]= 0
         #state[1]= 'no_cmd'
         #rospy.sleep(0.015)
@@ -158,8 +157,6 @@ Command:
       if gstate[arm]>gstate_range[arm][1]:  gstate[arm]= gstate_range[arm][1]
       #print rospy.Time.now(),LRToStr(arm),ct.robot.GripperPos(arm),gstate[arm]
       ct.robot.MoveGripper(gstate[arm],max_effort=100.0,speed=100.0,arm=arm)
-      if ct.robot.Is('Baxter') and isinstance(ct.robot.grippers[arm], baxter_interface.Gripper):
-        rospy.sleep(0.01)  #Without this, ct.robot.GripperPos(arm) is not updated.
       gsteps[0]= 0
       state[1]= 'no_cmd'
       rospy.sleep(0.015)

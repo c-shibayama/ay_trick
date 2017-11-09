@@ -2,7 +2,8 @@
 from core_tool import *
 def Help():
   return '''Default script executed at the beginning.
-    The Main function defined below is executed as a thread.
+    The Main function defined below is executed as a thread,
+    which is registered as "_default".
   Usage: (AUTOMATICALLY EXECUTED)'''
 
 import tf
@@ -14,12 +15,13 @@ def Main(ct,th_info):
     ct.robot= TFakeRobot()
     return
 
-  if ROS_ROBOT in ('PR2','PR2_SIM','Baxter','Baxter_SIM','BaxterN','RobotiqNB'):
+  if ROS_ROBOT in ('PR2','PR2_SIM','Baxter','Baxter_SIM','BaxterN','RobotiqNB','DxlGripper'):
     print 'Setup robot for',ROS_ROBOT
     if   ROS_ROBOT in ('PR2','PR2_SIM'):  ct.robot= TRobotPR2()
     elif ROS_ROBOT in ('Baxter','Baxter_SIM'):  ct.robot= TRobotBaxter()
     elif ROS_ROBOT in ('BaxterN',):  ct.robot= TRobotBaxterN()
     elif ROS_ROBOT in ('RobotiqNB',):  ct.robot= TRobotRobotiqNB()
+    elif ROS_ROBOT in ('DxlGripper',):  ct.robot= TRobotDxlGripper(dev=os.environ['DXLG_DEV'] if 'DXLG_DEV' in os.environ else '/dev/ttyUSB0')
     else:  ct.robot= TFakeRobot()
 
     if ct.robot.Is('PR2') or ct.robot.Is('Baxter'):

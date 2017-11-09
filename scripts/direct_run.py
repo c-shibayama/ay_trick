@@ -18,6 +18,8 @@ if __name__ == '__main__':
 
   print 'Running _default...'
   ct.Run('_default')
+  print 'Waiting thread _default...'
+  ct.thread_manager.Join('_default')
 
   print '+++Start running:',motion
   res= ct.Run(motion)

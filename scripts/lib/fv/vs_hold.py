@@ -16,6 +16,7 @@ def Help():
         fv.vs_hold 'off' LEFT
         fv.vs_hold 'off' RIGHT'''
 def HoldLoop(th_info, ct, arm):
+  ct.Run('fv.ctrl_params')
   vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
 
   #Stop object detection
@@ -26,13 +27,13 @@ def HoldLoop(th_info, ct, arm):
     if sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>0.06: #0.1
       print 'slip',rospy.Time.now()
       #g_pos-= 0.0005 if arm==LEFT else 0.002
-      g_pos-= 0.002 if isinstance(ct.robot.grippers[arm], baxter_interface.Gripper) else 0.0005
+      g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
       #ct.robot.MoveGripper(pos=g_pos, arm=arm, speed=100.0, blocking=False)
       #rospy.sleep(0.001)
       #g_pos= ct.robot.GripperPos(arm)
       ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
       for i in range(100):  #100
-        if abs(ct.robot.GripperPos(arm)-g_pos)<0.0002:  break
+        if abs(ct.robot.GripperPos(arm)-g_pos)<0.5*ct.GetAttr('fv_ctrl','min_gstep')[arm]:  break
         rospy.sleep(0.0001)
       g_pos= ct.robot.GripperPos(arm)
     else:

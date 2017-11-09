@@ -14,6 +14,8 @@ def Run(ct,*args):
     ct.AddDictAttr(LoadYAML('models/robot/gripper_bx.yaml'))
   elif ct.robot.Is('RobotiqNB'):
     ct.AddDictAttr(LoadYAML('models/robot/gripper_rqnb.yaml'))
+  elif ct.robot.Is('DxlGripper'):
+    ct.AddDictAttr(LoadYAML('models/robot/gripper_dxlg.yaml'))
 
   #FIXME: the following values should be DEFAULT values
   extra_values= {}

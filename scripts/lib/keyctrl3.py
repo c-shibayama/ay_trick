@@ -1,5 +1,7 @@
 #!/usr/bin/python
 from core_tool import *
+import sensor_msgs.msg
+
 def Help():
   return '''Velocity control using Joystick and Jacobian test with Baxter.
   Usage: j'''
@@ -239,7 +241,7 @@ Command:
         if gstate[arm]>gstate_range[arm][1]:  gstate[arm]= gstate_range[arm][1]
         #print rospy.Time.now(),LRToStr(arm),ct.robot.GripperPos(arm),gstate[arm]
         ct.robot.MoveGripper(gstate[arm],max_effort=100.0,speed=100.0,arm=arm)
-        if ct.robot.Is('Baxter') and isinstance(ct.robot.grippers[arm], baxter_interface.Gripper):
+        if ct.robot.Is('Baxter') and ct.robot.EndEff(arm).Is('BaxterEPG'):
           rospy.sleep(0.01)  #Without this, ct.robot.GripperPos(arm) is not updated.
 
       if state[3] and state[1] in ('position','orientation'):

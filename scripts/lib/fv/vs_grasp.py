@@ -16,6 +16,7 @@ def Help():
         fv.vs_grasp 'off' LEFT
         fv.vs_grasp 'off' RIGHT'''
 def GraspLoop(th_info, ct, arm):
+  ct.Run('fv.ctrl_params')
   vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
   #fa0= vs_finger.force_array[arm]
   #n_change= lambda: sum([1 if Dist(f[:6],f0[:6])>0.9 else 0 for f,f0 in zip(vs_finger.force_array[arm],fa0)])
@@ -44,10 +45,10 @@ def GraspLoop(th_info, ct, arm):
       print 'Done'
       break
 
-    g_pos-= 0.002 if isinstance(ct.robot.grippers[arm], baxter_interface.Gripper) else 0.0005
+    g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
     ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
     for i in range(100):
-      if abs(ct.robot.GripperPos(arm)-g_pos)<0.0002:  break
+      if abs(ct.robot.GripperPos(arm)-g_pos)<0.5*ct.GetAttr('fv_ctrl','min_gstep')[arm]:  break
       rospy.sleep(0.0001)
     #rospy.sleep(0.1)
     g_pos= ct.robot.GripperPos(arm)

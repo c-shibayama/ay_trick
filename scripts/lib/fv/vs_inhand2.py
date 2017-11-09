@@ -16,6 +16,7 @@ def Help():
         fv.vs_inhand2 'off' LEFT
         fv.vs_inhand2 'off' RIGHT'''
 def ManipLoop(th_info, ct, arm):
+  ct.Run('fv.ctrl_params')
   vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
 
   side= 0 if vs_finger.obj_area[0]>vs_finger.obj_area[1] else 1
@@ -27,7 +28,7 @@ def ManipLoop(th_info, ct, arm):
   while thread_cond():
     if abs(theta0-get_theta())>target_angle:
       print 'Done! target=', RadToDeg(target_angle)
-      g_pos-= 0.002 if isinstance(ct.robot.grippers[arm], baxter_interface.Gripper) else 0.0005
+      g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
       ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
       break
 
@@ -35,10 +36,10 @@ def ManipLoop(th_info, ct, arm):
     g_pos0= ct.robot.GripperPos(arm)
     g_pos= ct.robot.GripperPos(arm)
     while thread_cond() and sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])<0.05:
-      g_pos+= 0.002 if isinstance(ct.robot.grippers[arm], baxter_interface.Gripper) else 0.0005
+      g_pos+= ct.GetAttr('fv_ctrl','min_gstep')[arm]
       ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
       for i in range(100):
-        if abs(ct.robot.GripperPos(arm)-g_pos)<0.0002:  break
+        if abs(ct.robot.GripperPos(arm)-g_pos)<0.5*ct.GetAttr('fv_ctrl','min_gstep')[arm]:  break
         rospy.sleep(0.0001)
       for i in range(100):
         if sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>=0.05:  break
@@ -48,10 +49,10 @@ def ManipLoop(th_info, ct, arm):
     ##Close gripper to stop slip
     #g_pos= ct.robot.GripperPos(arm)
     #while thread_cond() and sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>0.05:
-      #g_pos-= 0.002 if isinstance(ct.robot.grippers[arm], baxter_interface.Gripper) else 0.0005
+      #g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
       #ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
       #for i in range(100):
-        #if abs(ct.robot.GripperPos(arm)-g_pos)<0.0002:  break
+        #if abs(ct.robot.GripperPos(arm)-g_pos)<0.5*ct.GetAttr('fv_ctrl','min_gstep')[arm]:  break
         #rospy.sleep(0.0001)
       #g_pos= ct.robot.GripperPos(arm)
     #Just go back to g_pos0

@@ -1,5 +1,7 @@
 #!/usr/bin/python
 from core_tool import *
+roslib.load_manifest('ay_3dvision_msgs')
+import ay_3dvision_msgs.srv
 def Help():
   return '''Sentis M100 controller.
   Usage:
@@ -41,7 +43,7 @@ def Run(ct,*args):
     ct.thread_manager.Add(name='m100_br', target=lambda th_info: TfBroadcast(th_info, ct))
 
   def SetRate(rate):
-    ct.AddSrvP('m100_set_frame_rate', '/sentis_m100/set_frame_rate', lfd_vision.srv.SetFrameRate, persistent=False, time_out=3.0)
+    ct.AddSrvP('m100_set_frame_rate', '/sentis_m100/set_frame_rate', ay_3dvision_msgs.srv.SetFrameRate, persistent=False, time_out=3.0)
     ct.srvp.m100_set_frame_rate(rate)
     ct.SetAttr('wl_m100','rate', rate)
     if ct.thread_manager.IsRunning('m100_br'):

@@ -193,6 +193,8 @@ def Run(ct,*args):
     command= args[0]
     args= args[1:]
 
+  rqdxl= (ct.robot.Is('RobotiqNB') or ct.robot.Is('DxlGripper'))
+
   def StartStopRecording(ct,arm,rid=None):
     vs= LRToStrS(arm)
     if not ct.HasAttr(TMP,'vs_finger'+vs):
@@ -228,7 +230,8 @@ def Run(ct,*args):
   if command=='setup':
     if len(args)==0:  args= ['all']
     arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
-    if ct.robot.Is('RobotiqNB'):  arms= set(RIGHT if a==LEFT else a for a in arms)
+    if rqdxl:
+      arms= set(RIGHT if a==LEFT else a for a in arms)
     ct.viz.finger_force= TSimpleVisualizer(name_space='visualizer_estate')
     ct.viz.finger_force.viz_frame= ct.robot.BaseFrame
     for arm in arms:
@@ -273,6 +276,23 @@ def Run(ct,*args):
           ct.AddSrvP('vsay1l_set_frame_skip', '/visual_skin_node_ay10l/set_frame_skip', ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
           ct.AddSrvP('vsay1l_start_detect_obj', '/visual_skin_node_ay10l/start_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
           ct.AddSrvP('vsay1l_stop_detect_obj', '/visual_skin_node_ay10l/stop_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        elif ct.robot.Is('DxlGripper'):
+          ct.AddSub('vsay1_blob_moves_usbcam2fay12_r', '/visual_skin_node_ay11r/blob_moves_usbcam2fay11a_r',
+                  ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,RIGHT))
+          ct.AddSub('vsay1_blob_moves_usbcam2fay12_l', '/visual_skin_node_ay11l/blob_moves_usbcam2fay11a_l',
+                  ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,LEFT))
+          ct.AddSub('vsay1_prox_vision_usbcam2fay12_r', '/visual_skin_node_ay11r/prox_vision_usbcam2fay11a_r',
+                  ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,RIGHT))
+          ct.AddSub('vsay1_prox_vision_usbcam2fay12_l', '/visual_skin_node_ay11l/prox_vision_usbcam2fay11a_l',
+                  ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,LEFT))
+          ct.AddSrvP('vsay1r_clear_obj', '/visual_skin_node_ay11r/clear_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
+          ct.AddSrvP('vsay1r_set_frame_skip', '/visual_skin_node_ay11r/set_frame_skip', ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
+          ct.AddSrvP('vsay1r_start_detect_obj', '/visual_skin_node_ay11r/start_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
+          ct.AddSrvP('vsay1r_stop_detect_obj', '/visual_skin_node_ay11r/stop_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
+          ct.AddSrvP('vsay1l_clear_obj', '/visual_skin_node_ay11l/clear_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
+          ct.AddSrvP('vsay1l_set_frame_skip', '/visual_skin_node_ay11l/set_frame_skip', ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
+          ct.AddSrvP('vsay1l_start_detect_obj', '/visual_skin_node_ay11l/start_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
+          ct.AddSrvP('vsay1l_stop_detect_obj', '/visual_skin_node_ay11l/stop_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
         else:
           ct.AddSub('vsay1_blob_moves_usbcam2fay12_r', '/visual_skin_node_ay1/blob_moves_usbcam2fay12_r',
                   ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,RIGHT))
@@ -287,7 +307,7 @@ def Run(ct,*args):
           ct.AddSrvP('vsay1_start_detect_obj', '/visual_skin_node_ay1/start_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
           ct.AddSrvP('vsay1_stop_detect_obj', '/visual_skin_node_ay1/stop_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
       elif arm==LEFT:
-        if ct.robot.Is('RobotiqNB'):
+        if rqdxl:
           raise Exception('This should be a bug.')
         else:
           ct.AddSub('vsay2_blob_moves_usbcam2fay22_r', '/visual_skin_node_ay2/blob_moves_usbcam2fay22_r',
@@ -303,7 +323,7 @@ def Run(ct,*args):
           ct.AddSrvP('vsay2_start_detect_obj', '/visual_skin_node_ay2/start_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
           ct.AddSrvP('vsay2_stop_detect_obj', '/visual_skin_node_ay2/stop_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
       if arm==RIGHT:
-        if ct.robot.Is('RobotiqNB'):
+        if rqdxl:
           ct.srvp.vsay1r_start_detect_obj(std_srvs.srv.EmptyRequest())
           ct.srvp.vsay1l_start_detect_obj(std_srvs.srv.EmptyRequest())
           ct.srvp.vsay1r_clear_obj(std_srvs.srv.EmptyRequest())
@@ -352,27 +372,27 @@ def Run(ct,*args):
     set_frame_skip_req= ay_vision_msgs.srv.SetInt32Request()
     set_frame_skip_req.data= skip
     for arm in arms:
-      if arm==RIGHT:   ct.srvp.vsay1_set_frame_skip(set_frame_skip_req) if not ct.robot.Is('RobotiqNB') else (ct.srvp.vsay1r_set_frame_skip(set_frame_skip_req), ct.srvp.vsay1l_set_frame_skip(set_frame_skip_req))
+      if arm==RIGHT:   ct.srvp.vsay1_set_frame_skip(set_frame_skip_req) if not rqdxl else (ct.srvp.vsay1r_set_frame_skip(set_frame_skip_req), ct.srvp.vsay1l_set_frame_skip(set_frame_skip_req))
       elif arm==LEFT:  ct.srvp.vsay2_set_frame_skip(set_frame_skip_req)
 
   elif command=='clear_obj':
     if len(args)==0:  args= ['all']
     arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
     for arm in arms:
-      if arm==RIGHT:   ct.srvp.vsay1_clear_obj(std_srvs.srv.EmptyRequest()) if not ct.robot.Is('RobotiqNB') else (ct.srvp.vsay1r_clear_obj(std_srvs.srv.EmptyRequest()), ct.srvp.vsay1l_clear_obj(std_srvs.srv.EmptyRequest()))
+      if arm==RIGHT:   ct.srvp.vsay1_clear_obj(std_srvs.srv.EmptyRequest()) if not rqdxl else (ct.srvp.vsay1r_clear_obj(std_srvs.srv.EmptyRequest()), ct.srvp.vsay1l_clear_obj(std_srvs.srv.EmptyRequest()))
       elif arm==LEFT:  ct.srvp.vsay2_clear_obj(std_srvs.srv.EmptyRequest())
 
   elif command=='stop_detect_obj':
     if len(args)==0:  args= ['all']
     arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
     for arm in arms:
-      if arm==RIGHT:   ct.srvp.vsay1_stop_detect_obj(std_srvs.srv.EmptyRequest()) if not ct.robot.Is('RobotiqNB') else (ct.srvp.vsay1r_stop_detect_obj(std_srvs.srv.EmptyRequest()), ct.srvp.vsay1l_stop_detect_obj(std_srvs.srv.EmptyRequest()))
+      if arm==RIGHT:   ct.srvp.vsay1_stop_detect_obj(std_srvs.srv.EmptyRequest()) if not rqdxl else (ct.srvp.vsay1r_stop_detect_obj(std_srvs.srv.EmptyRequest()), ct.srvp.vsay1l_stop_detect_obj(std_srvs.srv.EmptyRequest()))
       elif arm==LEFT:  ct.srvp.vsay2_stop_detect_obj(std_srvs.srv.EmptyRequest())
 
   elif command=='start_detect_obj':
     if len(args)==0:  args= ['all']
     arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
     for arm in arms:
-      if arm==RIGHT:   ct.srvp.vsay1_start_detect_obj(std_srvs.srv.EmptyRequest()) if not ct.robot.Is('RobotiqNB') else (ct.srvp.vsay1r_start_detect_obj(std_srvs.srv.EmptyRequest()), ct.srvp.vsay1l_start_detect_obj(std_srvs.srv.EmptyRequest()))
+      if arm==RIGHT:   ct.srvp.vsay1_start_detect_obj(std_srvs.srv.EmptyRequest()) if not rqdxl else (ct.srvp.vsay1r_start_detect_obj(std_srvs.srv.EmptyRequest()), ct.srvp.vsay1l_start_detect_obj(std_srvs.srv.EmptyRequest()))
       elif arm==LEFT:  ct.srvp.vsay2_start_detect_obj(std_srvs.srv.EmptyRequest())
 
