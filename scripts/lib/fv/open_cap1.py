@@ -14,7 +14,7 @@ def OpenCapLoop(ct, arm):
   ex0,ey0,ez0= RotToExyz(QToRot(x_e0[3:]))
   omega= -0.2  #Rotational velocity
 
-  velctrl= ct.Load('bx_velctrl').TVelCtrl(ct,arm=arm)
+  velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
 
   try:
     for tm in np.arange(0.0,5.0,1.0/velctrl.rate):
@@ -41,7 +41,7 @@ def OpenCapLoop(ct, arm):
 
   finally:
     velctrl.Finish()
-    #ct.Run('fv.vs_finger3','start_detect_obj',arm)
+    #ct.Run('fv.finger3','start_detect_obj',arm)
 
 def Run(ct,*args):
   OpenCapLoop(ct, LEFT)

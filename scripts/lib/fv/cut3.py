@@ -13,10 +13,10 @@ def Run(ct,*args):
   cmargin= 1.1
 
   if not ct.HasAttr(TMP,'vs_finger') or not ct.GetAttr(TMP,'vs_finger').running:
-    CPrint(0,'fv.vs_finger2 is not setup. Do you want to continue with setting it up?')
+    CPrint(0,'fv.finger2 is not setup. Do you want to continue with setting it up?')
     if not ct.AskYesNo():
       return
-    ct.Run('fv.vs_finger2','setup')
+    ct.Run('fv.finger2','setup')
 
   vs_finger= ct.GetAttr(TMP,'vs_finger')
   vsf_init= [vs_finger.force[RIGHT][0], vs_finger.force[LEFT][0]]

@@ -101,7 +101,7 @@ def Run(ct,*args):
   ct.robot.MoveGripper(gstate[LEFT],arm=LEFT)
 
   ct.AddSub('joy', 'joy', sensor_msgs.msg.Joy, lambda msg: Callback(state, steps, wsteps, gsteps, msg))
-  velctrl= [ct.Load('bx_velctrl').TVelCtrl(ct,arm=RIGHT), ct.Load('bx_velctrl').TVelCtrl(ct,arm=LEFT)]
+  velctrl= [ct.Load('bx.velctrl').TVelCtrl(ct,arm=RIGHT), ct.Load('bx.velctrl').TVelCtrl(ct,arm=LEFT)]
   suppress_velctrl= False  #Set this True when an external program use the velocity control.
 
   kbhit= TKBHit()
@@ -138,20 +138,20 @@ Command:
       Left-stick (axes 0,1):
         Left/Right: open/close
     DPad:
-      Left:  Run fv.vs_open arm  (Cancel all tactile-based grasping and Open)
-      Right: Run fv.vs_grasp 'on'/'off' arm  (Gentle grasp)
-      Up:    Run fv.vs_hold' on'/'off' arm   (Holding = Slip avoidance)
-      Down:  Run fv.vs_openif 'on'/'off' arm (Handover)
+      Left:  Run fv.open arm  (Cancel all tactile-based grasping and Open)
+      Right: Run fv.grasp 'on'/'off' arm  (Gentle grasp)
+      Up:    Run fv.hold' on'/'off' arm   (Holding = Slip avoidance)
+      Down:  Run fv.openif 'on'/'off' arm (Handover)
   Keyboard:
     q: Quit
     h: Show help
     l/r: Switch arm to LEFT/RIGHT
     c: Run calib_x (Calibrate the external RGB-D sensor pose)
-    i: Run fv.vs_inhand 'on'/'off' arm  (In-hand manipulation)
-    ct: Run fv.vs_trackf4 'on'/'off' arm (Tai Chi)
-    y: Run fv.vs_trackf4 for BOTH ARM   (Tai Chi)
-    o: Run fv.vs_tracko 'on'/'off' arm  (Proximity vision-based tracking)
-    p: Run fv.vs_pickup2a 'on'/'off' arm (Slip-based automatic picking up) '''
+    i: Run fv.inhand 'on'/'off' arm  (In-hand manipulation)
+    ct: Run fv.trackf4 'on'/'off' arm (Tai Chi)
+    y: Run fv.trackf4 for BOTH ARM   (Tai Chi)
+    o: Run fv.tracko 'on'/'off' arm  (Proximity vision-based tracking)
+    p: Run fv.pickup2a 'on'/'off' arm (Slip-based automatic picking up) '''
         state[1]= 'no_cmd'
 
       elif state[1]=='key_l' or state[1]=='key_r':
@@ -163,41 +163,41 @@ Command:
         state[1]= 'no_cmd'
       elif state[1]=='key_i':
         if 'vs_inhand'+LRToStrS(arm) not in ct.thread_manager.thread_list:
-          ct.Run('fv.vs_inhand','on',arm)
+          ct.Run('fv.inhand','on',arm)
         else:
-          ct.Run('fv.vs_inhand','off',arm)
+          ct.Run('fv.inhand','off',arm)
         state[1]= 'no_cmd'
       elif state[1]=='key_t':
         if 'vs_trackf4'+LRToStrS(arm) not in ct.thread_manager.thread_list:
-          ct.Run('fv.vs_trackf4','on',arm)
+          ct.Run('fv.trackf4','on',arm)
           suppress_velctrl= True
         else:
-          ct.Run('fv.vs_trackf4','off',arm)
+          ct.Run('fv.trackf4','off',arm)
           suppress_velctrl= False
         state[1]= 'no_cmd'
       elif state[1]=='key_y':
         if 'vs_trackf4'+LRToStrS(LEFT) not in ct.thread_manager.thread_list and 'vs_trackf4'+LRToStrS(RIGHT) not in ct.thread_manager.thread_list:
-          ct.Run('fv.vs_trackf4','on',LEFT)
-          ct.Run('fv.vs_trackf4','on',RIGHT)
+          ct.Run('fv.trackf4','on',LEFT)
+          ct.Run('fv.trackf4','on',RIGHT)
           suppress_velctrl= True
         else:
-          ct.Run('fv.vs_trackf4','clear')
+          ct.Run('fv.trackf4','clear')
           suppress_velctrl= False
         state[1]= 'no_cmd'
       elif state[1]=='key_o':
         if 'vs_tracko'+LRToStrS(arm) not in ct.thread_manager.thread_list:
-          ct.Run('fv.vs_tracko','on',arm)
+          ct.Run('fv.tracko','on',arm)
           suppress_velctrl= True
         else:
-          ct.Run('fv.vs_tracko','off',arm)
+          ct.Run('fv.tracko','off',arm)
           suppress_velctrl= False
         state[1]= 'no_cmd'
       elif state[1]=='key_p' or state[1]=='cmd_Y':
         if 'vs_pickup2a'+LRToStrS(arm) not in ct.thread_manager.thread_list:
-          ct.Run('fv.vs_pickup2a','on',arm)  #,{'resume_detect_obj':False}
+          ct.Run('fv.pickup2a','on',arm)  #,{'resume_detect_obj':False}
           suppress_velctrl= True
         else:
-          ct.Run('fv.vs_pickup2a','off',arm)
+          ct.Run('fv.pickup2a','off',arm)
           suppress_velctrl= False
         state[1]= 'no_cmd'
 
@@ -212,26 +212,26 @@ Command:
         #state[1]= 'no_cmd'
 
       elif state[1]=='cmd_left':
-        ct.Run('fv.vs_open',arm)
+        ct.Run('fv.open',arm)
         state[1]= 'no_cmd'
       elif state[1]=='cmd_right':
         if state[3]:
-          ct.Run('fv.vs_grasp','on',arm)
+          ct.Run('fv.grasp','on',arm)
         else:
-          ct.Run('fv.vs_grasp','off',arm)
+          ct.Run('fv.grasp','off',arm)
         state[1]= 'no_cmd'
       elif state[1]=='cmd_up':
         if state[3]:
-          ct.Run('fv.vs_hold','on',arm)
+          ct.Run('fv.hold','on',arm)
         else:
-          ct.Run('fv.vs_hold','off',arm)
+          ct.Run('fv.hold','off',arm)
         state[1]= 'no_cmd'
       elif state[1]=='cmd_down':
         #ct.Run('fv.cut3',arm)
         if state[3]:
-          ct.Run('fv.vs_openif','on',arm)
+          ct.Run('fv.openif','on',arm)
         else:
-          ct.Run('fv.vs_openif','off',arm)
+          ct.Run('fv.openif','off',arm)
         state[1]= 'no_cmd'
 
       elif state[1]=='grip':

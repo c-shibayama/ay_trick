@@ -80,7 +80,7 @@ class TCUITool(object):
     global ct
     self.running= True
     while self.running and not rospy.is_shutdown():
-      if ct.robot is not None:  caret= '%s:trick or quit|%s> '%(ct.robot.Name,ct.robot.ArmStrS)
+      if ct.robot is not None:  caret= '%s:trick or quit|%s> '%(ct.robot.Name,ct.robot.ArmStrS())
       else:  caret= 'trick or quit> '
       try:
         cmd_raw= raw_input(caret).strip()

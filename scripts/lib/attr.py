@@ -4,21 +4,21 @@ def Help():
   return '''List up the attributes or assign value to an element.
   Usage:
     attr
-    attr 'list' [MAX_LEVEL]
+    attr 'list' [, MAX_LEVEL]
       List up the attributes
       MAX_LEVEL: Maximum level of printed attribute
-    attr 'keys' [MAX_LEVEL, ] [KEY1 [, KEY2 [, ...]]]
+    attr 'keys' [, MAX_LEVEL] [, KEY1 [, KEY2 [, ...]]]
       List up the keys of attributes with their types (not values)
       MAX_LEVEL: Maximum level of printed attribute
       KEY*: List of attribute keys
-    attr 'show' [KEY1 [, KEY2 [, ...]]]
+    attr 'show' [, KEY1 [, KEY2 [, ...]]]
       Show the value of the specified attribute
       KEY*: List of attribute keys
-    attr 'set' KEY1 [, KEY2 [, ...]], VALUE
+    attr 'set',  KEY1 [, KEY2 [, ...]], VALUE
       Assign VALUE to the specified attribute
       KEY*: List of attribute keys
       VALUE: Value
-    attr 'del' KEY1 [, KEY2 [, ...]]
+    attr 'del',  KEY1 [, KEY2 [, ...]]
       Delete the specified attribute
       KEY*: List of attribute keys
     attr 'savemem' [, MEM_FILE]
