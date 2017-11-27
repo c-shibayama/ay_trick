@@ -1,9 +1,9 @@
 #!/usr/bin/python
 from core_tool import *
 def Help():
-  return '''Velocity control tools for Baxter.  Do not use this directly.
+  return '''Velocity control tools for Motoman.  Do not use this directly.
     Usage:
-      velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=LEFT)
+      velctrl= ct.Load('moto.velctrl').TVelCtrl(ct)
       try:
         while ...:
           dq= [...]
@@ -17,12 +17,10 @@ def Run(ct,*args):
 class TVelCtrl(object):
   #ct: core_tool.
   #rate: Control time cycle in Hz.
-  def __init__(self, ct, arm, rate=500):
+  def __init__(self, ct, rate=40):
     self.rate= rate
     self.ct= ct
-    self.arm= arm
-    ct.AddPub('js_rate', 'robot/joint_state_publish_rate', std_msgs.msg.UInt16)
-    ct.pub.js_rate.publish(self.rate)
+    self.arm= 0
     self.rate_adjuster= rospy.Rate(self.rate)
 
   def Rate(self):
@@ -41,8 +39,6 @@ class TVelCtrl(object):
     dt= self.TimeStep()
     #print ' '.join(map(lambda f:'%0.2f'%f,dq))
 
-    ct.pub.js_rate.publish(self.rate)
-
     dq_max= max(map(abs,dq))
     if dq_max>dq_lim:  dq= [v*(dq_lim/dq_max) for v in dq]
 
@@ -57,14 +53,22 @@ class TVelCtrl(object):
         q2[j]= qmaxi-q_limit_th
         dq[j]= (q2[j]-qi)/dt
 
-    cmd= {joint: dq[j] for j,joint in enumerate(ct.robot.JointNames(arm))}
-    ct.robot.limbs[arm].set_joint_velocities(cmd)
+    t_traj= [0.0, dt]
+    q_traj= [ct.robot.Q(arm=arm), q2]
+    dq_traj= [ct.robot.DQ(arm=arm), dq]
+    traj= ToROSTrajectory(ct.robot.JointNames(arm), q_traj, t_traj, dq_traj)
+    with ct.robot.control_locker:
+      ct.robot.pub.joint_path_command.publish(traj)
+
     if sleep:  self.rate_adjuster.sleep()
 
   def Finish(self):
     ct= self.ct
     arm= self.arm
-    cmd= {joint: 0.0 for j,joint in enumerate(ct.robot.JointNames(arm))}
-    ct.robot.limbs[arm].set_joint_velocities(cmd)
-    ct.robot.limbs[arm].exit_control_mode()
-    ct.pub.js_rate.publish(100)  #100 Hz is default joint state rate
+    dt= self.TimeStep()
+    t_traj= [0.0, dt]
+    q_traj= [ct.robot.Q(arm=arm), ct.robot.Q(arm=arm)]
+    dq_traj= [ct.robot.DQ(arm=arm), [0.0]*7]
+    traj= ToROSTrajectory(ct.robot.JointNames(arm), q_traj, t_traj, dq_traj)
+    with ct.robot.control_locker:
+      ct.robot.pub.joint_path_command.publish(traj)

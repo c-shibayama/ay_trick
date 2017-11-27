@@ -84,8 +84,8 @@ def Callback(state, steps, wsteps, gsteps, data):
       wsteps[2]= multiplier * axes[3]
 
 def Run(ct,*args):
-  if not ct.robot.Is('Baxter'):
-    CPrint(4,'This program works only with Baxter.')
+  if not (ct.robot.Is('Baxter') or ct.robot.Is('Motoman')):
+    CPrint(4,'This program works only with Baxter and Motoman.')
     return
 
   arm= ct.robot.Arm
@@ -95,13 +95,16 @@ def Run(ct,*args):
   gsteps= [0.0]
   state= ['run', 'no_cmd', arm, False]  #run/quit, no_cmd/CMD, ARM, ACTIVE_BTN
 
-  gstate_range= [ct.robot.GripperRange(RIGHT),ct.robot.GripperRange(LEFT)]
-  gstate= [ct.robot.GripperPos(RIGHT), ct.robot.GripperPos(LEFT)]
-  ct.robot.MoveGripper(gstate[RIGHT],arm=RIGHT)
-  ct.robot.MoveGripper(gstate[LEFT],arm=LEFT)
+  gstate_range= [ct.robot.GripperRange(a) for a in range(ct.robot.NumArms)]
+  gstate= [ct.robot.GripperPos(a) for a in range(ct.robot.NumArms)]
+  for a in range(ct.robot.NumArms):
+    ct.robot.MoveGripper(gstate[a],arm=a)
 
   ct.AddSub('joy', 'joy', sensor_msgs.msg.Joy, lambda msg: Callback(state, steps, wsteps, gsteps, msg))
-  velctrl= [ct.Load('bx.velctrl').TVelCtrl(ct,arm=RIGHT), ct.Load('bx.velctrl').TVelCtrl(ct,arm=LEFT)]
+  if ct.robot.Is('Baxter'):
+    velctrl= [ct.Load('bx.velctrl').TVelCtrl(ct,arm=a) for a in range(ct.robot.NumArms)]
+  elif ct.robot.Is('Motoman'):
+    velctrl= [ct.Load('moto.velctrl').TVelCtrl(ct) for a in range(ct.robot.NumArms)]
   suppress_velctrl= False  #Set this True when an external program use the velocity control.
 
   kbhit= TKBHit()
@@ -202,7 +205,8 @@ Command:
         state[1]= 'no_cmd'
 
       elif state[1]=='arm_switch':
-        ct.robot.limbs[arm].exit_control_mode()
+        #ct.robot.limbs[arm].exit_control_mode()
+        velctrl[arm].Finish()
         arm= state[2]
         print 'Switched arm:',LRToStr(arm)
         state[1]= 'no_cmd'
@@ -256,8 +260,8 @@ Command:
         velctrl[arm].Step(dq)
 
   finally:
-    velctrl[RIGHT].Finish()
-    velctrl[LEFT].Finish()
+    for a in range(ct.robot.NumArms):
+      velctrl[a].Finish()
     kbhit.Deactivate()
     ct.DelSub('joy')
     print 'Finished'
