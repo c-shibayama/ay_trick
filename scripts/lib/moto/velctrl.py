@@ -22,6 +22,7 @@ class TVelCtrl(object):
     self.ct= ct
     self.arm= 0
     self.rate_adjuster= rospy.Rate(self.rate)
+    self.dq_prev= [0.0]*7  #Hack for missing joint velocity.
 
   def Rate(self):
     return self.rate
@@ -56,9 +57,11 @@ class TVelCtrl(object):
     t_traj= [0.0, dt]
     q_traj= [ct.robot.Q(arm=arm), q2]
     dq_traj= [ct.robot.DQ(arm=arm), dq]
+    if len(dq_traj[0])==0:  dq_traj[0]= self.dq_prev
     traj= ToROSTrajectory(ct.robot.JointNames(arm), q_traj, t_traj, dq_traj)
     with ct.robot.control_locker:
       ct.robot.pub.joint_path_command.publish(traj)
+    self.dq_prev= dq
 
     if sleep:  self.rate_adjuster.sleep()
 
@@ -69,6 +72,8 @@ class TVelCtrl(object):
     t_traj= [0.0, dt]
     q_traj= [ct.robot.Q(arm=arm), ct.robot.Q(arm=arm)]
     dq_traj= [ct.robot.DQ(arm=arm), [0.0]*7]
+    if len(dq_traj[0])==0:  dq_traj[0]= self.dq_prev
     traj= ToROSTrajectory(ct.robot.JointNames(arm), q_traj, t_traj, dq_traj)
     with ct.robot.control_locker:
       ct.robot.pub.joint_path_command.publish(traj)
+    self.dq_prev= [0.0]*7
