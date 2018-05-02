@@ -77,6 +77,14 @@ class TCoreTool(TROSUtil):
 
     self.thread_manager.StopAll()
 
+    if self.state_validity_checker is not None:
+      del self.state_validity_checker
+      self.state_validity_checker= None
+    if self.robot is not None:
+      self.robot.Cleanup()
+      del self.robot
+      self.robot= None
+
     for k in self.callback.keys():
       print 'Stopping callback %r...' % k,
       self.callback[k]= None  #We do not delete

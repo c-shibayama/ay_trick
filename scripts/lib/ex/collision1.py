@@ -13,8 +13,13 @@ def Run(ct,*args):
     x_trg= lambda t: [0.45,0.2*math.sin(t),0.5]+list(QFromAxisAngle([0,1,0], math.pi*0.5))
     ct.robot.MoveToX(x_trg(0.0), 4.0)
     rospy.sleep(4.0)
-
     x_box= [0.4,-0.3,0.5, 0.0,0.0,0.0,1.0]
+  elif ct.robot.Is('Mikata'):
+    #Move the robot to the initial pose:
+    x_trg= lambda t: [0.1,0.05*math.sin(t),0.1]+[0,0,0,1]
+    ct.robot.MoveToX(x_trg(0.0), 4.0)
+    rospy.sleep(4.0)
+    x_box= [0.2,-0.23,0.2, 0.0,0.0,0.0,1.0]
   else:
     raise Exception('ex.collision1: Parameters are not configured for:',ct.robot.Name)
 

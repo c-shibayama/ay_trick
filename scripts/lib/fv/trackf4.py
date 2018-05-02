@@ -135,11 +135,6 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
       else:
         q= ct.robot.Q(arm=arm)
         J= ct.robot.J(q,arm=arm)
-        #vq0= ct.robot.limbs[arm].joint_velocities()
-        #vq0= MCVec([vq0[joint] for joint in ct.robot.JointNames(arm)])
-        #vx0= J * vq0
-        #kv= np.diag([0.3,0.5,0.5])
-        #vx= ToList(MCVec(vp) - kv*vx0[:3])+[0.0,0.0,0.0]
         vx= 0.2*MCVec(fd)
         dq= ToList(la.pinv(J)*vx)
       velctrl.Step(dq)
@@ -149,6 +144,9 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
     ct.Run('fv.finger3','start_detect_obj',arm)
 
 def Run(ct,*args):
+  if not ct.robot.Is('Baxter'):
+    raise Exception('vs_trackf4 works only with Baxter.')
+
   if len(args)==0:
     command= 'clear'
   else:

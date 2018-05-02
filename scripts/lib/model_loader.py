@@ -8,15 +8,6 @@ def Run(ct,*args):
 
   #FIXME: loading from YAML is very slow.  on-demand loading should be required
 
-  if ct.robot.Is('PR2'):
-    ct.AddDictAttr(LoadYAML('models/robot/gripper.yaml'))
-  elif ct.robot.Is('Baxter'):
-    ct.AddDictAttr(LoadYAML('models/robot/gripper_bx.yaml'))
-  elif ct.robot.Is('RobotiqNB'):
-    ct.AddDictAttr(LoadYAML('models/robot/gripper_rqnb.yaml'))
-  elif ct.robot.Is('DxlGripper'):
-    ct.AddDictAttr(LoadYAML('models/robot/gripper_dxlg.yaml'))
-
   #FIXME: the following values should be DEFAULT values
   extra_values= {}
   #Gripper width before grab

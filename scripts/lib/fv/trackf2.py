@@ -79,7 +79,10 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
     if obj_area < 0.02:  return True
     return False
 
-  velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+  if ct.robot.Is('Baxter'):
+    velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+  elif ct.robot.Is('Mikata'):
+    velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
 
   try:
     wrist= ['wrist_r','wrist_l'][arm]
@@ -109,13 +112,16 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
       else:
         q= ct.robot.Q(arm=arm)
         J= ct.robot.J(q,arm=arm)
-        vq0= ct.robot.limbs[arm].joint_velocities()
-        vq0= MCVec([vq0[joint] for joint in ct.robot.JointNames(arm)])
+        vq0= MCVec(ct.robot.DQ(arm=arm))
         vx0= J * vq0
         #kv= np.diag([0.3,0.5,0.5])
         #vx= ToList(MCVec(vp) - kv*vx0[:3])+[0.0,0.0,0.0]
         vx= 0.2*MCVec(fd)
-        dq= ToList(la.pinv(J)*vx)
+        if ct.robot.DoF(arm=arm)>=6:
+          dq= ToList(la.pinv(J)*vx)
+        else:  #e.g. Mikata Arm
+          W= np.diag(6.0*Normalize([1.0,1.0,1.0, 0.01,0.01,0.01]))
+          dq= ToList(la.pinv(W*J)*W*vx)
       velctrl.Step(dq)
 
   finally:

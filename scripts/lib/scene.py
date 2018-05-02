@@ -131,6 +131,9 @@ def Run(ct,*args):
         ign_combinations= (('base_link', 'link_s'),
                            ('link_s', 'link_l'),('link_l', 'link_e'),('link_e', 'link_u'),
                            ('link_u', 'link_r'),('link_r', 'link_b'),('link_b', 'link_t'))
+      elif ct.robot.Is('Mikata'):
+        ign_combinations= (('base_link','link_2'),('link_2','link_3'),('link_3','link_4'),('link_4','link_5'),
+                           ('link_5','right_gripper'),('link_5','left_gripper'),('right_gripper','left_gripper'))
       for i1,i2 in ign_combinations:
         if displavel>0:  CPrint(3, '  ignoring collision between %r and %r'%(i1,i2))
         ct.state_validity_checker.IgnoreCollision(i1,i2)

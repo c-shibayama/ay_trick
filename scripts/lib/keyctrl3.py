@@ -84,11 +84,14 @@ def Callback(state, steps, wsteps, gsteps, data):
       wsteps[2]= multiplier * axes[3]
 
 def Run(ct,*args):
-  if not (ct.robot.Is('Baxter') or ct.robot.Is('Motoman')):
-    CPrint(4,'This program works only with Baxter and Motoman.')
+  if not any((ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'))):
+    CPrint(4,'This program works only with Baxter, Motoman, and Mikata.')
     return
 
   arm= ct.robot.Arm
+
+  if ct.robot.Is('Mikata'):
+    active_holding= [False]
 
   steps= [0.0, 0.0, 0.0]
   wsteps= [0.0, 0.0, 0.0]
@@ -106,6 +109,8 @@ def Run(ct,*args):
     velctrl= [ct.Load('bx.velctrl').TVelCtrl(ct,arm=a) for a in range(ct.robot.NumArms)]
   elif ct.robot.Is('Motoman'):
     velctrl= [ct.Load('moto.velctrl').TVelCtrl(ct) for a in range(ct.robot.NumArms)]
+  elif ct.robot.Is('Mikata'):
+    velctrl= [ct.Load('mikata.velctrl_p').TVelCtrl(ct) for a in range(ct.robot.NumArms)]
   suppress_velctrl= False  #Set this True when an external program use the velocity control.
 
   kbhit= TKBHit()
@@ -152,8 +157,8 @@ Command:
     l/r: Switch arm to LEFT/RIGHT
     c: Run calib_x (Calibrate the external RGB-D sensor pose)
     i: Run fv.inhand 'on'/'off' arm  (In-hand manipulation)
-    ct: Run fv.trackf4 'on'/'off' arm (Tai Chi)
-    y: Run fv.trackf4 for BOTH ARM   (Tai Chi)
+    t: Run fv.trackf4 (or fv.trackf2) 'on'/'off' arm (Tai Chi)
+    y: Run fv.trackf4 (or fv.trackf2) for BOTH ARM   (Tai Chi)
     o: Run fv.tracko 'on'/'off' arm  (Proximity vision-based tracking)
     p: Run fv.pickup2a 'on'/'off' arm (Slip-based automatic picking up) '''
         state[1]= 'no_cmd'
@@ -172,21 +177,26 @@ Command:
           ct.Run('fv.inhand','off',arm)
         state[1]= 'no_cmd'
       elif state[1]=='key_t':
-        if 'vs_trackf4'+LRToStrS(arm) not in ct.thread_manager.thread_list:
-          ct.Run('fv.trackf4','on',arm)
+        trackf= 'trackf4' if ct.robot.Is('Baxter') else 'trackf2'
+        if 'vs_'+trackf+LRToStrS(arm) not in ct.thread_manager.thread_list:
+          ct.Run('fv.'+trackf,'on',arm)
           suppress_velctrl= True
         else:
-          ct.Run('fv.trackf4','off',arm)
+          ct.Run('fv.'+trackf,'off',arm)
           suppress_velctrl= False
         state[1]= 'no_cmd'
       elif state[1]=='key_y':
-        if 'vs_trackf4'+LRToStrS(LEFT) not in ct.thread_manager.thread_list and 'vs_trackf4'+LRToStrS(RIGHT) not in ct.thread_manager.thread_list:
-          ct.Run('fv.trackf4','on',LEFT)
-          ct.Run('fv.trackf4','on',RIGHT)
-          suppress_velctrl= True
+        if ct.robot.NumArms>1:
+          trackf= 'trackf4' if ct.robot.Is('Baxter') else 'trackf2'
+          if 'vs_'+trackf+LRToStrS(LEFT) not in ct.thread_manager.thread_list and 'vs_'+trackf+LRToStrS(RIGHT) not in ct.thread_manager.thread_list:
+            ct.Run('fv.'+trackf,'on',LEFT)
+            ct.Run('fv.'+trackf,'on',RIGHT)
+            suppress_velctrl= True
+          else:
+            ct.Run('fv.'+trackf,'clear')
+            suppress_velctrl= False
         else:
-          ct.Run('fv.trackf4','clear')
-          suppress_velctrl= False
+          CPrint(4,'{robot} does not have two arms.'.format(robot=ct.robot.Name))
         state[1]= 'no_cmd'
       elif state[1]=='key_o':
         if 'vs_tracko'+LRToStrS(arm) not in ct.thread_manager.thread_list:
@@ -240,21 +250,42 @@ Command:
         state[1]= 'no_cmd'
 
       elif state[1]=='grip':
+        if ct.robot.Is('Mikata'):
+          if not active_holding[arm]:
+            ct.robot.EndEff(arm).StartHolding()
+            active_holding[arm]= True
         #gstate[arm]+= 0.0002*gsteps[0]
         gstate[arm]= ct.robot.GripperPos(arm) + 0.005*gsteps[0]
         if gstate[arm]<gstate_range[arm][0]:  gstate[arm]= gstate_range[arm][0]
         if gstate[arm]>gstate_range[arm][1]:  gstate[arm]= gstate_range[arm][1]
         #print rospy.Time.now(),LRToStr(arm),ct.robot.GripperPos(arm),gstate[arm]
         ct.robot.MoveGripper(gstate[arm],max_effort=100.0,speed=100.0,arm=arm)
-        if ct.robot.Is('Baxter') and ct.robot.EndEff(arm).Is('BaxterEPG'):
+        if ct.robot.EndEff(arm).Is('BaxterEPG'):
           rospy.sleep(0.01)  #Without this, ct.robot.GripperPos(arm) is not updated.
+
+      if not state[1]=='grip':
+        if ct.robot.Is('Mikata'):
+          if active_holding[arm]:
+            ct.robot.EndEff(arm).StopHolding()
+            active_holding[arm]= False
 
       if state[3] and state[1] in ('position','orientation'):
         q= ct.robot.Q(arm=arm)
         f= 1.0
         #f= 0.2
         vx= map(lambda x:f*0.4*x,steps)+map(lambda x:f*1.0*x,wsteps)
-        dq= ToList(la.pinv(ct.robot.J(q,arm=arm))*MCVec(vx))
+        if ct.robot.DoF(arm=arm)>=6:
+          dq= ToList(la.pinv(ct.robot.J(q,arm=arm))*MCVec(vx))
+        else:  #e.g. Mikata Arm
+          #We use weighted pseudo inverse of Jacobian.
+          #W: weights on pose error.
+          if Norm(vx[:3])>=Norm(vx[3:]):
+            W= np.diag(6.0*Normalize([1.0,1.0,1.0, 0.01,0.01,0.01]))
+          else:
+            W= np.diag(6.0*Normalize([1.0,1.0,1.0, 0.01,0.01,0.01]))
+          dq= ToList(la.pinv(W*ct.robot.J(q,arm=arm))*W*MCVec(vx))
+          #dq= ToList(0.5*(la.pinv(ct.robot.J(q,arm=arm)[:3,])*MCVec(vx[:3])+
+                          #la.pinv(ct.robot.J(q,arm=arm))*MCVec(vx)))
       else:
         dq= [0.0]*ct.robot.DoF(arm)
       if not suppress_velctrl:
@@ -264,5 +295,9 @@ Command:
     for a in range(ct.robot.NumArms):
       velctrl[a].Finish()
     kbhit.Deactivate()
+    if ct.robot.Is('Mikata'):
+      if active_holding[arm]:
+        ct.robot.EndEff(arm).StopHolding()
+        active_holding[arm]= False
     ct.DelSub('joy')
     print 'Finished'

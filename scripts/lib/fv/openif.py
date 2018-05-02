@@ -28,11 +28,13 @@ def OpeningLoop(th_info, ct, arm):
   while th_info.IsRunning() and not rospy.is_shutdown():
     if n_change(0)+n_change(1)>7:
       print 'Force is applied'
-      ct.robot.OpenGripper(arm)
+      #ct.robot.OpenGripper(arm)
+      ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+0.02, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
       break
     elif sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>0.3:
       print 'Slip is detected'
-      ct.robot.OpenGripper(arm)
+      #ct.robot.OpenGripper(arm)
+      ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+0.02, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
       break
     else:
       rospy.sleep(0.02)

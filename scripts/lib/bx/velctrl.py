@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from core_tool import *
+import std_msgs.msg
 def Help():
   return '''Velocity control tools for Baxter.  Do not use this directly.
     Usage:

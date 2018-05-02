@@ -5,35 +5,98 @@ roslib.load_manifest('ay_vision_msgs')
 import ay_vision_msgs.msg
 import ay_vision_msgs.srv
 def Help():
-  return '''Test fingertip visual skin (Optical Skin) sensors ver.3.
+  return '''Test FingerVision ver.3.
     This uses visual_skin_node2 that has an improved marker tracker
     and proximity vision (object detection, tracking, and movement detection).
   Usage:
     fv.finger3 'setup' [, ARM1 [, ARM2]]
       Start to subscribe topics, setup services.
-      ARM*: LEFT, RIGHT, or 'all' (both arms). Default: 'all'
+      ARM*: RIGHT, LEFT, or 'all' (both arms). Default: 'all'
     fv.finger3 'rec' [, RID [, ARM1 [, ARM2]]]
       Start/stop recording.
       RID: Recoding ID.
-      ARM*: LEFT, RIGHT, or 'all' (both arms). Default: 'all'
+      ARM*: RIGHT, LEFT, or 'all' (both arms). Default: 'all'
     fv.finger3
     fv.finger3 'clear' [, ARM1 [, ARM2]]
       Stop to subscribe topics.
-      ARM*: LEFT, RIGHT, or 'all' (both arms). Default: 'all'
+      ARM*: RIGHT, LEFT, or 'all' (both arms). Default: 'all'
     fv.finger3 'frame_skip', SKIP [, ARM1 [, ARM2]]
       Set frame-skip to SKIP.
       SKIP: Frames to be skipped. 0: No skip.
-      ARM*: LEFT, RIGHT, or 'all' (both arms). Default: 'all'
+      ARM*: RIGHT, LEFT, or 'all' (both arms). Default: 'all'
     fv.finger3 'clear_obj' [, ARM1 [, ARM2]]
       Clear detected object models.
-      ARM*: LEFT, RIGHT, or 'all' (both arms). Default: 'all'
+      ARM*: RIGHT, LEFT, or 'all' (both arms). Default: 'all'
     fv.finger3 'stop_detect_obj' [, ARM1 [, ARM2]]
       Stop detecting object.
-      ARM*: LEFT, RIGHT, or 'all' (both arms). Default: 'all'
+      ARM*: RIGHT, LEFT, or 'all' (both arms). Default: 'all'
     fv.finger3 'start_detect_obj' [, ARM1 [, ARM2]]
       Start detecting object.
-      ARM*: LEFT, RIGHT, or 'all' (both arms). Default: 'all'
+      ARM*: RIGHT, LEFT, or 'all' (both arms). Default: 'all'
   '''
+
+#Return a table of topics and services for each (robot, arm).
+def TopicServiceTable(robot, arm):
+  if robot.Is('Baxter'):
+    if arm==RIGHT:
+      return {
+        'srv_separated':    False,
+        'blob_moves_r':     '/visual_skin_node_ay1/blob_moves_usbcam2fay12_r',
+        'blob_moves_l':     '/visual_skin_node_ay1/blob_moves_usbcam2fay12_l',
+        'prox_vision_r':    '/visual_skin_node_ay1/prox_vision_usbcam2fay12_r',
+        'prox_vision_l':    '/visual_skin_node_ay1/prox_vision_usbcam2fay12_l',
+        'clear_obj':        '/visual_skin_node_ay1/clear_obj',
+        'set_frame_skip':   '/visual_skin_node_ay1/set_frame_skip',
+        'start_detect_obj': '/visual_skin_node_ay1/start_detect_obj',
+        'stop_detect_obj':  '/visual_skin_node_ay1/stop_detect_obj',
+        }
+    elif arm==LEFT:
+      return {
+        'srv_separated':    False,
+        'blob_moves_r':     '/visual_skin_node_ay2/blob_moves_usbcam2fay22_r',
+        'blob_moves_l':     '/visual_skin_node_ay2/blob_moves_usbcam2fay22_l',
+        'prox_vision_r':    '/visual_skin_node_ay2/prox_vision_usbcam2fay22_r',
+        'prox_vision_l':    '/visual_skin_node_ay2/prox_vision_usbcam2fay22_l',
+        'clear_obj':        '/visual_skin_node_ay2/clear_obj',
+        'set_frame_skip':   '/visual_skin_node_ay2/set_frame_skip',
+        'start_detect_obj': '/visual_skin_node_ay2/start_detect_obj',
+        'stop_detect_obj':  '/visual_skin_node_ay2/stop_detect_obj',
+        }
+  elif robot.Is('RobotiqNB'):
+    return {
+      'srv_separated':      True,
+      'blob_moves_r':       '/visual_skin_node_ay10r/blob_moves_usbcam2fay10a_r',
+      'blob_moves_l':       '/visual_skin_node_ay10l/blob_moves_usbcam2fay10a_l',
+      'prox_vision_r':      '/visual_skin_node_ay10r/prox_vision_usbcam2fay10a_r',
+      'prox_vision_l':      '/visual_skin_node_ay10l/prox_vision_usbcam2fay10a_l',
+      'clear_obj_r':        '/visual_skin_node_ay10r/clear_obj',
+      'clear_obj_l':        '/visual_skin_node_ay10l/clear_obj',
+      'set_frame_skip_r':   '/visual_skin_node_ay10r/set_frame_skip',
+      'set_frame_skip_l':   '/visual_skin_node_ay10l/set_frame_skip',
+      'start_detect_obj_r': '/visual_skin_node_ay10r/start_detect_obj',
+      'start_detect_obj_l': '/visual_skin_node_ay10l/start_detect_obj',
+      'stop_detect_obj_r':  '/visual_skin_node_ay10r/stop_detect_obj',
+      'stop_detect_obj_l':  '/visual_skin_node_ay10l/stop_detect_obj',
+      }
+  elif robot.Is('DxlGripper') or robot.Is('Mikata'):
+    return {
+      'srv_separated':      True,
+      'blob_moves_r':       '/visual_skin_node_ay11r/blob_moves_usbcam2fay11a_r',
+      'blob_moves_l':       '/visual_skin_node_ay11l/blob_moves_usbcam2fay11a_l',
+      'prox_vision_r':      '/visual_skin_node_ay11r/prox_vision_usbcam2fay11a_r',
+      'prox_vision_l':      '/visual_skin_node_ay11l/prox_vision_usbcam2fay11a_l',
+      'clear_obj_r':        '/visual_skin_node_ay11r/clear_obj',
+      'clear_obj_l':        '/visual_skin_node_ay11l/clear_obj',
+      'set_frame_skip_r':   '/visual_skin_node_ay11r/set_frame_skip',
+      'set_frame_skip_l':   '/visual_skin_node_ay11l/set_frame_skip',
+      'start_detect_obj_r': '/visual_skin_node_ay11r/start_detect_obj',
+      'start_detect_obj_l': '/visual_skin_node_ay11l/start_detect_obj',
+      'stop_detect_obj_r':  '/visual_skin_node_ay11r/stop_detect_obj',
+      'stop_detect_obj_l':  '/visual_skin_node_ay11l/stop_detect_obj',
+      }
+  else:
+    raise Exception('fv.finger3: No info in the TopicServiceTable for: {robot}=Arm-{arm}'.format(robot=robot.Name,arm=robot.ArmStr(arm)))
+
 
 #Similar to a median of a position pos but
 #return one of median(pos) and median(1-pos)
@@ -193,8 +256,6 @@ def Run(ct,*args):
     command= args[0]
     args= args[1:]
 
-  rqdxl= (ct.robot.Is('RobotiqNB') or ct.robot.Is('DxlGripper'))
-
   def StartStopRecording(ct,arm,rid=None):
     vs= LRToStrS(arm)
     if not ct.HasAttr(TMP,'vs_finger'+vs):
@@ -230,8 +291,8 @@ def Run(ct,*args):
   if command=='setup':
     if len(args)==0:  args= ['all']
     arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
-    if rqdxl:
-      arms= set(RIGHT if a==LEFT else a for a in arms)
+    if ct.robot.NumArms==1:
+      arms= set(0 if a>0 else a for a in arms)
     ct.viz.finger_force= TSimpleVisualizer(name_space='visualizer_estate')
     ct.viz.finger_force.viz_frame= ct.robot.BaseFrame
     for arm in arms:
@@ -258,82 +319,36 @@ def Run(ct,*args):
       l.tm_last_topic= [None,None,None,None]  #ros time of last topic receiving. blob_moves-r,l, prox_vision-r,l
       l.recording= False
       l.running= True
-      if arm==RIGHT:
-        if ct.robot.Is('RobotiqNB'):
-          ct.AddSub('vsay1_blob_moves_usbcam2fay12_r', '/visual_skin_node_ay10r/blob_moves_usbcam2fay10a_r',
-                  ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,RIGHT))
-          ct.AddSub('vsay1_blob_moves_usbcam2fay12_l', '/visual_skin_node_ay10l/blob_moves_usbcam2fay10a_l',
-                  ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,LEFT))
-          ct.AddSub('vsay1_prox_vision_usbcam2fay12_r', '/visual_skin_node_ay10r/prox_vision_usbcam2fay10a_r',
-                  ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,RIGHT))
-          ct.AddSub('vsay1_prox_vision_usbcam2fay12_l', '/visual_skin_node_ay10l/prox_vision_usbcam2fay10a_l',
-                  ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,LEFT))
-          ct.AddSrvP('vsay1r_clear_obj', '/visual_skin_node_ay10r/clear_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1r_set_frame_skip', '/visual_skin_node_ay10r/set_frame_skip', ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1r_start_detect_obj', '/visual_skin_node_ay10r/start_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1r_stop_detect_obj', '/visual_skin_node_ay10r/stop_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1l_clear_obj', '/visual_skin_node_ay10l/clear_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1l_set_frame_skip', '/visual_skin_node_ay10l/set_frame_skip', ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1l_start_detect_obj', '/visual_skin_node_ay10l/start_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1l_stop_detect_obj', '/visual_skin_node_ay10l/stop_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-        elif ct.robot.Is('DxlGripper'):
-          ct.AddSub('vsay1_blob_moves_usbcam2fay12_r', '/visual_skin_node_ay11r/blob_moves_usbcam2fay11a_r',
-                  ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,RIGHT))
-          ct.AddSub('vsay1_blob_moves_usbcam2fay12_l', '/visual_skin_node_ay11l/blob_moves_usbcam2fay11a_l',
-                  ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,LEFT))
-          ct.AddSub('vsay1_prox_vision_usbcam2fay12_r', '/visual_skin_node_ay11r/prox_vision_usbcam2fay11a_r',
-                  ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,RIGHT))
-          ct.AddSub('vsay1_prox_vision_usbcam2fay12_l', '/visual_skin_node_ay11l/prox_vision_usbcam2fay11a_l',
-                  ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,LEFT))
-          ct.AddSrvP('vsay1r_clear_obj', '/visual_skin_node_ay11r/clear_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1r_set_frame_skip', '/visual_skin_node_ay11r/set_frame_skip', ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1r_start_detect_obj', '/visual_skin_node_ay11r/start_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1r_stop_detect_obj', '/visual_skin_node_ay11r/stop_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1l_clear_obj', '/visual_skin_node_ay11l/clear_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1l_set_frame_skip', '/visual_skin_node_ay11l/set_frame_skip', ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1l_start_detect_obj', '/visual_skin_node_ay11l/start_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1l_stop_detect_obj', '/visual_skin_node_ay11l/stop_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-        else:
-          ct.AddSub('vsay1_blob_moves_usbcam2fay12_r', '/visual_skin_node_ay1/blob_moves_usbcam2fay12_r',
-                  ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,RIGHT))
-          ct.AddSub('vsay1_blob_moves_usbcam2fay12_l', '/visual_skin_node_ay1/blob_moves_usbcam2fay12_l',
-                  ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,LEFT))
-          ct.AddSub('vsay1_prox_vision_usbcam2fay12_r', '/visual_skin_node_ay1/prox_vision_usbcam2fay12_r',
-                  ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,RIGHT))
-          ct.AddSub('vsay1_prox_vision_usbcam2fay12_l', '/visual_skin_node_ay1/prox_vision_usbcam2fay12_l',
-                  ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,LEFT))
-          ct.AddSrvP('vsay1_clear_obj', '/visual_skin_node_ay1/clear_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1_set_frame_skip', '/visual_skin_node_ay1/set_frame_skip', ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1_start_detect_obj', '/visual_skin_node_ay1/start_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay1_stop_detect_obj', '/visual_skin_node_ay1/stop_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-      elif arm==LEFT:
-        if rqdxl:
-          raise Exception('This should be a bug.')
-        else:
-          ct.AddSub('vsay2_blob_moves_usbcam2fay22_r', '/visual_skin_node_ay2/blob_moves_usbcam2fay22_r',
-                  ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,RIGHT))
-          ct.AddSub('vsay2_blob_moves_usbcam2fay22_l', '/visual_skin_node_ay2/blob_moves_usbcam2fay22_l',
-                  ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,LEFT))
-          ct.AddSub('vsay2_prox_vision_usbcam2fay22_r', '/visual_skin_node_ay2/prox_vision_usbcam2fay22_r',
-                  ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,RIGHT))
-          ct.AddSub('vsay2_prox_vision_usbcam2fay22_l', '/visual_skin_node_ay2/prox_vision_usbcam2fay22_l',
-                  ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,LEFT))
-          ct.AddSrvP('vsay2_clear_obj', '/visual_skin_node_ay2/clear_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay2_set_frame_skip', '/visual_skin_node_ay2/set_frame_skip', ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay2_start_detect_obj', '/visual_skin_node_ay2/start_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-          ct.AddSrvP('vsay2_stop_detect_obj', '/visual_skin_node_ay2/stop_detect_obj', std_srvs.srv.Empty, persistent=False, time_out=3.0)
-      if arm==RIGHT:
-        if rqdxl:
-          ct.srvp.vsay1r_start_detect_obj(std_srvs.srv.EmptyRequest())
-          ct.srvp.vsay1l_start_detect_obj(std_srvs.srv.EmptyRequest())
-          ct.srvp.vsay1r_clear_obj(std_srvs.srv.EmptyRequest())
-          ct.srvp.vsay1l_clear_obj(std_srvs.srv.EmptyRequest())
-        else:
-          ct.srvp.vsay1_start_detect_obj(std_srvs.srv.EmptyRequest())
-          ct.srvp.vsay1_clear_obj(std_srvs.srv.EmptyRequest())
-      elif arm==LEFT:
-        ct.srvp.vsay2_start_detect_obj(std_srvs.srv.EmptyRequest())
-        ct.srvp.vsay2_clear_obj(std_srvs.srv.EmptyRequest())
+
+      table= TopicServiceTable(ct.robot, arm)
+      armstr= ct.robot.ArmStr(arm)+'_'
+      x='blob_moves_r'; ct.AddSub(armstr+x, table[x], ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,RIGHT))
+      x='blob_moves_l'; ct.AddSub(armstr+x, table[x], ay_vision_msgs.msg.BlobMoves, lambda msg,l=l:BlobMoves(ct,l,msg,LEFT))
+      x='prox_vision_r'; ct.AddSub(armstr+x, table[x], ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,RIGHT))
+      x='prox_vision_l'; ct.AddSub(armstr+x, table[x], ay_vision_msgs.msg.ProxVision, lambda msg,l=l:ProxVision(ct,l,msg,LEFT))
+      if table['srv_separated']:
+        x='clear_obj_r'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='clear_obj_l'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='set_frame_skip_r'; ct.AddSrvP(armstr+x, table[x], ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
+        x='set_frame_skip_l'; ct.AddSrvP(armstr+x, table[x], ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
+        x='start_detect_obj_r'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='start_detect_obj_l'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='stop_detect_obj_r'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='stop_detect_obj_l'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+      else:
+        x='clear_obj'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='set_frame_skip'; ct.AddSrvP(armstr+x, table[x], ay_vision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
+        x='start_detect_obj'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='stop_detect_obj'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+
+      if table['srv_separated']:
+        ct.srvp[armstr+'start_detect_obj_r'](std_srvs.srv.EmptyRequest())
+        ct.srvp[armstr+'start_detect_obj_l'](std_srvs.srv.EmptyRequest())
+        #ct.srvp[armstr+'clear_obj_r'](std_srvs.srv.EmptyRequest())
+        #ct.srvp[armstr+'clear_obj_l'](std_srvs.srv.EmptyRequest())
+      else:
+        ct.srvp[armstr+'start_detect_obj'](std_srvs.srv.EmptyRequest())
+        #ct.srvp[armstr+'clear_obj'](std_srvs.srv.EmptyRequest())
 
   elif command=='rec':
     rid= args[0] if len(args)>0 else None
@@ -354,16 +369,18 @@ def Run(ct,*args):
         ct.GetAttr(TMP,'vs_finger'+vs).running= False
       if 'vs_finger_bm' in ct.callback:  ct.callback.vs_finger_bm[vs]= [None,None]
       if 'vs_finger_pv' in ct.callback:  ct.callback.vs_finger_pv[vs]= [None,None]
-      if arm==RIGHT:
-        ct.DelSub('vsay1_blob_moves_usbcam2fay12_r')
-        ct.DelSub('vsay1_blob_moves_usbcam2fay12_l')
-        ct.DelSub('vsay1_prox_vision_usbcam2fay12_r')
-        ct.DelSub('vsay1_prox_vision_usbcam2fay12_l')
-      elif arm==LEFT:
-        ct.DelSub('vsay2_blob_moves_usbcam2fay22_r')
-        ct.DelSub('vsay2_blob_moves_usbcam2fay22_l')
-        ct.DelSub('vsay2_prox_vision_usbcam2fay22_r')
-        ct.DelSub('vsay2_prox_vision_usbcam2fay22_l')
+
+      table= TopicServiceTable(ct.robot, arm)
+      armstr= ct.robot.ArmStr(arm)+'_'
+      for x in ('blob_moves_r','blob_moves_l','prox_vision_r','prox_vision_l'):
+        ct.DelSub(armstr+x)
+      if table['srv_separated']:
+        for x in ('clear_obj_r','clear_obj_l','set_frame_skip_r','set_frame_skip_l',
+                  'start_detect_obj_r','start_detect_obj_l','stop_detect_obj_r','stop_detect_obj_l'):
+          ct.DelSrvP(armstr+x)
+      else:
+        for x in ('clear_obj','set_frame_skip','start_detect_obj','stop_detect_obj'):
+          ct.DelSrvP(armstr+x)
 
   elif command=='frame_skip':
     skip= args[0] if len(args)>0 else None
@@ -372,27 +389,47 @@ def Run(ct,*args):
     set_frame_skip_req= ay_vision_msgs.srv.SetInt32Request()
     set_frame_skip_req.data= skip
     for arm in arms:
-      if arm==RIGHT:   ct.srvp.vsay1_set_frame_skip(set_frame_skip_req) if not rqdxl else (ct.srvp.vsay1r_set_frame_skip(set_frame_skip_req), ct.srvp.vsay1l_set_frame_skip(set_frame_skip_req))
-      elif arm==LEFT:  ct.srvp.vsay2_set_frame_skip(set_frame_skip_req)
+      table= TopicServiceTable(ct.robot, arm)
+      armstr= ct.robot.ArmStr(arm)+'_'
+      if table['srv_separated']:
+        ct.srvp[armstr+'set_frame_skip_r'](set_frame_skip_req)
+        ct.srvp[armstr+'set_frame_skip_l'](set_frame_skip_req)
+      else:
+        ct.srvp[armstr+'set_frame_skip'](set_frame_skip_req)
 
   elif command=='clear_obj':
     if len(args)==0:  args= ['all']
     arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
     for arm in arms:
-      if arm==RIGHT:   ct.srvp.vsay1_clear_obj(std_srvs.srv.EmptyRequest()) if not rqdxl else (ct.srvp.vsay1r_clear_obj(std_srvs.srv.EmptyRequest()), ct.srvp.vsay1l_clear_obj(std_srvs.srv.EmptyRequest()))
-      elif arm==LEFT:  ct.srvp.vsay2_clear_obj(std_srvs.srv.EmptyRequest())
+      table= TopicServiceTable(ct.robot, arm)
+      armstr= ct.robot.ArmStr(arm)+'_'
+      if table['srv_separated']:
+        ct.srvp[armstr+'clear_obj_r'](std_srvs.srv.EmptyRequest())
+        ct.srvp[armstr+'clear_obj_l'](std_srvs.srv.EmptyRequest())
+      else:
+        ct.srvp[armstr+'clear_obj'](std_srvs.srv.EmptyRequest())
 
   elif command=='stop_detect_obj':
     if len(args)==0:  args= ['all']
     arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
     for arm in arms:
-      if arm==RIGHT:   ct.srvp.vsay1_stop_detect_obj(std_srvs.srv.EmptyRequest()) if not rqdxl else (ct.srvp.vsay1r_stop_detect_obj(std_srvs.srv.EmptyRequest()), ct.srvp.vsay1l_stop_detect_obj(std_srvs.srv.EmptyRequest()))
-      elif arm==LEFT:  ct.srvp.vsay2_stop_detect_obj(std_srvs.srv.EmptyRequest())
+      table= TopicServiceTable(ct.robot, arm)
+      armstr= ct.robot.ArmStr(arm)+'_'
+      if table['srv_separated']:
+        ct.srvp[armstr+'stop_detect_obj_r'](std_srvs.srv.EmptyRequest())
+        ct.srvp[armstr+'stop_detect_obj_l'](std_srvs.srv.EmptyRequest())
+      else:
+        ct.srvp[armstr+'stop_detect_obj'](std_srvs.srv.EmptyRequest())
 
   elif command=='start_detect_obj':
     if len(args)==0:  args= ['all']
     arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
     for arm in arms:
-      if arm==RIGHT:   ct.srvp.vsay1_start_detect_obj(std_srvs.srv.EmptyRequest()) if not rqdxl else (ct.srvp.vsay1r_start_detect_obj(std_srvs.srv.EmptyRequest()), ct.srvp.vsay1l_start_detect_obj(std_srvs.srv.EmptyRequest()))
-      elif arm==LEFT:  ct.srvp.vsay2_start_detect_obj(std_srvs.srv.EmptyRequest())
+      table= TopicServiceTable(ct.robot, arm)
+      armstr= ct.robot.ArmStr(arm)+'_'
+      if table['srv_separated']:
+        ct.srvp[armstr+'start_detect_obj_r'](std_srvs.srv.EmptyRequest())
+        ct.srvp[armstr+'start_detect_obj_l'](std_srvs.srv.EmptyRequest())
+      else:
+        ct.srvp[armstr+'start_detect_obj'](std_srvs.srv.EmptyRequest())
 

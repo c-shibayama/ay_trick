@@ -15,6 +15,7 @@ def Help():
         fv.tracko 'off' LEFT
         fv.tracko 'off' RIGHT'''
 def TrackingLoop(th_info, ct, arm):
+  ct.Run('fv.ctrl_params')
   vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
 
   #Stop object detection
@@ -55,7 +56,10 @@ def TrackingLoop(th_info, ct, arm):
     #return +1.0 if (a2-a1)>th else (-1.0 if (a1-a2)>th else 0.0)
     return (a2-a1) # if abs(a2-a1)>th else 0.0
 
-  velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+  if ct.robot.Is('Baxter'):
+    velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+  elif ct.robot.Is('Mikata'):
+    velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
 
   try:
     wrist= ['wrist_r','wrist_l'][arm]
@@ -64,7 +68,7 @@ def TrackingLoop(th_info, ct, arm):
       x_e= ct.robot.FK(x_ext=x_ext,arm=arm)
       ex,ey,ez= RotToExyz(QToRot(x_e[3:]))
       #print vel_x(),vel_y(),vel_z()
-      gain= [0.5,0.5,0.5]
+      gain= ct.GetAttr('fv_ctrl','tracko_gain')[arm]
       #gain= [1.0,1.6,1.0]
       vel= [vel_x(),vel_y(),vel_z()]
       #print vel
@@ -87,12 +91,15 @@ def TrackingLoop(th_info, ct, arm):
       else:
         q= ct.robot.Q(arm=arm)
         J= ct.robot.J(q,arm=arm)
-        vq0= ct.robot.limbs[arm].joint_velocities()
-        vq0= MCVec([vq0[joint] for joint in ct.robot.JointNames(arm)])
+        vq0= MCVec(ct.robot.DQ(arm=arm))
         vx0= J * vq0
         kv= np.diag([0.3,0.3,0.5])
         vx= ToList(MCVec(vp) - kv*vx0[:3])+[0.0,0.0,0.0]
-        dq= ToList(la.pinv(J)*MCVec(vx))
+        if ct.robot.DoF(arm=arm)>=6:
+          dq= ToList(la.pinv(J)*MCVec(vx))
+        else:  #e.g. Mikata Arm
+          W= np.diag([1.0,1.0,1.0, 0.01,0.01,0.01])
+          dq= ToList(la.pinv(W*J)*W*MCVec(vx))
       velctrl.Step(dq)
 
   finally:

@@ -95,7 +95,10 @@ def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
   l.log['z_trg']= []
   l.log['x']= []
 
-  l.velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+  if ct.robot.Is('Baxter'):
+    l.velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+  elif ct.robot.Is('Mikata'):
+    l.velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
   l.ctrl_step= 0  #Counter for logging cycle control.
 
   def SetZOffset(z_offset):
@@ -119,7 +122,7 @@ def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
     #ct.robot.MoveGripper(pos=l.g_pos, arm=arm, speed=100.0, blocking=False)
     #rospy.sleep(0.001)
     #l.g_pos= ct.robot.GripperPos(arm)
-    ct.robot.MoveGripper(pos=l.g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
+    ct.robot.MoveGripper(pos=l.g_pos, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=1.0, blocking=False)
     l.g_motion= count_wait_gmove
 
   def ControlStep():
@@ -159,8 +162,7 @@ def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
     x1= ct.robot.FK(arm=arm)
     q= ct.robot.Q(arm=arm)
     J= ct.robot.J(q,arm=arm)
-    vq1= ct.robot.limbs[arm].joint_velocities()
-    vq1= MCVec([vq1[joint] for joint in ct.robot.JointNames(arm)])
+    vq1= MCVec(ct.robot.DQ(arm=arm))
     vx1= J * vq1
 
     #amp= 0.02 if z_offset<0.04 else 0.0
@@ -180,12 +182,16 @@ def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
     vx[2]= kp[2]*z_err-kv[2]*vx1[2,0]
     #print vx
 
-    dq= ToList(la.pinv(J)*MCVec(vx))
+    if ct.robot.DoF(arm=arm)>=6:
+      dq= ToList(la.pinv(J)*MCVec(vx))
+    else:  #e.g. Mikata Arm
+      W= np.diag(6.0*Normalize([1.0,1.0,1.0, 0.01,0.01,0.01]))
+      dq= ToList(la.pinv(W*J)*W*MCVec(vx))
     l.velctrl.Step(dq)
     l.ctrl_step+= 1
 
   sm= TStateMachine(debug=False, local_obj=l)
-  sm.EventCallback= ct.SMCallback
+  #sm.EventCallback= ct.SMCallback
   sm.StartState= 'bring_test'
 
   time_out= options['time_out']
@@ -267,7 +273,7 @@ def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
   sm['bring_up_to_exit'].ElseAction= action_ctrlstep
 
   try:
-    ct.RunSM(sm,'vs_pickup2')
+    sm.Run()
 
   finally:
     if options['stop_velctrl']:  l.velctrl.Finish()

@@ -14,7 +14,10 @@ def Run(ct,*args):
     return
 
   arm= ct.robot.Arm
-  ct.robot.grippers[arm].Init()
+  #ct.robot.grippers[arm].Init()  #FIXME: Commented out as I'm not sure why this code is here.
+
+  if ct.robot.Is('DxlGripper'):
+    active_holding= [False]
 
   steps= [0.0, 0.0, 0.0]
   wsteps= [0.0, 0.0, 0.0]
@@ -133,6 +136,10 @@ Command:
 
       #elif state[1]=='grip':
       if state[1]=='grip':
+        if ct.robot.Is('DxlGripper'):
+          if not active_holding[arm]:
+            ct.robot.EndEff(arm).StartHolding()
+            active_holding[arm]= True
         #gstate[arm]+= 0.0002*gsteps[0]
         #gstate[arm]= ct.robot.GripperPos(arm) + 0.005*gsteps[0]
         gstate[arm]= ct.robot.GripperPos(arm) + 0.01*gsteps[0]
@@ -144,6 +151,12 @@ Command:
         #gsteps[0]= 0
         #state[1]= 'no_cmd'
         #rospy.sleep(0.015)
+
+      if not state[1]=='grip':
+        if ct.robot.Is('DxlGripper'):
+          if active_holding[arm]:
+            ct.robot.EndEff(arm).StopHolding()
+            active_holding[arm]= False
 
       rospy.sleep(0.005)
 
@@ -165,4 +178,8 @@ Command:
   finally:
     kbhit.Deactivate()
     ct.DelSub('joy')
+    if ct.robot.Is('DxlGripper'):
+      if active_holding[arm]:
+        ct.robot.EndEff(arm).StopHolding()
+        active_holding[arm]= False
     print 'Finished'

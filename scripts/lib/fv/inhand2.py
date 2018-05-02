@@ -29,7 +29,7 @@ def ManipLoop(th_info, ct, arm):
     if abs(theta0-get_theta())>target_angle:
       print 'Done! target=', RadToDeg(target_angle)
       g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
-      ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
+      ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=1.0, blocking=False)
       break
 
     #Open gripper until slip is detected
@@ -37,7 +37,7 @@ def ManipLoop(th_info, ct, arm):
     g_pos= ct.robot.GripperPos(arm)
     while thread_cond() and sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])<0.05:
       g_pos+= ct.GetAttr('fv_ctrl','min_gstep')[arm]
-      ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
+      ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=1.0, blocking=False)
       for i in range(100):
         if abs(ct.robot.GripperPos(arm)-g_pos)<0.5*ct.GetAttr('fv_ctrl','min_gstep')[arm]:  break
         rospy.sleep(0.0001)
@@ -50,13 +50,13 @@ def ManipLoop(th_info, ct, arm):
     #g_pos= ct.robot.GripperPos(arm)
     #while thread_cond() and sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>0.05:
       #g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
-      #ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
+      #ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=1.0, blocking=False)
       #for i in range(100):
         #if abs(ct.robot.GripperPos(arm)-g_pos)<0.5*ct.GetAttr('fv_ctrl','min_gstep')[arm]:  break
         #rospy.sleep(0.0001)
       #g_pos= ct.robot.GripperPos(arm)
     #Just go back to g_pos0
-    ct.robot.MoveGripper(pos=g_pos0, arm=arm, max_effort=1.0, speed=1.0, blocking=True)
+    ct.robot.MoveGripper(pos=g_pos0, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=1.0, blocking=True)
 
     print RadToDeg(theta0-get_theta()), RadToDeg(get_theta())
 

@@ -25,18 +25,20 @@ def Help():
 def PickupLoopDefaultOptions():
   return {
     'slip_sensitivity': 0.4,  #Slip sensitivity (smaller is more sensitive).
-    'area_drop_rate': 0.8,  #If object area becomes smaller than this rate, it's considered as dropped.
+    #'area_drop_rate': 0.8,
+    'area_drop_rate': 0.6,  #If object area becomes smaller than this rate, it's considered as dropped.
     'z_final': 0.15,  #Final height (offset from the beginning).
     'obj_area_filter_len': 5,  #Filter length for obj_area.
     'auto_stop': False,  #Whether automatically stops when pickup is completed.
     'time_out': None,  #Timeout in seconds, or no timeout (None).
     'stop_velctrl': True,  #Exit velocity control mode after execution.
-    'resume_detect_obj': True,  #Restart object detection after execution.
+    'resume_detect_obj': False,  #Restart object detection after execution.
     'bring_up_after_exit': False,  #Even if an exit condition is satisfied, robot brings up an object to target height.
     'log': {},  #[output] Execution results are stored into this dictionary.
     }
 
 def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
+  ct.Run('fv.ctrl_params')
   vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
 
   vs_finger.obj_area_tm= [tm for tm in vs_finger.tm_last_topic[2:4]]
@@ -106,7 +108,7 @@ def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
   #l.slip_detected= False
   l.z_err= None
   l.z_gain_mode= 'low'
-  l.g_motion= 0  #If >0, gripper is in motion.
+  l.g_motion= 0  #If >0, gripper is in motion (see below).
   l.suppress_z_ctrl= False  #If True, z_ctrl is suppressed during gripper control.
   l.suppress_slipavd= False  #If True, slip avoidance control is suppressed.
   l.log= options['log']
@@ -119,7 +121,10 @@ def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
   l.log['z_trg']= []
   l.log['x']= []
 
-  l.velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+  if ct.robot.Is('Baxter'):
+    l.velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+  elif ct.robot.Is('Mikata'):
+    l.velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
   l.ctrl_step= 0  #Counter for logging cycle control.
 
   def InitObjArea():
@@ -154,19 +159,20 @@ def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
     #l.slip_detected= False
 
   def GraspMore():
-    count_wait_gmove= 50
-    #l.g_pos-= 0.0005 if arm==LEFT else 0.002
-    l.g_pos-= 0.0007 if arm==LEFT else 0.003
+    count_wait_gmove= ct.GetAttr('fv_ctrl','pickup2a_gtimeout1')
+    ##l.g_pos-= 0.0005 if arm==LEFT else 0.002
+    #l.g_pos-= 0.0007 if arm==LEFT else 0.003
+    l.g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
     #ct.robot.MoveGripper(pos=l.g_pos, arm=arm, speed=100.0, blocking=False)
     #rospy.sleep(0.001)
     #l.g_pos= ct.robot.GripperPos(arm)
-    ct.robot.MoveGripper(pos=l.g_pos, arm=arm, max_effort=1.0, speed=20.0, blocking=False)
+    ct.robot.MoveGripper(pos=l.g_pos, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=20.0, blocking=False)
     l.g_motion= count_wait_gmove
 
   def SetGrasp(g_pos, speed, exclusive):
-    count_wait_gmove= 250
+    count_wait_gmove= ct.GetAttr('fv_ctrl','pickup2a_gtimeout2')
     l.g_pos= g_pos
-    ct.robot.MoveGripper(pos=l.g_pos, arm=arm, max_effort=1.0, speed=speed, blocking=False)
+    ct.robot.MoveGripper(pos=l.g_pos, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=speed, blocking=False)
     l.g_motion= count_wait_gmove
     l.suppress_z_ctrl= exclusive
 
@@ -210,9 +216,17 @@ def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
     keypts= ([0.3,1.0], [0.7,0.0])
     slip_to_kp_rate= max(keypts[1][1],min(keypts[1][0],(keypts[1][1]-keypts[0][1])/(keypts[1][0]-keypts[0][0])*(l.slip_curr-keypts[0][0])+keypts[0][1]))
 
+    '''
+    If l.g_motion>0, gripper is in motion.
+    When l.g_motion>0, it denotes the timeout count.
+    l.g_motion is set to zero when:
+      1. The target gripper position l.g_pos is achieved.
+      2. Timeout count (==l.g_motion) has passed.
+    '''
     if l.g_motion>0:
       print rospy.Time.now().to_sec(), abs(ct.robot.GripperPos(arm)-l.g_pos), abs(ct.robot.GripperPos(arm)-l.g_pos)<0.0005
-      if abs(ct.robot.GripperPos(arm)-l.g_pos)<0.0005:  l.g_motion= 0
+      #if abs(ct.robot.GripperPos(arm)-l.g_pos)<0.0005:  l.g_motion= 0
+      if abs(ct.robot.GripperPos(arm)-l.g_pos)<0.5*ct.GetAttr('fv_ctrl','min_gstep')[arm]:  l.g_motion= 0
       else:  l.g_motion-= 1
       if l.g_motion==0:  l.suppress_z_ctrl= False
 
@@ -223,36 +237,40 @@ def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
       x1= ct.robot.FK(arm=arm)
       q= ct.robot.Q(arm=arm)
       J= ct.robot.J(q,arm=arm)
-      vq1= ct.robot.limbs[arm].joint_velocities()
-      vq1= MCVec([vq1[joint] for joint in ct.robot.JointNames(arm)])
+      vq1= MCVec(ct.robot.DQ(arm=arm))
       vx1= J * vq1
 
       #amp= 0.02 if z_offset<0.04 else 0.0
       #omega= 2.0
-      kp= [1.0,1.0, 15.0,  1.0,1.0,1.0]
-      kv= [0.1,0.1, 2.5,  0.1,0.1,0.1]
-      ##kv= np.diag([0.3,0.5,0.5])
-      ##vx= ToList(MCVec(vp) - kv*vx0[:3])+[0.0,0.0,0.0]
+      kp= ct.GetAttr('fv_ctrl','pickup2a_kp')
+      kd= ct.GetAttr('fv_ctrl','pickup2a_kd')
+      ##kd= np.diag([0.3,0.5,0.5])
+      ##vx= ToList(MCVec(vp) - kd*vx0[:3])+[0.0,0.0,0.0]
       #vx= [0.0,0.0, 0.005+0.02*math.cos(5.0*tm), 0.0,0.0,0.0]
       l.z_trg,l.z_err= ZTrgErr()
-      z_err_max= 0.006
+      #z_err_max= 0.006
+      z_err_max= 0.02
       if l.z_err>z_err_max:  z_err= z_err_max
       elif l.z_err<-z_err_max:  z_err= -z_err_max
       else:  z_err= l.z_err
-      #vx= [0.0,0.0, kp*z_err-kv*vx1[2,0], 0.0,0.0,0.0]
-      vx= [kp[d]*(l.x0[d]-x1[d]) - kv[d]*vx1[d,0] for d in range(6)]
+      #vx= [0.0,0.0, kp*z_err-kd*vx1[2,0], 0.0,0.0,0.0]
+      vx= [kp[d]*(l.x0[d]-x1[d]) - kd[d]*vx1[d,0] for d in range(6)]
       if l.z_gain_mode=='low':
-        vx[2]= 0.3*slip_to_kp_rate*kp[2]*z_err-kv[2]*vx1[2,0]
+        vx[2]= ct.GetAttr('fv_ctrl','pickup2a_lowgain')*slip_to_kp_rate*kp[2]*z_err-kd[2]*vx1[2,0]
       else:
-        vx[2]= slip_to_kp_rate*kp[2]*z_err-kv[2]*vx1[2,0]
+        vx[2]= slip_to_kp_rate*kp[2]*z_err-kd[2]*vx1[2,0]
       #print vx
 
-      dq= ToList(la.pinv(J)*MCVec(vx))
+      if ct.robot.DoF(arm=arm)>=6:
+        dq= ToList(la.pinv(J)*MCVec(vx))
+      else:  #e.g. Mikata Arm
+        W= np.diag(6.0*Normalize([1.0,1.0,1.0, 0.01,0.01,0.01]))
+        dq= ToList(la.pinv(W*J)*W*MCVec(vx))
       l.velctrl.Step(dq)
     l.ctrl_step+= 1
 
   sm= TStateMachine(debug=True, local_obj=l)
-  sm.EventCallback= ct.SMCallback
+  #sm.EventCallback= ct.SMCallback
   sm.StartState= 'bring_test'
 
   time_out= options['time_out']
@@ -365,7 +383,7 @@ def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
   sm['bring_up_to_exit'].ElseAction= action_ctrlstep
 
   try:
-    ct.RunSM(sm,'vs_pickup2a')
+    sm.Run()
 
   finally:
     ct.callback.vs_finger_pv[LRToStrS(arm)]= [None,None]

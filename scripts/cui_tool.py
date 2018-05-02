@@ -24,6 +24,34 @@ def Exec(exec_line):
   exec(code_obj,globals(),globals())
   return None
 
+def ParseAndRun(ct, cmd_raw, cmd_split=None):
+  if cmd_split is None:
+    cmd_split= cmd_raw.split()
+  if len(cmd_split)==0:
+    return None
+
+  res= None
+  if ct.Exists(cmd_split[0]):
+    if len(cmd_split)==2 and cmd_split[1] in ('-help','--help'):
+      sub= ct.Load(cmd_split[0])
+      try:
+        helpfunc= sub.Help
+      except AttributeError:
+        helpfunc= None
+        res= 'Help function is not defined in: {script}'.format(script=cmd_split[0])
+      if helpfunc is not None:  res= helpfunc()
+    else:
+      if len(cmd_split)>1:  args= Eval(' '.join(cmd_split[1:]))
+      else:  args= ()
+      if not isinstance(args,tuple):  args= (args,)
+      res= ct.Run(cmd_split[0], *args)
+      #if res!=None:  print res
+  else:
+    res= Exec(cmd_raw)
+    #if res!=None:  print res
+  return res
+
+
 class TCUITool(object):
 
   def __init__(self):
@@ -87,7 +115,6 @@ class TCUITool(object):
       except EOFError:
         self.running= False
         continue
-      cmd_split= cmd_raw.split()
 
       try:
         if cmd_raw=='':
@@ -96,24 +123,8 @@ class TCUITool(object):
           self.running= False
           continue
         else:
-          if ct.Exists(cmd_split[0]):
-            if len(cmd_split)==2 and cmd_split[1] in ('-help','--help'):
-              sub= ct.Load(cmd_split[0])
-              try:
-                helpfunc= sub.Help
-              except AttributeError:
-                helpfunc= None
-                print 'Help function is not defined in:', cmd_split[0]
-              if helpfunc is not None:  print helpfunc()
-            else:
-              if len(cmd_split)>1:  args= Eval(' '.join(cmd_split[1:]))
-              else:  args= ()
-              if not isinstance(args,tuple):  args= (args,)
-              res= ct.Run(cmd_split[0], *args)
-              if res!=None:  print res
-          else:
-            res= Exec(cmd_raw)
-            if res!=None:  print res
+          res= ParseAndRun(ct, cmd_raw)
+          if res!=None:  print res
       except Exception as e:
         PrintException(e,' in CUI')
         c1,c2,ce= ACol.I(4,1,None)

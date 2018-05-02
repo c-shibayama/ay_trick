@@ -28,7 +28,7 @@ def PickupLoop(th_info, ct, arm):
       ##ct.robot.MoveGripper(pos=g_pos, arm=arm, speed=100.0, blocking=False)
       ##rospy.sleep(0.001)
       ##g_pos= ct.robot.GripperPos(arm)
-      #ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
+      #ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=1.0, blocking=False)
       #for i in range(100):
         #if abs(ct.robot.GripperPos(arm)-g_pos)<0.0002:  break
         #rospy.sleep(0.0001)
@@ -44,7 +44,10 @@ def PickupLoop(th_info, ct, arm):
   slip_detected= False
   z_offset= 0.0
 
-  velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+  if ct.robot.Is('Baxter'):
+    velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+  elif ct.robot.Is('Mikata'):
+    velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
   try:
     while th_info.IsRunning() and not rospy.is_shutdown():
       if sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>0.1:
@@ -57,7 +60,7 @@ def PickupLoop(th_info, ct, arm):
           #ct.robot.MoveGripper(pos=g_pos, arm=arm, speed=100.0, blocking=False)
           #rospy.sleep(0.001)
           #g_pos= ct.robot.GripperPos(arm)
-          ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
+          ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=1.0, blocking=False)
           g_motion= 100
           slip_detected= False
       else:
@@ -84,8 +87,7 @@ def PickupLoop(th_info, ct, arm):
       x1= ct.robot.FK(arm=arm)
       q= ct.robot.Q(arm=arm)
       J= ct.robot.J(q,arm=arm)
-      vq1= ct.robot.limbs[arm].joint_velocities()
-      vq1= MCVec([vq1[joint] for joint in ct.robot.JointNames(arm)])
+      vq1= MCVec(ct.robot.DQ(arm=arm))
       vx1= J * vq1
 
       amp= 0.02 if z_offset<0.04 else 0.0
@@ -97,7 +99,11 @@ def PickupLoop(th_info, ct, arm):
       #vx= [0.0,0.0, 0.005+0.02*math.cos(5.0*tm), 0.0,0.0,0.0]
       vx= [0.0,0.0, kp*(z_trg-x1[2]), 0.0,0.0,0.0]
 
-      dq= ToList(la.pinv(J)*MCVec(vx))
+      if ct.robot.DoF(arm=arm)>=6:
+        dq= ToList(la.pinv(J)*MCVec(vx))
+      else:  #e.g. Mikata Arm
+        W= np.diag(6.0*Normalize([1.0,1.0,1.0, 0.01,0.01,0.01]))
+        dq= ToList(la.pinv(W*J)*W*MCVec(vx))
       velctrl.Step(dq)
 
   finally:

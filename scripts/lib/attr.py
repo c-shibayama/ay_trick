@@ -91,7 +91,7 @@ def Run(ct,*args):
         file_name= args[0] if len(args)>0 else MEMORY_FILE
         if os.path.exists(file_name):
           print 'File %r exists.  Do you want to overwrite?' % file_name
-          if not ct.AskYesNo():
+          if not AskYesNo():
             return
         SaveYAML(ct.GetAttrOr({},'memory'), file_name)
         print 'Saved memory into: %r' % file_name
@@ -102,7 +102,7 @@ def Run(ct,*args):
           return
         if ct.HasAttr('memory'):
           print 'Memory exists.  Do you want to load from %r?' % file_name
-          if not ct.AskYesNo():
+          if not AskYesNo():
             return
         ct.AddDictAttr('memory', LoadYAML(file_name))
         print 'Loaded memory from: %r' % (file_name)
@@ -110,14 +110,14 @@ def Run(ct,*args):
         file_name= args[0]
         if os.path.exists(file_name):
           print 'File %r exists.  Do you want to overwrite?' % file_name
-          if not ct.AskYesNo():
+          if not AskYesNo():
             return
         SaveYAML(ct.GetAttrOr({}), file_name)
         print 'Saved attributes into: %r' % file_name
       elif command=='load':
         file_name= args[0]
         print 'Do you want to load attributes from %r?' % file_name
-        if not ct.AskYesNo():
+        if not AskYesNo():
           return
         ct.AddDictAttr(LoadYAML(file_name))
         print 'Loaded attributes from: %r' % (file_name)

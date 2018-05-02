@@ -22,6 +22,9 @@ def HoldLoop(th_info, ct, arm):
   #Stop object detection
   ct.Run('fv.finger3','stop_detect_obj',arm)
 
+  #if ct.robot.EndEff(arm).Is('DxlGripper'):
+    #ct.robot.EndEff(arm).StartHolding()
+
   g_pos= ct.robot.GripperPos(arm)
   while th_info.IsRunning() and not rospy.is_shutdown():
     if sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>0.06: #0.1
@@ -31,7 +34,7 @@ def HoldLoop(th_info, ct, arm):
       #ct.robot.MoveGripper(pos=g_pos, arm=arm, speed=100.0, blocking=False)
       #rospy.sleep(0.001)
       #g_pos= ct.robot.GripperPos(arm)
-      ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=1.0, speed=1.0, blocking=False)
+      ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=1.0, blocking=False)
       for i in range(100):  #100
         if abs(ct.robot.GripperPos(arm)-g_pos)<0.5*ct.GetAttr('fv_ctrl','min_gstep')[arm]:  break
         rospy.sleep(0.0001)
@@ -39,6 +42,9 @@ def HoldLoop(th_info, ct, arm):
     else:
       rospy.sleep(0.001)
     rospy.sleep(0.04)  #0.02
+
+  #if ct.robot.EndEff(arm).Is('DxlGripper'):
+    #ct.robot.EndEff(arm).StopHolding()
 
   #print 'Open the gripper and start object detection?'
   #if ct.AskYesNo():

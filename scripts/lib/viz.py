@@ -14,7 +14,7 @@ def VizLoop(th_info, ct, objs):
   objs= objs-set(('',))
   objs= objs.union(ct.GetAttrOr([],TMP,'scene'))
   #tmpfp= file('/tmp/m_viz_state','w')
-  viz= TSimpleVisualizer(rospy.Duration(1.0), name_space='visualizer_viz')
+  viz= TSimpleVisualizer(rospy.Duration(1.0), name_space='visualizer_viz', frame=ct.GetAttr('default_frame'))
   m_infer= ct.Load('adv.infer_x')
   try:
     while th_info.IsRunning() and not rospy.is_shutdown():
@@ -112,7 +112,7 @@ def VizLoop(th_info, ct, objs):
           mid= viz.AddArrow(xe_near_rcv, scale=[0.06,0.003,0.003], rgb=viz.ICol(7), alpha=0.7, mid=mid)
       #Visualize gripper models:
       if ct.robot.Is('Baxter'):
-        for arm in ct.robot.NumArms:
+        for arm in range(ct.robot.NumArms):
           #xw= ct.robot.FK(arm=arm)
           if xw[arm] is None:  continue
           mid= viz.AddCoord(xw[arm], scale=[0.03,0.002], alpha=1.0, mid=mid)
@@ -124,6 +124,20 @@ def VizLoop(th_info, ct, objs):
           mid= viz.AddCube(xe+((0.04*ey).tolist()+[0.0]*4), [0.015,0.003,0.03], rgb=viz.ICol(1), alpha=0.8, mid=mid)
           mid= viz.AddCube(xe-((0.04*ey).tolist()+[0.0]*4), [0.015,0.003,0.03], rgb=viz.ICol(1), alpha=0.8, mid=mid)
           mid= viz.AddCoord(xe, scale=[0.05,0.002], alpha=1.0, mid=mid)
+      #Visualize gripper models:
+      if ct.robot.Is('Mikata'):
+        arm= 0
+        #xw= ct.robot.FK(arm=arm)
+        if xw[arm] is None:  continue
+        mid= viz.AddCoord(xw[arm], scale=[0.03,0.002], alpha=1.0, mid=mid)
+        lw_xe= ct.GetAttr('wrist_'+LRToStrs(arm),'lx')
+        xe= Vec(Transform(xw[arm],lw_xe))
+        ex,ey,ez= RotToExyz(QToRot(xe[3:]))
+        #mid= viz.AddCube(xe, [0.1,0.06,0.04], rgb=viz.ICol(arm), alpha=0.5, mid=mid)
+        mid= viz.AddCube(xe-((0.05*ex).tolist()+[0.0]*4), [0.1,0.08,0.02], rgb=viz.ICol(3), alpha=0.5, mid=mid)
+        mid= viz.AddCube(xe+((0.04*ey).tolist()+[0.0]*4), [0.015,0.003,0.03], rgb=viz.ICol(1), alpha=0.8, mid=mid)
+        mid= viz.AddCube(xe-((0.04*ey).tolist()+[0.0]*4), [0.015,0.003,0.03], rgb=viz.ICol(1), alpha=0.8, mid=mid)
+        mid= viz.AddCoord(xe, scale=[0.05,0.002], alpha=1.0, mid=mid)
       #Sentis M100 on Gripper:
       if ct.robot.Is('Baxter'):
         if xw[LEFT] is not None:
