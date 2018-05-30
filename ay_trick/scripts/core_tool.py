@@ -18,6 +18,7 @@ class TCoreTool(TROSUtil):
 
     #self.library_path_prefix= 'lib.'
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../../ay_skill')
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../../../ay_skill_extra')
     sys.path.insert(0, os.environ['HOME']+'/ay_skill')
     self.loaded_libraries= []
 
