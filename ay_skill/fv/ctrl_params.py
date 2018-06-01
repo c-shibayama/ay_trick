@@ -15,6 +15,7 @@ def Run(ct,*args):
   ct.SetAttr('fv_ctrl','pickup2a_lowgain', 0.3)
   ct.SetAttr('fv_ctrl','pickup2a_gtimeout1', 50)
   ct.SetAttr('fv_ctrl','pickup2a_gtimeout2', 250)
+  ct.SetAttr('fv_ctrl','pickup2a_z_final', 0.15)
   for arm in (RIGHT,LEFT):
     if ct.robot.EndEff(arm).Is('BaxterEPG'):
       ct.GetAttr('fv_ctrl','min_gstep')[arm]= 0.002
@@ -28,3 +29,4 @@ def Run(ct,*args):
     #ct.SetAttr('fv_ctrl','pickup2a_lowgain', 0.9)
     ct.SetAttr('fv_ctrl','pickup2a_gtimeout1', 20)  #Ctrl step=50Hz(Mikata), 500Hz(Bx)
     ct.SetAttr('fv_ctrl','pickup2a_gtimeout2', 25)
+    ct.SetAttr('fv_ctrl','pickup2a_z_final', 0.05)

@@ -22,12 +22,13 @@ def Help():
       OPTIONS: Options of PickupLoop (see PickupLoopDefaultOptions).
 '''
 
-def PickupLoopDefaultOptions():
+def PickupLoopDefaultOptions(ct):
+  ct.Run('fv.ctrl_params')
   return {
     'slip_sensitivity': 0.4,  #Slip sensitivity (smaller is more sensitive).
     #'area_drop_rate': 0.8,
     'area_drop_rate': 0.6,  #If object area becomes smaller than this rate, it's considered as dropped.
-    'z_final': 0.15,  #Final height (offset from the beginning).
+    'z_final': ct.GetAttr('fv_ctrl','pickup2a_z_final'),  #Final height (offset from the beginning).
     'obj_area_filter_len': 5,  #Filter length for obj_area.
     'auto_stop': False,  #Whether automatically stops when pickup is completed.
     'time_out': None,  #Timeout in seconds, or no timeout (None).
@@ -37,13 +38,13 @@ def PickupLoopDefaultOptions():
     'log': {},  #[output] Execution results are stored into this dictionary.
     }
 
-def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
+def PickupLoop(th_info, ct, arm, options):
   ct.Run('fv.ctrl_params')
   vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
 
-  vs_finger.obj_area_tm= [tm for tm in vs_finger.tm_last_topic[2:4]]
-  vs_finger.obj_area_log= [[area] for area in vs_finger.obj_area]
-  vs_finger.obj_area_filtered= [None,None]
+  vs_finger.obj_area_tm= [vs_finger.tm_last_topic[2+side] for side in [0,1]]
+  vs_finger.obj_area_log= [([vs_finger.obj_area[side]] if vs_finger.obj_area[side] is not None else []) for side in [0,1]]
+  vs_finger.obj_area_filtered= [None for side in [0,1]]
   def ObjAreaFilter(ct, l, side):
     if l.obj_area_tm[side] is None or l.tm_last_topic[2+side]>l.obj_area_tm[side]:
       vs_finger.obj_area_tm[side]= l.tm_last_topic[2+side]
@@ -401,7 +402,7 @@ def Run(ct,*args):
     arm= args[0] if len(args)>0 else ct.robot.Arm
     user_options= args[1] if len(args)>1 else {}
 
-    options= PickupLoopDefaultOptions()
+    options= PickupLoopDefaultOptions(ct)
     InsertDict(options, user_options)
     if 'log' in user_options:  options['log']= user_options['log']
 
@@ -432,7 +433,7 @@ def Run(ct,*args):
     arm= args[0] if len(args)>0 else ct.robot.Arm
     user_options= args[1] if len(args)>1 else {}
 
-    options= PickupLoopDefaultOptions()
+    options= PickupLoopDefaultOptions(ct)
     InsertDict(options, user_options)
     if 'log' in user_options:  options['log']= user_options['log']
     options['auto_stop']= True

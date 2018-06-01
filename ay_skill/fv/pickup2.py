@@ -22,7 +22,7 @@ def Help():
       OPTIONS: Options of PickupLoop (see PickupLoopDefaultOptions).
 '''
 
-def PickupLoopDefaultOptions():
+def PickupLoopDefaultOptions(ct):
   return {
     'slip_sensitivity': 0.6,  #Slip sensitivity.
     'z_final': 0.15,  #Final height (offset from the beginning).
@@ -34,7 +34,7 @@ def PickupLoopDefaultOptions():
     'log': {},  #[output] Execution results are stored into this dictionary.
     }
 
-def PickupLoop(th_info, ct, arm, options=PickupLoopDefaultOptions()):
+def PickupLoop(th_info, ct, arm, options):
   vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
 
   #get_center= lambda: [0.5*(vs_finger.obj_center[0][0]-vs_finger.obj_center[1][0]),
@@ -290,7 +290,7 @@ def Run(ct,*args):
     arm= args[0] if len(args)>0 else ct.robot.Arm
     user_options= args[1] if len(args)>1 else {}
 
-    options= PickupLoopDefaultOptions()
+    options= PickupLoopDefaultOptions(ct)
     InsertDict(options, user_options)
     if 'log' in user_options:  options['log']= user_options['log']
 
@@ -321,7 +321,7 @@ def Run(ct,*args):
     arm= args[0] if len(args)>0 else ct.robot.Arm
     user_options= args[1] if len(args)>1 else {}
 
-    options= PickupLoopDefaultOptions()
+    options= PickupLoopDefaultOptions(ct)
     InsertDict(options, user_options)
     if 'log' in user_options:  options['log']= user_options['log']
     options['auto_stop']= True
