@@ -52,7 +52,7 @@ def Run(ct,*args):
 
   elif robot in ('Baxter','Baxter_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_bxtr')
-    ct.robot= mod.TRobotBaxter()
+    ct.robot= mod.TRobotBaxter(is_sim=(robot=='Baxter_SIM'))
 
   elif robot in ('BaxterN',):
     mod= SmartImportReload('ay_py.ros.rbt_bxtrN')
@@ -69,7 +69,7 @@ def Run(ct,*args):
 
   elif robot in ('Motoman','Motoman_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_moto')
-    ct.robot= mod.TRobotMotoman()
+    ct.robot= mod.TRobotMotoman(is_sim=(robot=='Motoman_SIM'))
 
   elif robot in ('Mikata','Mikata_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_mikata')
