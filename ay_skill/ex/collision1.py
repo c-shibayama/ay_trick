@@ -20,6 +20,12 @@ def Run(ct,*args):
     ct.robot.MoveToX(x_trg(0.0), 4.0)
     rospy.sleep(4.0)
     x_box= [0.2,-0.23,0.2, 0.0,0.0,0.0,1.0]
+  elif ct.robot.Is('UR'):
+    #Move the robot to the initial pose:
+    x_trg= lambda t: [-0.2,0.2*math.sin(t),0.1]+list(QFromAxisAngle([0,0,1], math.pi*0.5))
+    ct.robot.MoveToX(x_trg(0.0), 4.0)
+    rospy.sleep(4.0)
+    x_box= [-0.2,-0.23,0.2, 0.0,0.0,0.0,1.0]
   else:
     raise Exception('ex.collision1: Parameters are not configured for:',ct.robot.Name)
 
@@ -69,11 +75,12 @@ def Run(ct,*args):
         break
 
       t= (rospy.Time.now()-time0).to_sec()
-      ct.robot.MoveToX(x_trg(t), 0.1)
+      ct.robot.MoveToX(x_trg(t), 0.07)
 
       vs,res1= ct.Run('scene','isvalidq',ct.robot.Arm,[],ct.robot.Q())
       if not vs:  print '{t}: Arm-{arm} is in contact'.format(t=t, arm=ct.robot.ArmStr())
       viz_c.AddContacts(res1.contacts, scale=[0.05])
+      #print res1.contacts
 
       rospy.sleep(0.1)
       viz_c.DeleteAllMarkers()

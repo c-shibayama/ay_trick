@@ -118,6 +118,7 @@ def Run(ct,*args):
         if displavel>0:  CPrint(3, '  ignoring collision between %r and %r'%('all',obj2))
         ct.state_validity_checker.IgnoreCollision('all',obj2)
       #Ignoring list
+      ign_combinations= ()
       if ct.robot.Is('PR2'):
         ign_combinations= (('all','collision_map'),
                 ('.robot','collision_map'),
@@ -134,6 +135,11 @@ def Run(ct,*args):
       elif ct.robot.Is('Mikata'):
         ign_combinations= (('base_link','link_2'),('link_2','link_3'),('link_3','link_4'),('link_4','link_5'),
                            ('link_5','right_gripper'),('link_5','left_gripper'),('right_gripper','left_gripper'))
+      elif ct.robot.Is('UR'):
+        ign_combinations= (('base_link','shoulder_link'),('shoulder_link','upper_arm_link'),
+                           ('upper_arm_link','forearm_link'),('forearm_link','wrist_1_link'),
+                           ('wrist_1_link','wrist_2_link'),('wrist_2_link','wrist_3_link'),
+                           ('wrist_3_link','ee_link'))
       for i1,i2 in ign_combinations:
         if displavel>0:  CPrint(3, '  ignoring collision between %r and %r'%(i1,i2))
         ct.state_validity_checker.IgnoreCollision(i1,i2)
