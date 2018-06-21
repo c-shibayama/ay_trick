@@ -3,7 +3,7 @@ from core_tool import *
 import sensor_msgs.msg
 
 def Help():
-  return '''Velocity control using Joystick and Jacobian test with Baxter.
+  return '''Velocity control using Joystick and Jacobian.
   Usage: j'''
 
 def Callback(state, steps, wsteps, gsteps, data):
@@ -84,14 +84,15 @@ def Callback(state, steps, wsteps, gsteps, data):
       wsteps[2]= multiplier * axes[3]
 
 def Run(ct,*args):
-  if not any((ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'))):
-    CPrint(4,'This program works only with Baxter, Motoman, and Mikata.')
+  if not any((ct.robot.Is('Baxter'),ct.robot.Is('Mikata'),ct.robot.Is('UR'))):     #,ct.robot.Is('Motoman')
+    CPrint(4,'This program works only with Baxter, Mikata, and UR.')
     return
 
   arm= ct.robot.Arm
 
-  if ct.robot.Is('Mikata'):
-    active_holding= [False]
+  is_dxlg= [ct.robot.EndEff(a) is not None and ct.robot.EndEff(a).Is('DxlGripper') for a in range(ct.robot.NumArms)]
+  if any(is_dxlg):
+    active_holding= [False]*ct.robot.NumArms
 
   steps= [0.0, 0.0, 0.0]
   wsteps= [0.0, 0.0, 0.0]
@@ -111,6 +112,8 @@ def Run(ct,*args):
     velctrl= [ct.Load('moto.velctrl').TVelCtrl(ct) for a in range(ct.robot.NumArms)]
   elif ct.robot.Is('Mikata'):
     velctrl= [ct.Load('mikata.velctrl_p').TVelCtrl(ct) for a in range(ct.robot.NumArms)]
+  elif ct.robot.Is('UR'):
+    velctrl= [ct.Load('ur.velctrl').TVelCtrl(ct,arm=a) for a in range(ct.robot.NumArms)]
   suppress_velctrl= False  #Set this True when an external program use the velocity control.
 
   kbhit= TKBHit()
@@ -250,7 +253,7 @@ Command:
         state[1]= 'no_cmd'
 
       elif state[1]=='grip':
-        if ct.robot.Is('Mikata'):
+        if is_dxlg[arm]:
           if not active_holding[arm]:
             ct.robot.EndEff(arm).StartHolding()
             active_holding[arm]= True
@@ -264,7 +267,7 @@ Command:
           rospy.sleep(0.01)  #Without this, ct.robot.GripperPos(arm) is not updated.
 
       if not state[1]=='grip':
-        if ct.robot.Is('Mikata'):
+        if is_dxlg[arm]:
           if active_holding[arm]:
             ct.robot.EndEff(arm).StopHolding()
             active_holding[arm]= False
@@ -295,9 +298,10 @@ Command:
     for a in range(ct.robot.NumArms):
       velctrl[a].Finish()
     kbhit.Deactivate()
-    if ct.robot.Is('Mikata'):
-      if active_holding[arm]:
-        ct.robot.EndEff(arm).StopHolding()
-        active_holding[arm]= False
+    for a in range(ct.robot.NumArms):
+      if is_dxlg[a]:
+        if active_holding[arm]:
+          ct.robot.EndEff(arm).StopHolding()
+          active_holding[arm]= False
     ct.DelSub('joy')
     print 'Finished'

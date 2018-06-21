@@ -15,6 +15,8 @@ def Help():
       'motos','Motoman_SIM',
       'mikata','Mikata',
       'mikatas','Mikata_SIM',
+      'ur','UR',
+      'urs','UR_SIM',
   '''
 def Run(ct,*args):
   robot= args[0] if len(args)>0 else 'NoRobot'
@@ -31,6 +33,8 @@ def Run(ct,*args):
       'motos':'Motoman_SIM',
       'mikata':'Mikata',
       'mikatas':'Mikata_SIM',
+      'ur':'UR',
+      'urs':'UR_SIM',
     }
   if robot in alias:  robot= alias[robot]
 
@@ -75,6 +79,10 @@ def Run(ct,*args):
     mod= SmartImportReload('ay_py.ros.rbt_mikata')
     ct.robot= mod.TRobotMikata(dev='/dev/ttyUSB0',is_sim=(robot=='Mikata_SIM'))
 
+  elif robot in ('UR','UR_SIM'):
+    mod= SmartImportReload('ay_py.ros.rbt_ur')
+    ct.robot= mod.TRobotUR(is_sim=(robot=='UR_SIM'))
+
   elif robot=='NoRobot':
     ct.robot= TFakeRobot()
   else:
@@ -82,22 +90,22 @@ def Run(ct,*args):
 
   if robot=='NoRobot':  return
 
-  if any((ct.robot.Is('PR2'),ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'))):
+  if any((ct.robot.Is('PR2'),ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'),ct.robot.Is('UR'))):
     ct.state_validity_checker= TStateValidityCheckerMI()
 
   res= []
   ra= lambda r: res.append(r)
 
   ra(ct.robot.Init())
-  if any((ct.robot.Is('PR2'),ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'))):
+  if any((ct.robot.Is('PR2'),ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'),ct.robot.Is('UR'))):
     ra(ct.state_validity_checker.Init(ct.robot))
 
   if False in res:
     CPrint(4, 'Failed to setup robot:',robot)
 
-  if robot in ('PR2','Baxter','BaxterN','Motoman','Mikata'):
+  if robot in ('PR2','Baxter','BaxterN','Motoman','Mikata','UR'):
     ct.SetAttr('environment', 'real')
-  elif robot in ('PR2_SIM','Baxter_SIM','Motoman_SIM','Mikata_SIM'):
+  elif robot in ('PR2_SIM','Baxter_SIM','Motoman_SIM','Mikata_SIM','UR_SIM'):
     ct.SetAttr('environment', 'sim')
 
   #ct.Run('model_loader')

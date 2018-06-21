@@ -5,7 +5,7 @@ def Help():
   Note: pose = [x,y,z,qx,qy,qz,qw] (position, quaternion)
   Usage: fk [ARM [, ANGLES]]
     ARM: Arm ID. default=ct.robot.Arm
-    ANGLES: Array of joint angles (7 elements). default=ct.robot.Q(arm=ARM)
+    ANGLES: Array of joint angles. default=ct.robot.Q(arm=ARM)
   '''
 def Run(ct,*args):
   arm= args[0] if len(args)>0 else ct.robot.Arm
