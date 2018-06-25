@@ -35,12 +35,12 @@ def Run(ct,*args):
     lw_xe= [0.0,0.0,0.0, 0.0,0.0,0.0,1.0]
   elif ct.robot.Is('UR'):
     print 'Test this after running: moveq 2'
-    x_table= [-0.2,0.0,-0.03, 0.0,0.0,0.0,1.0]
-    table_dim= [0.1,0.1,0.01]
-    x_box= [-0.25,+0.26,0.075, 0.0,0.0,0.0,1.0]
-    box_dim= [0.15,0.2,0.12]
+    x_table= [0.2,0.0,-0.02, 0.0,0.0,0.0,1.0]
+    table_dim= [0.5,0.5,0.05]
+    x_box= [0.25,-0.2,0.075, 0.0,0.0,0.0,1.0]
+    box_dim= [0.15,0.25,0.2]
     arm= 0
-    x_trg= [-0.2,0.2,0.2]+list(QFromAxisAngle([0,0,1], math.pi*0.5))
+    x_trg= [0.22,-0.18,0.22]+list(QFromAxisAngle([0,0,1], -math.pi*0.5))
     lw_xe= [0.0,0.0,0.0, 0.0,0.0,0.0,1.0]
   else:
     raise Exception('ex.plan_x1: Parameters are not configured for:',ct.robot.Name)

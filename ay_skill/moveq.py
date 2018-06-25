@@ -35,8 +35,10 @@ def Run(ct,*args):
     elif ct.robot.Is('UR'):
       keyposes= [[]]
       keyposes[0].append([0.0, -math.pi*0.5, 0.0, -math.pi*0.5, 0.0, 0.0])
-      keyposes[0].append([0.0, -2.1, -2.1, -0.57, 0.0, math.pi])
-      keyposes[0].append([0.0, -2.1, -2.1, -2.1, -math.pi*0.5, math.pi])
+      #keyposes[0].append([0.0, -2.1, -2.1, -0.57, 0.0, math.pi])
+      keyposes[0].append([0.0, -1.04, 2.1, -math.pi*0.5-1.06, 0.0, -math.pi])
+      #keyposes[0].append([0.0, -2.1, -2.1, -2.1, -math.pi*0.5, math.pi])
+      keyposes[0].append([0.0, -1.04, 2.1, -1.06, math.pi*0.5, -math.pi])
       #keyposes[0].append([0.0]*4)
     q_trg= keyposes[ct.robot.Arm][q_trg]
   assert(len(q_trg)==ct.robot.DoF())
