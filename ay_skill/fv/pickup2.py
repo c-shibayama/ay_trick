@@ -99,6 +99,10 @@ def PickupLoop(th_info, ct, arm, options):
     l.velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
   elif ct.robot.Is('Mikata'):
     l.velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
+  elif ct.robot.Is('UR'):
+    l.velctrl= ct.Load('ur.velctrl').TVelCtrl(ct,arm=arm)
+  else:
+    raise Exception('{robot} does not support velocity control.'.format(robot=ct.robot.Name))
   l.ctrl_step= 0  #Counter for logging cycle control.
 
   def SetZOffset(z_offset):
