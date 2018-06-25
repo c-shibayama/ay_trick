@@ -94,6 +94,22 @@ def TopicServiceTable(robot, arm):
       'stop_detect_obj_r':  '/visual_skin_node_ay11r/stop_detect_obj',
       'stop_detect_obj_l':  '/visual_skin_node_ay11l/stop_detect_obj',
       }
+  elif robot.Is('URDxlG'):
+    return {
+      'srv_separated':      True,
+      'blob_moves_r':       '/visual_skin_node_ay13r/blob_moves_usbcam2fay13a_r',
+      'blob_moves_l':       '/visual_skin_node_ay13l/blob_moves_usbcam2fay13a_l',
+      'prox_vision_r':      '/visual_skin_node_ay13r/prox_vision_usbcam2fay13a_r',
+      'prox_vision_l':      '/visual_skin_node_ay13l/prox_vision_usbcam2fay13a_l',
+      'clear_obj_r':        '/visual_skin_node_ay13r/clear_obj',
+      'clear_obj_l':        '/visual_skin_node_ay13l/clear_obj',
+      'set_frame_skip_r':   '/visual_skin_node_ay13r/set_frame_skip',
+      'set_frame_skip_l':   '/visual_skin_node_ay13l/set_frame_skip',
+      'start_detect_obj_r': '/visual_skin_node_ay13r/start_detect_obj',
+      'start_detect_obj_l': '/visual_skin_node_ay13l/start_detect_obj',
+      'stop_detect_obj_r':  '/visual_skin_node_ay13r/stop_detect_obj',
+      'stop_detect_obj_l':  '/visual_skin_node_ay13l/stop_detect_obj',
+      }
   else:
     raise Exception('fv.finger3: No info in the TopicServiceTable for: {robot}=Arm-{arm}'.format(robot=robot.Name,arm=robot.ArmStr(arm)))
 

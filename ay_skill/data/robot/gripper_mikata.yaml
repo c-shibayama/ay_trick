@@ -10,9 +10,9 @@ wrist_r:
   #Standard gripper mount:
   #lx: [0.1,0.0,0.0, 0,0,0,1]
   #Rotated gripper mount (Gripper pose (Q=QFromAxisAngle([1.,0.,0.],-math.pi/2.0))):
-  lx: [0.1,0.0,0.0, -0.7071067811865475, -0.0, -0.0, 0.7071067811865476]
+  lx: [0.175,0.0,0.0, -0.7071067811865475, -0.0, -0.0, 0.7071067811865476]
   #Bounding box is attached to the local frame of 'lx'.
   bound_box:
     #Optical skin:
-    dim: [0.1,0.08,0.02]
-    center: [0.05,0.0,0.0, 0.0,0.0,0.0,1.0]
+    dim: [0.175,0.02,0.08]
+    center: [0.0875,0.0,0.0, 0.0,0.0,0.0,1.0]

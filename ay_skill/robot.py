@@ -2,8 +2,9 @@
 from core_tool import *
 def Help():
   return '''Robot initialization utility.
-  Usage: robot ROBOT_NAME
+  Usage: robot ROBOT_NAME [, OPT1]
     Available ROBOT_NAME:
+      'NoRobot',
       'pr2','PR2',
       'pr2s','PR2_SIM',
       'bx','Baxter',
@@ -17,6 +18,13 @@ def Help():
       'mikatas','Mikata_SIM',
       'ur','UR',
       'urs','UR_SIM',
+      'urdxlg','URDxlG',
+      'urdxlgs','URDxlG_SIM',
+    If ROBOT_NAME is omitted, we assume 'NoRobot'.
+
+    Definition of OPT1 depends on ROBOT_NAME.
+      'dxlg','mikata','urdxlg': Device name (default='/dev/ttyUSB0')
+
   '''
 def Run(ct,*args):
   robot= args[0] if len(args)>0 else 'NoRobot'
@@ -35,6 +43,8 @@ def Run(ct,*args):
       'mikatas':'Mikata_SIM',
       'ur':'UR',
       'urs':'UR_SIM',
+      'urdxlg':'URDxlG',
+      'urdxlgs':'URDxlG_SIM',
     }
   if robot in alias:  robot= alias[robot]
 
@@ -67,8 +77,9 @@ def Run(ct,*args):
     ct.robot= mod.TRobotRobotiqNB()
 
   elif robot in ('DxlGripper',):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_dxlg')
-    serial_dev= os.environ['DXLG_DEV'] if 'DXLG_DEV' in os.environ else '/dev/ttyUSB0'
+    #serial_dev= os.environ['DXLG_DEV'] if 'DXLG_DEV' in os.environ else '/dev/ttyUSB0'
     ct.robot= mod.TRobotDxlGripper(dev=serial_dev)
 
   elif robot in ('Motoman','Motoman_SIM'):
@@ -76,12 +87,18 @@ def Run(ct,*args):
     ct.robot= mod.TRobotMotoman(is_sim=(robot=='Motoman_SIM'))
 
   elif robot in ('Mikata','Mikata_SIM'):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_mikata')
-    ct.robot= mod.TRobotMikata(dev='/dev/ttyUSB0',is_sim=(robot=='Mikata_SIM'))
+    ct.robot= mod.TRobotMikata(dev=serial_dev,is_sim=(robot=='Mikata_SIM'))
 
   elif robot in ('UR','UR_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_ur')
     ct.robot= mod.TRobotUR(is_sim=(robot=='UR_SIM'))
+
+  elif robot in ('URDxlG','URDxlG_SIM'):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_urdxlg')
+    ct.robot= mod.TRobotURDxlG(is_sim=(robot=='URDxlG_SIM'),dev=serial_dev)
 
   elif robot=='NoRobot':
     ct.robot= TFakeRobot()
@@ -90,22 +107,24 @@ def Run(ct,*args):
 
   if robot=='NoRobot':  return
 
-  if any((ct.robot.Is('PR2'),ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'),ct.robot.Is('UR'))):
+  if any((ct.robot.Is('PR2'),ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'),ct.robot.Is('UR'),ct.robot.Is('URDxlG'))):
     ct.state_validity_checker= TStateValidityCheckerMI()
+  else:
+    ct.state_validity_checker= None
 
   res= []
   ra= lambda r: res.append(r)
 
   ra(ct.robot.Init())
-  if any((ct.robot.Is('PR2'),ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'),ct.robot.Is('UR'))):
+  if ct.state_validity_checker is not None:
     ra(ct.state_validity_checker.Init(ct.robot))
 
   if False in res:
     CPrint(4, 'Failed to setup robot:',robot)
 
-  if robot in ('PR2','Baxter','BaxterN','Motoman','Mikata','UR'):
+  if robot in ('PR2','Baxter','BaxterN','Motoman','Mikata','UR','URDxlG'):
     ct.SetAttr('environment', 'real')
-  elif robot in ('PR2_SIM','Baxter_SIM','Motoman_SIM','Mikata_SIM','UR_SIM'):
+  elif robot in ('PR2_SIM','Baxter_SIM','Motoman_SIM','Mikata_SIM','UR_SIM','URDxlG_SIM'):
     ct.SetAttr('environment', 'sim')
 
   #ct.Run('model_loader')
@@ -120,8 +139,9 @@ def Run(ct,*args):
   elif ct.robot.Is('DxlGripper'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlg.yaml'))
   elif ct.robot.Is('Motoman'):
-    #ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_moto.yaml'))
-    pass
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_moto.yaml'))
   elif ct.robot.Is('Mikata'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_mikata.yaml'))
+  elif ct.robot.Is('URDxlG'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_urdxlg.yaml'))
   ct.SetAttr('default_frame', ct.robot.BaseFrame)

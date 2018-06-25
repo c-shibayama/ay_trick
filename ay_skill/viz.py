@@ -111,32 +111,19 @@ def VizLoop(th_info, ct, objs):
           mid= viz.AddCube(xe_near_rcv, scale=[0.06,0.04,0.01], rgb=viz.ICol(7), alpha=0.7, mid=mid)
           mid= viz.AddArrow(xe_near_rcv, scale=[0.06,0.003,0.003], rgb=viz.ICol(7), alpha=0.7, mid=mid)
       #Visualize gripper models:
-      if ct.robot.Is('Baxter'):
-        for arm in range(ct.robot.NumArms):
-          #xw= ct.robot.FK(arm=arm)
-          if xw[arm] is None:  continue
-          mid= viz.AddCoord(xw[arm], scale=[0.03,0.002], alpha=1.0, mid=mid)
-          lw_xe= ct.GetAttr('wrist_'+LRToStrs(arm),'lx')
-          xe= Vec(Transform(xw[arm],lw_xe))
-          ex,ey,ez= RotToExyz(QToRot(xe[3:]))
-          #mid= viz.AddCube(xe, [0.1,0.06,0.04], rgb=viz.ICol(arm), alpha=0.5, mid=mid)
-          mid= viz.AddCube(xe-((0.09*ex).tolist()+[0.0]*4), [0.18,0.08,0.02], rgb=viz.ICol(3), alpha=0.5, mid=mid)
-          mid= viz.AddCube(xe+((0.04*ey).tolist()+[0.0]*4), [0.015,0.003,0.03], rgb=viz.ICol(1), alpha=0.8, mid=mid)
-          mid= viz.AddCube(xe-((0.04*ey).tolist()+[0.0]*4), [0.015,0.003,0.03], rgb=viz.ICol(1), alpha=0.8, mid=mid)
-          mid= viz.AddCoord(xe, scale=[0.05,0.002], alpha=1.0, mid=mid)
-      #Visualize gripper models:
-      if ct.robot.Is('Mikata'):
-        arm= 0
-        #xw= ct.robot.FK(arm=arm)
+      for arm in range(ct.robot.NumArms):
         if xw[arm] is None:  continue
+        if not ct.HasAttr('wrist_'+LRToStrs(arm),'lx'):  continue
         mid= viz.AddCoord(xw[arm], scale=[0.03,0.002], alpha=1.0, mid=mid)
         lw_xe= ct.GetAttr('wrist_'+LRToStrs(arm),'lx')
+        bb_dim= ct.GetAttr('wrist_'+LRToStrs(arm),'bound_box','dim')
+        bb_center= ct.GetAttr('wrist_'+LRToStrs(arm),'bound_box','center')
         xe= Vec(Transform(xw[arm],lw_xe))
         ex,ey,ez= RotToExyz(QToRot(xe[3:]))
-        #mid= viz.AddCube(xe, [0.1,0.06,0.04], rgb=viz.ICol(arm), alpha=0.5, mid=mid)
-        mid= viz.AddCube(xe-((0.05*ex).tolist()+[0.0]*4), [0.1,0.08,0.02], rgb=viz.ICol(3), alpha=0.5, mid=mid)
-        mid= viz.AddCube(xe+((0.04*ey).tolist()+[0.0]*4), [0.015,0.003,0.03], rgb=viz.ICol(1), alpha=0.8, mid=mid)
-        mid= viz.AddCube(xe-((0.04*ey).tolist()+[0.0]*4), [0.015,0.003,0.03], rgb=viz.ICol(1), alpha=0.8, mid=mid)
+        mid= viz.AddCube(Vec(Transform(xw[arm],bb_center)), bb_dim, rgb=viz.ICol(3), alpha=0.5, mid=mid)
+        gpos= ct.robot.GripperPos(arm)
+        mid= viz.AddCube(xe+((0.5*gpos*ey).tolist()+[0.0]*4), [0.015,0.003,0.03], rgb=viz.ICol(1), alpha=0.8, mid=mid)
+        mid= viz.AddCube(xe-((0.5*gpos*ey).tolist()+[0.0]*4), [0.015,0.003,0.03], rgb=viz.ICol(1), alpha=0.8, mid=mid)
         mid= viz.AddCoord(xe, scale=[0.05,0.002], alpha=1.0, mid=mid)
       #Sentis M100 on Gripper:
       if ct.robot.Is('Baxter'):

@@ -22,7 +22,7 @@ def Run(ct,*args):
     x_box= [0.2,-0.23,0.2, 0.0,0.0,0.0,1.0]
   elif ct.robot.Is('UR'):
     #Move the robot to the initial pose:
-    x_trg= lambda t: [0.2,0.2*math.sin(t),0.1]+list(QFromAxisAngle([0,0,1], -math.pi*0.5))
+    x_trg= lambda t: [0.3,0.2*math.sin(t),0.1]+list(QFromAxisAngle([-1,1,-1],2.0/3.0*math.pi))
     ct.robot.MoveToX(x_trg(0.0), 4.0)
     rospy.sleep(4.0)
     x_box= [0.25,-0.23,0.2, 0.0,0.0,0.0,1.0]
