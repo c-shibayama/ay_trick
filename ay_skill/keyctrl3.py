@@ -264,7 +264,7 @@ Command:
         #print rospy.Time.now(),LRToStr(arm),ct.robot.GripperPos(arm),gstate[arm]
         ct.robot.MoveGripper(gstate[arm],max_effort=100.0,speed=100.0,arm=arm)
         if ct.robot.EndEff(arm).Is('BaxterEPG'):
-          rospy.sleep(0.01)  #Without this, ct.robot.GripperPos(arm) is not updated.
+          rospy.sleep(0.01)  #FIXME: Without this, ct.robot.GripperPos(arm) is not updated.
 
       if not state[1]=='grip':
         if is_dxlg[arm]:

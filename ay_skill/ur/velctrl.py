@@ -113,17 +113,31 @@ class TURVelCtrl(object):
     #socketobj= socket.create_connection((robot_hostname, port))
     self.socketobj= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.socketobj.connect((self.robot_hostname, port))
+    self.dt= None  #Control time step.
+    if self.robot_ver>=3.3:
+      #self.dt= 0.008
+      self.dt= 0.016
+      '''NOTE: Since the robot is operated at 125 Hz, the control time step should be
+      0.008 sec.  However when the computer looses the real-time, the robot stops,
+      which causes a shaky motion.
+      To avoid this, we use a larger control time step.'''
+    elif self.robot_ver>=3.1:
+      pass
+    else:
+      self.dt= 0.02
+      #This value is from ur_modern_driver/src/ur_realtime_communication.cpp UrRealtimeCommunication::setSpeed
 
+  #Control step.  NOTE: This is expected to be running at 125 Hz.
   def Step(self, dq, acc):
     if self.robot_ver>=3.3:
-      cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f, 0.008)\n" % (
-              dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc)
+      cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f, %f)\n" % (
+              dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc,self.dt)
     elif self.robot_ver>=3.1:
       cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f)\n" % (
               dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc)
     else:
-      cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f, 0.02)\n" % (
-              dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc)
+      cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f, %f)\n" % (
+              dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc,self.dt)
     self.AddCommandToQueue(cmd)
 
   def Finish(self):
@@ -149,7 +163,7 @@ class TVelCtrl(object):
     self.q_limit_th= q_limit_th
     self.ct= ct
     self.arm= arm
-    self.velctrl= TURVelCtrl('ur3a2')  #FIXME:Get robot hostname from somewhere else
+    self.velctrl= TURVelCtrl('ur3a')  #FIXME:Get robot hostname from somewhere else
     self.velctrl.Init()
     self.rate_adjuster= rospy.Rate(self.rate)
     self.last_dq= [0.0]*ct.robot.DoF(self.arm)
