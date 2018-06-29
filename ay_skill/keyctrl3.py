@@ -292,6 +292,7 @@ Command:
       else:
         dq= [0.0]*ct.robot.DoF(arm)
       if not suppress_velctrl:
+        CPrint(1,dq)
         velctrl[arm].Step(dq)
 
   finally:

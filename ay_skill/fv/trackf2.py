@@ -80,7 +80,7 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
     return False
 
   vx_list= []  #List of target task space velocities for temporal filtering.
-  smoothing_filter_len= 10
+  smoothing_filter_len= 15
 
   if ct.robot.Is('Baxter'):
     velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)

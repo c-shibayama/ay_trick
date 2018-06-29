@@ -126,6 +126,7 @@ class TURVelCtrl(object):
     else:
       self.dt= 0.02
       #This value is from ur_modern_driver/src/ur_realtime_communication.cpp UrRealtimeCommunication::setSpeed
+    self.Step([0.0]*6, 10.0)
 
   #Control step.  NOTE: This is expected to be running at 125 Hz.
   def Step(self, dq, acc):
@@ -139,6 +140,7 @@ class TURVelCtrl(object):
       cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f, %f)\n" % (
               dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc,self.dt)
     self.AddCommandToQueue(cmd)
+    CPrint(2,cmd)
 
   def Finish(self):
     self.Step([0.0]*6, 10.0)

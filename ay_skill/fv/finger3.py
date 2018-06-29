@@ -127,27 +127,31 @@ def XMedian(array,pos=0.75):
 
 def VizForce(ct,force,dstate,arm,side):
   viz= ct.viz.finger_force
-  dy= (-0.05,0.05,0.0)[side]
-  dz= [0.12,0.20][arm]
+  #dy= (-0.05,0.05,0.0)[side]
+  #dz= [0.12,0.20][arm]
   wrist= ['wrist_r','wrist_l'][arm]
-  x_w= ct.robot.FK(x_ext=[0.0,dy,dz, 0,0,0,1],arm=arm)
-  x_e= ct.robot.FK(x_ext=ct.GetAttr(wrist,'lx'),arm=arm)
+  x_w= ct.robot.FK(arm=arm)
+  #x_w= ct.robot.FK(x_ext=[0.0,dy,dz, 0,0,0,1],arm=arm)
+  x_e= Vec(Transform(x_w, ct.GetAttr(wrist,'lx')))
+  ex,ey,ez= RotToExyz(QToRot(x_e[3:]))
+  gpos= ct.robot.GripperPos(arm)
+  x_f= x_e+(((-0.5,0.5)[side]*gpos*ey).tolist()+[0.0]*4)
   def VizVector(ct,vec,width,col,mid):
-    x_f= Vec([0.0]*7)
-    x_f[:3]= x_w[:3]
+    x_v= Vec([0.0]*7)
+    x_v[:3]= x_f[:3]
     ex= Vec(vec)
     f_norm= Norm(ex)
     if f_norm<1.0e-6:
-      viz.AddArrow(x_f, scale=[0.0,0.0,0.0], mid=mid)
+      viz.AddArrow(x_v, scale=[0.0,0.0,0.0], mid=mid)
       return
     ex= ex/f_norm
     ey= GetOrthogonalAxisOf(ex, preferable=([0.0,1.0,0.0]), fault=[1.0,0.0,0.0])
     ez= np.cross(ex, ey)
-    x_f[3:]= RotToQ(ExyzToRot(ex,ey,ez))
-    viz.AddArrow(x_f, scale=[0.02*f_norm,width,width], rgb=col, alpha=0.7, mid=mid)
+    x_v[3:]= RotToQ(ExyzToRot(ex,ey,ez))
+    viz.AddArrow(x_v, scale=[0.02*f_norm,width,width], rgb=col, alpha=0.7, mid=mid)
   c= min(dstate,5.0)/5.0
-  VizVector(ct,Transform(x_e[3:],force[:3]),width=0.010,col=[c,0.0,0.0],mid=4*arm+2*side+0)
-  VizVector(ct,Transform(x_e[3:],force[3:]),width=0.005,col=[0.0,c,0.0],mid=4*arm+2*side+1)
+  VizVector(ct,Transform(x_f[3:],force[:3]),width=0.010,col=[c,0.0,0.0],mid=4*arm+2*side+0)
+  VizVector(ct,Transform(x_f[3:],force[3:]),width=0.005,col=[0.0,c,0.0],mid=4*arm+2*side+1)
 
 def BlobMoves(ct,l,msg,side):
   l.tm_last_topic[side]= rospy.Time.now()

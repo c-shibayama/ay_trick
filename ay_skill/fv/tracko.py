@@ -56,10 +56,17 @@ def TrackingLoop(th_info, ct, arm):
     #return +1.0 if (a2-a1)>th else (-1.0 if (a1-a2)>th else 0.0)
     return (a2-a1) # if abs(a2-a1)>th else 0.0
 
+  vx_list= []  #List of target task space velocities for temporal filtering.
+  smoothing_filter_len= 15
+
   if ct.robot.Is('Baxter'):
     velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
   elif ct.robot.Is('Mikata'):
     velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
+  elif ct.robot.Is('UR'):
+    velctrl= ct.Load('ur.velctrl').TVelCtrl(ct,arm=arm)
+  else:
+    raise Exception('{robot} does not support velocity control.'.format(robot=ct.robot.Name))
 
   try:
     wrist= ['wrist_r','wrist_l'][arm]
@@ -94,12 +101,16 @@ def TrackingLoop(th_info, ct, arm):
         vq0= MCVec(ct.robot.DQ(arm=arm))
         vx0= J * vq0
         kv= np.diag([0.3,0.3,0.5])
-        vx= ToList(MCVec(vp) - kv*vx0[:3])+[0.0,0.0,0.0]
+        vx= MCVec(ToList(MCVec(vp) - kv*vx0[:3])+[0.0,0.0,0.0])
+        if smoothing_filter_len>1:
+          vx_list.append(vx)
+          if len(vx_list)>smoothing_filter_len:  vx_list.pop(0)
+          vx= np.mean(np.hstack(vx_list),axis=1)
         if ct.robot.DoF(arm=arm)>=6:
-          dq= ToList(la.pinv(J)*MCVec(vx))
+          dq= ToList(la.pinv(J)*vx)
         else:  #e.g. Mikata Arm
           W= np.diag([1.0,1.0,1.0, 0.01,0.01,0.01])
-          dq= ToList(la.pinv(W*J)*W*MCVec(vx))
+          dq= ToList(la.pinv(W*J)*W*vx)
       velctrl.Step(dq)
 
   finally:
