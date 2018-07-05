@@ -20,6 +20,9 @@ def Help():
     fv.finger3 'clear' [, ARM1 [, ARM2]]
       Stop to subscribe topics.
       ARM*: RIGHT, LEFT, or 'all' (both arms). Default: 'all'
+    fv.finger3 'is_active' [, ARM1 [, ARM2]]
+      Check if FingerVision is working properly.
+      ARM*: RIGHT, LEFT, or 'all' (both arms). Default: 'all'
     fv.finger3 'frame_skip', SKIP [, ARM1 [, ARM2]]
       Set frame-skip to SKIP.
       SKIP: Frames to be skipped. 0: No skip.
@@ -310,7 +313,7 @@ def Run(ct,*args):
 
   if command=='setup':
     if len(args)==0:  args= ['all']
-    arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
+    arms= set(sum([range(ct.robot.NumArms) if a=='all' else [a] for a in args],[]))
     if ct.robot.NumArms==1:
       arms= set(0 if a>0 else a for a in arms)
     ct.viz.finger_force= TSimpleVisualizer(name_space='visualizer_estate')
@@ -373,13 +376,13 @@ def Run(ct,*args):
   elif command=='rec':
     rid= args[0] if len(args)>0 else None
     if len(args[1:])==0:  args= [None,'all']
-    arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args[1:]],[]))
+    arms= set(sum([range(ct.robot.NumArms) if a=='all' else [a] for a in args[1:]],[]))
     for arm in arms:
       StartStopRecording(ct,arm,rid)
 
   elif command=='clear':
     if len(args)==0:  args= ['all']
-    arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
+    arms= set(sum([range(ct.robot.NumArms) if a=='all' else [a] for a in args],[]))
     for arm in arms:
       vs= LRToStrS(arm)
       print 'Stopping','vs_finger'+vs
@@ -402,10 +405,23 @@ def Run(ct,*args):
         for x in ('clear_obj','set_frame_skip','start_detect_obj','stop_detect_obj'):
           ct.DelSrvP(armstr+x)
 
+  elif command=='is_active':
+    if len(args)==0:  args= ['all']
+    arms= set(sum([range(ct.robot.NumArms) if a=='all' else [a] for a in args],[]))
+    is_active= [False]*ct.robot.NumArms
+    for arm in arms:
+      vs= LRToStrS(arm)
+      if not ct.HasAttr(TMP,'vs_finger'+vs):
+        is_active[arm]= False
+      else:
+        is_active[arm]= None not in ct.GetAttr(TMP,'vs_finger'+vs).tm_last_topic \
+          and (rospy.Time.now()-min(ct.GetAttr(TMP,'vs_finger'+vs).tm_last_topic)).to_sec()<0.2
+    return is_active
+
   elif command=='frame_skip':
     skip= args[0] if len(args)>0 else None
     if len(args[1:])==0:  args= [None,'all']
-    arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args[1:]],[]))
+    arms= set(sum([range(ct.robot.NumArms) if a=='all' else [a] for a in args[1:]],[]))
     set_frame_skip_req= ay_vision_msgs.srv.SetInt32Request()
     set_frame_skip_req.data= skip
     for arm in arms:
@@ -419,7 +435,7 @@ def Run(ct,*args):
 
   elif command=='clear_obj':
     if len(args)==0:  args= ['all']
-    arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
+    arms= set(sum([range(ct.robot.NumArms) if a=='all' else [a] for a in args],[]))
     for arm in arms:
       table= TopicServiceTable(ct.robot, arm)
       armstr= ct.robot.ArmStr(arm)+'_'
@@ -431,7 +447,7 @@ def Run(ct,*args):
 
   elif command=='stop_detect_obj':
     if len(args)==0:  args= ['all']
-    arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
+    arms= set(sum([range(ct.robot.NumArms) if a=='all' else [a] for a in args],[]))
     for arm in arms:
       table= TopicServiceTable(ct.robot, arm)
       armstr= ct.robot.ArmStr(arm)+'_'
@@ -443,7 +459,7 @@ def Run(ct,*args):
 
   elif command=='start_detect_obj':
     if len(args)==0:  args= ['all']
-    arms= set(sum([[RIGHT,LEFT] if a=='all' else [a] for a in args],[]))
+    arms= set(sum([range(ct.robot.NumArms) if a=='all' else [a] for a in args],[]))
     for arm in arms:
       table= TopicServiceTable(ct.robot, arm)
       armstr= ct.robot.ArmStr(arm)+'_'

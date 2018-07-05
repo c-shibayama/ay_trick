@@ -32,4 +32,4 @@ def Run(ct,*args):
     ct.SetAttr('fv_ctrl','pickup2a_z_final', 0.05)
   elif ct.robot.Is('UR'):
     ct.SetAttr('fv_ctrl','pickup2a_kp', [1.0,1.0, 2.0,  1.0,1.0,1.0])
-    ct.SetAttr('fv_ctrl','pickup2a_kd', [0.01,0.01, 0.05,  0.01,0.01,0.01])
+    ct.SetAttr('fv_ctrl','pickup2a_kd', [0.01,0.01, 0.03,  0.01,0.01,0.01])

@@ -217,10 +217,6 @@ def PickupLoop(th_info, ct, arm, options):
       if not l.suppress_slipavd and l.g_motion==0 and not IsDropped():
         GraspMore()
 
-    #When the slip is large, we move the robot slowly.
-    keypts= ([0.3,1.0], [0.7,0.0])
-    slip_to_kp_rate= max(keypts[1][1],min(keypts[1][0],(keypts[1][1]-keypts[0][1])/(keypts[1][0]-keypts[0][0])*(l.slip_curr-keypts[0][0])+keypts[0][1]))
-
     '''
     If l.g_motion>0, gripper is in motion.
     When l.g_motion>0, it denotes the timeout count.
@@ -254,10 +250,20 @@ def PickupLoop(th_info, ct, arm, options):
       #vx= [0.0,0.0, 0.005+0.02*math.cos(5.0*tm), 0.0,0.0,0.0]
       l.z_trg,l.z_err= ZTrgErr()
       #z_err_max= 0.006
-      z_err_max= 0.02
+      #z_err_max= 0.02
+      z_err_max= 0.008
       if l.z_err>z_err_max:  z_err= z_err_max
       elif l.z_err<-z_err_max:  z_err= -z_err_max
       else:  z_err= l.z_err
+
+      #When the slip is large, we move the robot slowly.
+      #keypts= ([0.3,1.0], [0.7,0.0])
+      #slip_to_kp_rate= max(keypts[1][1],min(keypts[1][0],(keypts[1][1]-keypts[0][1])/(keypts[1][0]-keypts[0][0])*(l.slip_curr-keypts[0][0])+keypts[0][1]))
+      s0,s1= 0.3, 0.7  #Slip range
+      r0,r1= 1.0, 0.5  #Corresponding kp rate
+      slip_to_kp_rate= max(r1,min(r0,(r1-r0)/(s1-s0)*(l.slip_curr-s0)+r0))
+      if z_err<0.0:  slip_to_kp_rate= 1.0
+
       #vx= [0.0,0.0, kp*z_err-kd*vx1[2,0], 0.0,0.0,0.0]
       vx= [kp[d]*(l.x0[d]-x1[d]) - kd[d]*vx1[d,0] for d in range(6)]
       if l.z_gain_mode=='low':
