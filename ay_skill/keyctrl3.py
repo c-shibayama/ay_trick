@@ -106,14 +106,8 @@ def Run(ct,*args):
       ct.robot.MoveGripper(gstate[a],arm=a)
 
   ct.AddSub('joy', 'joy', sensor_msgs.msg.Joy, lambda msg: Callback(state, steps, wsteps, gsteps, msg))
-  if ct.robot.Is('Baxter'):
-    velctrl= [ct.Load('bx.velctrl').TVelCtrl(ct,arm=a) for a in range(ct.robot.NumArms)]
-  elif ct.robot.Is('Motoman'):
-    velctrl= [ct.Load('moto.velctrl').TVelCtrl(ct) for a in range(ct.robot.NumArms)]
-  elif ct.robot.Is('Mikata'):
-    velctrl= [ct.Load('mikata.velctrl_p').TVelCtrl(ct) for a in range(ct.robot.NumArms)]
-  elif ct.robot.Is('UR'):
-    velctrl= [ct.Load('ur.velctrl').TVelCtrl(ct,arm=a) for a in range(ct.robot.NumArms)]
+
+  velctrl= [ct.Run('velctrl',a) for a in range(ct.robot.NumArms)]
   suppress_velctrl= False  #Set this True when an external program use the velocity control.
 
   kbhit= TKBHit()
@@ -296,9 +290,9 @@ Command:
         velctrl[arm].Step(dq)
 
   finally:
+    kbhit.Deactivate()
     for a in range(ct.robot.NumArms):
       velctrl[a].Finish()
-    kbhit.Deactivate()
     for a in range(ct.robot.NumArms):
       if is_dxlg[a]:
         if active_holding[arm]:

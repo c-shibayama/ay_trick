@@ -122,14 +122,7 @@ def PickupLoop(th_info, ct, arm, options):
   l.log['z_trg']= []
   l.log['x']= []
 
-  if ct.robot.Is('Baxter'):
-    l.velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
-  elif ct.robot.Is('Mikata'):
-    l.velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
-  elif ct.robot.Is('UR'):
-    l.velctrl= ct.Load('ur.velctrl').TVelCtrl(ct,arm=arm)
-  else:
-    raise Exception('{robot} does not support velocity control.'.format(robot=ct.robot.Name))
+  l.velctrl= ct.Run('velctrl',arm)
   l.ctrl_step= 0  #Counter for logging cycle control.
 
   def InitObjArea():
@@ -330,7 +323,7 @@ def PickupLoop(th_info, ct, arm, options):
   sm['to_initial'].ElseAction= action_ctrlstep
 
   sm.NewState('grasp_prev')
-  sm['grasp_prev'].EntryAction= lambda: SetGrasp(l.g_pos_log[-1], speed=10.0, exclusive=False)
+  sm['grasp_prev'].EntryAction= lambda: SetGrasp(0.5*(l.g_pos_log[-1]+l.g_pos_log[-2]), speed=10.0, exclusive=False)
   sm['grasp_prev'].NewAction()
   sm['grasp_prev'].Actions[-1]= action_quit
   sm['grasp_prev'].NewAction()
@@ -340,7 +333,7 @@ def PickupLoop(th_info, ct, arm, options):
   sm['grasp_prev'].ElseAction= action_ctrlstep
 
   sm.NewState('wait2')
-  sm['wait2'].EntryAction= lambda: setattr(l,'tm2',rospy.Time.now()+rospy.Duration(0.7))
+  sm['wait2'].EntryAction= lambda: setattr(l,'tm2',rospy.Time.now()+rospy.Duration(0.3))
   sm['wait2'].NewAction()
   sm['wait2'].Actions[-1]= action_quit
   sm['wait2'].NewAction()

@@ -82,16 +82,8 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
   vx_list= []  #List of target task space velocities for temporal filtering.
   smoothing_filter_len= 15
 
-  if ct.robot.Is('Baxter'):
-    velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
-  elif ct.robot.Is('Mikata'):
-    velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
-  elif ct.robot.Is('UR'):
-    velctrl= ct.Load('ur.velctrl').TVelCtrl(ct,arm=arm)
-  else:
-    raise Exception('{robot} does not support velocity control.'.format(robot=ct.robot.Name))
-
   try:
+    velctrl= ct.Run('velctrl',arm)
     wrist= ['wrist_r','wrist_l'][arm]
     while th_info.IsRunning() and not rospy.is_shutdown():
       if out_of_track():

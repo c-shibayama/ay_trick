@@ -92,10 +92,10 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
   wrench= [0.0]*6
   wrench0= None
 
-  velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
   time0= rospy.Time.now()
 
   try:
+    velctrl= ct.Run('velctrl',arm)
     wrist= ['wrist_r','wrist_l'][arm]
     while th_info.IsRunning() and not rospy.is_shutdown():
       if (rospy.Time.now()-time0).to_sec()>2.0:

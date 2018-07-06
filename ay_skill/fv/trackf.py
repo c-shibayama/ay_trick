@@ -23,13 +23,8 @@ def TrackingLoop(th_info, ct, arm):
   f0= Vec(copy.deepcopy(vs_finger.force))
   f_diff= lambda side: Vec(vs_finger.force[side]) - f0[side]
 
-
-  if ct.robot.Is('Baxter'):
-    velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
-  elif ct.robot.Is('Mikata'):
-    velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
-
   try:
+    velctrl= ct.Run('velctrl',arm)
     wrist= ['wrist_r','wrist_l'][arm]
     while th_info.IsRunning() and not rospy.is_shutdown():
       x_ext= ct.GetAttr(wrist,'lx')

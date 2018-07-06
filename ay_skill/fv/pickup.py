@@ -44,11 +44,8 @@ def PickupLoop(th_info, ct, arm):
   slip_detected= False
   z_offset= 0.0
 
-  if ct.robot.Is('Baxter'):
-    velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
-  elif ct.robot.Is('Mikata'):
-    velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
   try:
+    velctrl= ct.Run('velctrl',arm)
     while th_info.IsRunning() and not rospy.is_shutdown():
       if sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>0.1:
         slip_detected= True

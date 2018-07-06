@@ -79,12 +79,8 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
     if obj_area < 0.02:  return True
     return False
 
-  if ct.robot.Is('Baxter'):
-    velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
-  elif ct.robot.Is('Mikata'):
-    velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
-
   try:
+    velctrl= ct.Run('velctrl',arm)
     wrist= ['wrist_r','wrist_l'][arm]
     while th_info.IsRunning() and not rospy.is_shutdown():
       x_ext= ct.GetAttr(wrist,'lx')

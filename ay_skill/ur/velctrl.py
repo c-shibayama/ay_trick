@@ -143,8 +143,10 @@ class TURVelCtrl(object):
     CPrint(2,cmd)
 
   def Finish(self):
+    if self.socketobj is None:  return
     self.Step([0.0]*6, 10.0)
     self.socketobj.close()
+    self.socketobj= None
 
   def AddCommandToQueue(self, cmd):
     if cmd[-1]!='\n': cmd+= '\n'
@@ -184,6 +186,10 @@ class TVelCtrl(object):
     dq= copy.deepcopy(dq)
     dt= self.TimeStep()
     #print ' '.join(map(lambda f:'%0.2f'%f,dq))
+
+    if not ct.robot.IsNormal():
+      self.Finish()
+      raise Exception('TVelCtrl has stopped as the robot is not normal state.')
 
     #Get current state:
     q= ct.robot.Q(arm=arm)
