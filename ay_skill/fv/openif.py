@@ -6,6 +6,7 @@ def Help():
     fv.openif 'on' [, ARM]
       Turn on an opening thread.
       ARM: RIGHT or LEFT. Default: ct.robot.Arm
+      OPTIONS: Options of OpeningLoop (see OpeningLoopDefaultOptions).
     fv.openif 'off' [, ARM]
       Stop an opening thread.
       ARM: RIGHT or LEFT. Default: ct.robot.Arm
@@ -14,7 +15,15 @@ def Help():
       Stop all threads. Equivalent to:
         fv.openif 'off' LEFT
         fv.openif 'off' RIGHT'''
-def OpeningLoop(th_info, ct, arm):
+
+def OpeningLoopDefaultOptions():
+  return {
+    'slip_threshold': 0.3,  #Threshold of slip amount to open the gripper.
+    'nforce_threshold': 7,  #Threshold of number of force changing points to open the gripper.
+    'dw_grip': 0.02,  #Displacement of gripper movement.
+    }
+
+def OpeningLoop(th_info, ct, arm, options):
   vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
 
   #Stop object detection
@@ -26,15 +35,15 @@ def OpeningLoop(th_info, ct, arm):
   #dth= 5
 
   while th_info.IsRunning() and not rospy.is_shutdown():
-    if n_change(0)+n_change(1)>7:
+    if n_change(0)+n_change(1)>options['nforce_threshold']:
       print 'Force is applied'
       #ct.robot.OpenGripper(arm)
-      ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+0.02, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
+      ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+options['dw_grip'], arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
       break
-    elif sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>0.3:
+    elif sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>options['slip_threshold']:
       print 'Slip is detected'
       #ct.robot.OpenGripper(arm)
-      ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+0.02, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
+      ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+options['dw_grip'], arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
       break
     else:
       rospy.sleep(0.02)
@@ -50,6 +59,11 @@ def Run(ct,*args):
 
   if command=='on':
     arm= args[0] if len(args)>0 else ct.robot.Arm
+    user_options= args[1] if len(args)>1 else {}
+
+    options= OpeningLoopDefaultOptions()
+    InsertDict(options, user_options)
+
     if 'vs_openif'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_openif'+LRToStrS(arm),'is already on'
 
@@ -63,7 +77,7 @@ def Run(ct,*args):
     ct.Run('fv.hold','off',arm)
 
     print 'Turn on:','vs_openif'+LRToStrS(arm)
-    ct.thread_manager.Add(name='vs_openif'+LRToStrS(arm), target=lambda th_info: OpeningLoop(th_info,ct,arm))
+    ct.thread_manager.Add(name='vs_openif'+LRToStrS(arm), target=lambda th_info: OpeningLoop(th_info,ct,arm,options))
 
   elif command=='off':
     arm= args[0] if len(args)>0 else ct.robot.Arm

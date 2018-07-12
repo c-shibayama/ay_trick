@@ -35,6 +35,7 @@ def PickupLoopDefaultOptions(ct):
     'stop_velctrl': True,  #Exit velocity control mode after execution.
     'resume_detect_obj': False,  #Restart object detection after execution.
     'bring_up_after_exit': False,  #Even if an exit condition is satisfied, robot brings up an object to target height.
+    'keep_thread_after_exit': False,  #Keep PickupLoop thread after everything has finished.
     'log': {},  #[output] Execution results are stored into this dictionary.
     }
 
@@ -125,6 +126,9 @@ def PickupLoop(th_info, ct, arm, options):
   l.velctrl= ct.Run('velctrl',arm)
   l.ctrl_step= 0  #Counter for logging cycle control.
 
+  l.force_detector= ct.Load('fv.grasp').TForceChangeDetector(vs_finger)
+  l.force_detector.Init()
+
   def InitObjArea():
     l.obj_area0= [area for area in vs_finger.obj_area_filtered]
   InitObjArea()
@@ -142,8 +146,14 @@ def PickupLoop(th_info, ct, arm, options):
   def SetZGainMode(z_gain_mode):
     l.z_gain_mode= z_gain_mode
 
+  #Set z_offset=None to stop.
   def SetZCtrl(z_offset, z_gain_mode):
-    SetZOffset(z_offset)
+    if z_offset is not None:
+      SetZOffset(z_offset)
+    else:
+      l.z_offset= 0.0
+      _,z_err= ZTrgErr()
+      l.z_offset= -z_err
     SetZGainMode(z_gain_mode)
 
   def ZTrgErr():
@@ -200,6 +210,8 @@ def PickupLoop(th_info, ct, arm, options):
       l.log['g_pos'].append([tm,ct.robot.GripperPos(arm)])
       l.log['z_trg'].append([tm,float(ZTrgErr()[0])])
       l.log['x'].append([tm,ToList(ct.robot.FK(arm=arm))])
+
+    l.force_detector.Update()
 
     #l.slip_curr= get_slip1()
     #if l.slip_curr>0.1:
@@ -312,10 +324,15 @@ def PickupLoop(th_info, ct, arm, options):
   sm['grasp_init'].ElseAction= action_ctrlstep
 
   sm.NewState('to_initial')
-  sm['to_initial'].EntryAction= lambda: (SetZCtrl(0.0,'high'), SetSuppressSlipAvd(True))
+  sm['to_initial'].EntryAction= lambda: (SetZCtrl(0.0,'high'), SetSuppressSlipAvd(True), l.force_detector.Init())
   #ct.Run('fv.finger3','start_detect_obj',arm)
   sm['to_initial'].NewAction()
   sm['to_initial'].Actions[-1]= action_quit
+  sm['to_initial'].NewAction()
+  sm['to_initial'].Actions[-1].Condition= l.force_detector.IsDetected  #Stop when large force is detected.
+  sm['to_initial'].Actions[-1].Action= lambda: (SetZCtrl(None,'high'), CPrint(4,'fv.pickup2a: Large force is detected. Stopping...'))
+  #sm['to_initial'].Actions[-1].NextState= 'grasp_prev'
+  sm['to_initial'].Actions[-1].NextState= action_quit.NextState
   sm['to_initial'].NewAction()
   sm['to_initial'].Actions[-1].Condition= lambda: abs(ZTrgErr()[1])<0.002
   #sm['to_initial'].Actions[-1].Action= lambda: SetGrasp(l.g_pos_log[-1], speed=10.0, exclusive=False)
@@ -323,7 +340,7 @@ def PickupLoop(th_info, ct, arm, options):
   sm['to_initial'].ElseAction= action_ctrlstep
 
   sm.NewState('grasp_prev')
-  sm['grasp_prev'].EntryAction= lambda: SetGrasp(0.5*(l.g_pos_log[-1]+l.g_pos_log[-2]), speed=10.0, exclusive=False)
+  sm['grasp_prev'].EntryAction= lambda: SetGrasp(0.7*l.g_pos_log[-1]+0.3*l.g_pos_log[-2], speed=10.0, exclusive=False)
   sm['grasp_prev'].NewAction()
   sm['grasp_prev'].Actions[-1]= action_quit
   sm['grasp_prev'].NewAction()
@@ -333,7 +350,7 @@ def PickupLoop(th_info, ct, arm, options):
   sm['grasp_prev'].ElseAction= action_ctrlstep
 
   sm.NewState('wait2')
-  sm['wait2'].EntryAction= lambda: setattr(l,'tm2',rospy.Time.now()+rospy.Duration(0.3))
+  sm['wait2'].EntryAction= lambda: setattr(l,'tm2',rospy.Time.now()+rospy.Duration(0.1))
   sm['wait2'].NewAction()
   sm['wait2'].Actions[-1]= action_quit
   sm['wait2'].NewAction()
@@ -393,6 +410,10 @@ def PickupLoop(th_info, ct, arm, options):
     ct.callback.vs_finger_pv[LRToStrS(arm)]= [None,None]
     if options['stop_velctrl']:  l.velctrl.Finish()
     if options['resume_detect_obj']: ct.Run('fv.finger3','start_detect_obj',arm)
+
+  if options['keep_thread_after_exit']:
+    while not action_quit.Condition():
+      rospy.sleep(0.01)
 
 def Run(ct,*args):
   if len(args)==0:

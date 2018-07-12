@@ -140,7 +140,7 @@ class TURVelCtrl(object):
       cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f, %f)\n" % (
               dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc,self.dt)
     self.AddCommandToQueue(cmd)
-    CPrint(2,cmd)
+    #CPrint(2,cmd)
 
   def Finish(self):
     if self.socketobj is None:  return
@@ -229,7 +229,7 @@ class TVelCtrl(object):
 
     self.velctrl.Step(dq, 100.0)
     self.last_dq= dq
-    print self.rate_adjuster.remaining().to_sec()
+    #print 'ur.velctrl:rate_adjuster.remaining:',self.rate_adjuster.remaining().to_sec()
     if self.rate_adjuster.remaining().to_sec()<0:
       CPrint(4,'Loosing real-time control:', self.rate_adjuster.remaining().to_sec())
     if sleep:  self.rate_adjuster.sleep()

@@ -205,7 +205,8 @@ Command:
         state[1]= 'no_cmd'
       elif state[1]=='key_p' or state[1]=='cmd_Y':
         if 'vs_pickup2a'+LRToStrS(arm) not in ct.thread_manager.thread_list:
-          ct.Run('fv.pickup2a','on',arm)  #,{'resume_detect_obj':False}
+          options= {'stop_velctrl':False, 'keep_thread_after_exit':True}  #,'resume_detect_obj':False
+          ct.Run('fv.pickup2a','on',arm,options)
           suppress_velctrl= True
         else:
           ct.Run('fv.pickup2a','off',arm)
@@ -286,7 +287,7 @@ Command:
       else:
         dq= [0.0]*ct.robot.DoF(arm)
       if not suppress_velctrl:
-        CPrint(1,dq)
+        #CPrint(1,'keyctrl3:',dq)
         velctrl[arm].Step(dq)
 
   finally:
