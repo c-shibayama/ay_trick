@@ -58,9 +58,16 @@ class TForceChangeDetector(object):
       if self.is_initialized:
         #print self.dstate_list
         #print self.vs_finger.dstate_array
-        print self.mean(self.dstate_list[0])-self.dstate0[0], self.mean(self.dstate_list[1])-self.dstate0[1]
+        #print self.mean(self.dstate_list[0])-self.dstate0[0], self.mean(self.dstate_list[1])-self.dstate0[1]
         if self.mean(self.dstate_list[0])>=self.dstate0[0]+self.dth or self.mean(self.dstate_list[1])>=self.dstate0[1]+self.dth:
           self.is_detected= True
+
+  #Wait until the initialization is finished.
+  def WaitForInitialization(self, dt=0.001, stop_callback=None):
+    while not self.IsInitialized():
+      if stop_callback is not None and stop_callback():  break
+      self.Update()
+      rospy.sleep(dt)
 
   #True if the initialization is finished (data for initial filter values are corrected).
   def IsInitialized(self):
