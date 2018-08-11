@@ -16,43 +16,43 @@ def Help():
         fv.tracko 'off' RIGHT'''
 def TrackingLoop(th_info, ct, arm):
   ct.Run('fv.ctrl_params')
-  vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
+  fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
 
   #Stop object detection
-  ct.Run('fv.finger3','stop_detect_obj',arm)
+  ct.Run('fv.fv','stop_detect_obj',arm)
 
-  center0= [0.5*(vs_finger.obj_center[0][0]-vs_finger.obj_center[1][0]),
-            0.5*(vs_finger.obj_center[0][1]+vs_finger.obj_center[1][1]) ]
-  obj_area0= 0.5*(vs_finger.obj_area[0] + vs_finger.obj_area[1])
+  center0= [0.5*(fv_data.obj_center[0][0]-fv_data.obj_center[1][0]),
+            0.5*(fv_data.obj_center[0][1]+fv_data.obj_center[1][1]) ]
+  obj_area0= 0.5*(fv_data.obj_area[0] + fv_data.obj_area[1])
 
   def out_of_track():
-    obj_area= 0.5*(vs_finger.obj_area[0] + vs_finger.obj_area[1])
+    obj_area= 0.5*(fv_data.obj_area[0] + fv_data.obj_area[1])
     #print obj_area0, obj_area, (obj_area < 0.02*obj_area0)
     if obj_area < 0.02*obj_area0:  return True
     return False
 
   def vel_z():
     #th= 0.01
-    y= 0.5*(vs_finger.obj_center[0][1]+vs_finger.obj_center[1][1])
+    y= 0.5*(fv_data.obj_center[0][1]+fv_data.obj_center[1][1])
     #return -1.0 if y>th else (+1.0 if y<-th else 0.0)
     return -y # if abs(y)>th else 0.0
 
   def vel_x():
     #th= 0.003
-    #obj_s= [np.array(vs_finger.obj_s[0]), np.array(vs_finger.obj_s[1])]
+    #obj_s= [np.array(fv_data.obj_s[0]), np.array(fv_data.obj_s[1])]
     #o1= sum(obj_s[0][[2,5,8]]) + sum(obj_s[1][[0,3,6]])
     ##o2= sum(obj_s[0][[0,3,6]]) + sum(obj_s[1][[2,5,8]])
     #o2= sum(obj_s[0][[1,4,7]]) + sum(obj_s[1][[1,4,7]])
     #return +1.0 if (o1-o2)>th else (-1.0 if (o2-o1)>th else 0.0)
     #th= 0.001
-    dx= 0.5*(vs_finger.obj_center[0][0]-vs_finger.obj_center[1][0]) - center0[0]
+    dx= 0.5*(fv_data.obj_center[0][0]-fv_data.obj_center[1][0]) - center0[0]
     #return +1.0 if dx>th else (-1.0 if dx<-th else 0.0)
     return dx # if abs(dx)>th else 0.0
 
   def vel_y():
     #th= 0.001
-    a1= vs_finger.obj_area[0]
-    a2= vs_finger.obj_area[1]
+    a1= fv_data.obj_area[0]
+    a2= fv_data.obj_area[1]
     #return +1.0 if (a2-a1)>th else (-1.0 if (a1-a2)>th else 0.0)
     return (a2-a1) # if abs(a2-a1)>th else 0.0
 
@@ -107,7 +107,7 @@ def TrackingLoop(th_info, ct, arm):
 
   finally:
     velctrl.Finish()
-    ct.Run('fv.finger3','start_detect_obj',arm)
+    ct.Run('fv.fv','start_detect_obj',arm)
 
 def Run(ct,*args):
   if len(args)==0:
@@ -121,11 +121,8 @@ def Run(ct,*args):
     if 'vs_tracko'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_tracko'+LRToStrS(arm),'is already on'
 
-    if not ct.HasAttr(TMP,'vs_finger'+LRToStrS(arm)) or not ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm)).running:
-      #CPrint(0,'fv.finger3 is not ready. Do you want to setup now?')
-      #if not ct.AskYesNo():
-        #return
-      ct.Run('fv.finger3','setup',arm)
+    if not all(ct.Run('fv.fv','is_active',arm)):
+      ct.Run('fv.fv','on',arm)
 
     ct.Run('fv.grasp','off',arm)
     ct.Run('fv.hold','off',arm)

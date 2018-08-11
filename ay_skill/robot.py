@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from core_tool import *
+import tf
 def Help():
   return '''Robot initialization utility.
   Usage: robot ROBOT_NAME [, OPT1]
@@ -54,7 +55,7 @@ def Run(ct,*args):
     del ct.state_validity_checker
     ct.state_validity_checker= None
   if ct.robot is not None and not ct.robot.Is('NoRobot'):
-    ct.Run('fv.finger3','clear')
+    ct.Run('fv.fv','clear')
 
     ct.robot.Cleanup()
     del ct.robot
@@ -106,6 +107,8 @@ def Run(ct,*args):
     raise Exception('Unknown robot: %s'%robot)
 
   if robot=='NoRobot':  return
+
+  ct.br= tf.TransformBroadcaster()
 
   if any((ct.robot.Is('PR2'),ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'),ct.robot.Is('UR'),ct.robot.Is('URDxlG'))):
     ct.state_validity_checker= TStateValidityCheckerMI()

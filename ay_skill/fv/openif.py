@@ -24,14 +24,14 @@ def OpeningLoopDefaultOptions():
     }
 
 def OpeningLoop(th_info, ct, arm, options):
-  vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
+  fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
 
   #Stop object detection
-  ct.Run('fv.finger3','stop_detect_obj',arm)
+  ct.Run('fv.fv','stop_detect_obj',arm)
 
-  fa0= copy.deepcopy(vs_finger.force_array)
+  fa0= copy.deepcopy(fv_data.force_array)
   #FIXME: This should be a distance of (x,y) or (x,y,z) (z is estimated by x,y though...). Do not use torque.
-  n_change= lambda side: sum([1 if Dist(f[:6],f0[:6])>0.9 else 0 for f,f0 in zip(vs_finger.force_array[side],fa0[side])])
+  n_change= lambda side: sum([1 if Dist(f[:6],f0[:6])>0.9 else 0 for f,f0 in zip(fv_data.force_array[side],fa0[side])])
   #dth= 5
 
   while th_info.IsRunning() and not rospy.is_shutdown():
@@ -40,7 +40,7 @@ def OpeningLoop(th_info, ct, arm, options):
       #ct.robot.OpenGripper(arm)
       ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+options['dw_grip'], arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
       break
-    elif sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>options['slip_threshold']:
+    elif sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>options['slip_threshold']:
       print 'Slip is detected'
       #ct.robot.OpenGripper(arm)
       ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+options['dw_grip'], arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
@@ -48,7 +48,7 @@ def OpeningLoop(th_info, ct, arm, options):
     else:
       rospy.sleep(0.02)
 
-  ct.Run('fv.finger3','start_detect_obj',arm)
+  ct.Run('fv.fv','start_detect_obj',arm)
 
 def Run(ct,*args):
   if len(args)==0:
@@ -67,11 +67,8 @@ def Run(ct,*args):
     if 'vs_openif'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_openif'+LRToStrS(arm),'is already on'
 
-    if not ct.HasAttr(TMP,'vs_finger'+LRToStrS(arm)) or not ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm)).running:
-      #CPrint(0,'fv.finger3 is not ready. Do you want to setup now?')
-      #if not ct.AskYesNo():
-        #return
-      ct.Run('fv.finger3','setup',arm)
+    if not all(ct.Run('fv.fv','is_active',arm)):
+      ct.Run('fv.fv','on',arm)
 
     ct.Run('fv.grasp','off',arm)
     ct.Run('fv.hold','off',arm)

@@ -41,52 +41,52 @@ def PickupLoopDefaultOptions(ct):
 
 def PickupLoop(th_info, ct, arm, options):
   ct.Run('fv.ctrl_params')
-  vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
+  fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
 
-  vs_finger.obj_area_tm= [vs_finger.tm_last_topic[2+side] for side in [0,1]]
-  vs_finger.obj_area_log= [([vs_finger.obj_area[side]] if vs_finger.obj_area[side] is not None else []) for side in [0,1]]
-  vs_finger.obj_area_filtered= [None for side in [0,1]]
+  fv_data.obj_area_tm= [fv_data.tm_last_topic[2+side] for side in [0,1]]
+  fv_data.obj_area_log= [([fv_data.obj_area[side]] if fv_data.obj_area[side] is not None else []) for side in [0,1]]
+  fv_data.obj_area_filtered= [None for side in [0,1]]
   def ObjAreaFilter(ct, l, side):
     if l.obj_area_tm[side] is None or l.tm_last_topic[2+side]>l.obj_area_tm[side]:
-      vs_finger.obj_area_tm[side]= l.tm_last_topic[2+side]
-      vs_finger.obj_area_log[side].append(vs_finger.obj_area[side])
-      if len(vs_finger.obj_area_log[side])>options['obj_area_filter_len']:
-        vs_finger.obj_area_log[side].pop(0)
-      vs_finger.obj_area_filtered[side]= sum(vs_finger.obj_area_log[side])/len(vs_finger.obj_area_log[side])
-  ct.callback.vs_finger_pv[LRToStrS(arm)]= [ObjAreaFilter,ObjAreaFilter]
+      fv_data.obj_area_tm[side]= l.tm_last_topic[2+side]
+      fv_data.obj_area_log[side].append(fv_data.obj_area[side])
+      if len(fv_data.obj_area_log[side])>options['obj_area_filter_len']:
+        fv_data.obj_area_log[side].pop(0)
+      fv_data.obj_area_filtered[side]= sum(fv_data.obj_area_log[side])/len(fv_data.obj_area_log[side])
+  ct.callback.fv_objinfo[ct.robot.ArmStrS(arm)]= [ObjAreaFilter,ObjAreaFilter]
 
   #Wait for obj_area_filtered
   for i in range(100):
-    if len(vs_finger.obj_area_log[0])>=options['obj_area_filter_len']:  break
+    if len(fv_data.obj_area_log[0])>=options['obj_area_filter_len']:  break
     rospy.sleep(0.01)
 
-  #get_center= lambda: [0.5*(vs_finger.obj_center[0][0]-vs_finger.obj_center[1][0]),
-                       #0.5*(vs_finger.obj_center[0][1]+vs_finger.obj_center[1][1]) ]
+  #get_center= lambda: [0.5*(fv_data.obj_center[0][0]-fv_data.obj_center[1][0]),
+                       #0.5*(fv_data.obj_center[0][1]+fv_data.obj_center[1][1]) ]
   #def get_center():
     #xy= [[],[]]
     #area_min= 0.1
     #for side in range(2):
-      #if vs_finger.obj_area[side]>area_min:
-        #xy[0].append(vs_finger.obj_center[side][0])
-        #xy[1].append(vs_finger.obj_center[side][1])
+      #if fv_data.obj_area[side]>area_min:
+        #xy[0].append(fv_data.obj_center[side][0])
+        #xy[1].append(fv_data.obj_center[side][1])
     #if len(xy[0])==0:  return [0.0,0.0]
     #return [sum(xy[0])/float(len(xy[0])), sum(xy[1])/float(len(xy[1]))]
 
   #Get object center computed as a sum of object centers from both fingers
   #weighted with their areas.
   def get_center_avr():
-    sum_area= sum(vs_finger.obj_area_filtered)
+    sum_area= sum(fv_data.obj_area_filtered)
     if sum_area<0.02:  return [0.0,0.0]
-    w= [vs_finger.obj_area_filtered[0]/sum_area, vs_finger.obj_area_filtered[1]/sum_area]
-    return [w[0]*vs_finger.obj_center[0][0] - w[1]*vs_finger.obj_center[1][0],
-            w[0]*vs_finger.obj_center[0][1] + w[1]*vs_finger.obj_center[1][1] ]
+    w= [fv_data.obj_area_filtered[0]/sum_area, fv_data.obj_area_filtered[1]/sum_area]
+    return [w[0]*fv_data.obj_center[0][0] - w[1]*fv_data.obj_center[1][0],
+            w[0]*fv_data.obj_center[0][1] + w[1]*fv_data.obj_center[1][1] ]
 
-  #obj_area0= [area for area in vs_finger.obj_area_filtered]
-  obj_area0_reg= [max(0.1,area) for area in vs_finger.obj_area_filtered]
+  #obj_area0= [area for area in fv_data.obj_area_filtered]
+  obj_area0_reg= [max(0.1,area) for area in fv_data.obj_area_filtered]
 
   #center_set= [get_center()]
-  get_slip1= lambda: sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])
-  get_slip1_nml= lambda: sum(vs_finger.mv_s[0])/obj_area0_reg[0]+sum(vs_finger.mv_s[1])/obj_area0_reg[1]
+  get_slip1= lambda: sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])
+  get_slip1_nml= lambda: sum(fv_data.mv_s[0])/obj_area0_reg[0]+sum(fv_data.mv_s[1])/obj_area0_reg[1]
   #def get_slip2():
     #center= get_center()
     #center_set.append(center)
@@ -94,7 +94,7 @@ def PickupLoop(th_info, ct, arm, options):
     #return Dist(center,center_set[0])
 
   #Stop object detection
-  ct.Run('fv.finger3','stop_detect_obj',arm)
+  ct.Run('fv.fv','stop_detect_obj',arm)
 
   l= TContainer(debug=True)
   l.x0= ct.robot.FK(arm=arm)
@@ -126,17 +126,17 @@ def PickupLoop(th_info, ct, arm, options):
   l.velctrl= ct.Run('velctrl',arm)
   l.ctrl_step= 0  #Counter for logging cycle control.
 
-  l.force_detector= ct.Load('fv.grasp').TForceChangeDetector(vs_finger)
+  l.force_detector= ct.Load('fv.grasp').TForceChangeDetector(fv_data)
   l.force_detector.Init()
 
   def InitObjArea():
-    l.obj_area0= [area for area in vs_finger.obj_area_filtered]
+    l.obj_area0= [area for area in fv_data.obj_area_filtered]
   InitObjArea()
 
   def IsDropped():
     #sum --> max for robustness.
-    print 'area:',max(vs_finger.obj_area_filtered),max(l.obj_area0),max(vs_finger.obj_area_filtered)/max(max(l.obj_area0),1.0e-6)
-    if max(vs_finger.obj_area_filtered) < options['area_drop_rate']*max(l.obj_area0):  return True
+    print 'area:',max(fv_data.obj_area_filtered),max(l.obj_area0),max(fv_data.obj_area_filtered)/max(max(l.obj_area0),1.0e-6)
+    if max(fv_data.obj_area_filtered) < options['area_drop_rate']*max(l.obj_area0):  return True
     return False
 
   def SetZOffset(z_offset):
@@ -202,11 +202,11 @@ def PickupLoop(th_info, ct, arm, options):
 
     if l.ctrl_step%50==0:
       tm= rospy.Time.now().to_sec()
-      l.log['area'].append([tm,sum(vs_finger.obj_area)])
+      l.log['area'].append([tm,sum(fv_data.obj_area)])
       l.log['slip'].append([tm,get_slip1()])
       l.log['slip_nml'].append([tm,get_slip1_nml()])
       l.log['center'].append([tm,get_center_avr()])
-      l.log['f'].append([tm,map(float,vs_finger.force[0][:3])+map(float,vs_finger.force[1][:3])])
+      l.log['f'].append([tm,map(float,fv_data.force[0][:3])+map(float,fv_data.force[1][:3])])
       l.log['g_pos'].append([tm,ct.robot.GripperPos(arm)])
       l.log['z_trg'].append([tm,float(ZTrgErr()[0])])
       l.log['x'].append([tm,ToList(ct.robot.FK(arm=arm))])
@@ -325,7 +325,7 @@ def PickupLoop(th_info, ct, arm, options):
 
   sm.NewState('to_initial')
   sm['to_initial'].EntryAction= lambda: (SetZCtrl(0.0,'high'), SetSuppressSlipAvd(True), l.force_detector.Init())
-  #ct.Run('fv.finger3','start_detect_obj',arm)
+  #ct.Run('fv.fv','start_detect_obj',arm)
   sm['to_initial'].NewAction()
   sm['to_initial'].Actions[-1]= action_quit
   sm['to_initial'].NewAction()
@@ -345,7 +345,7 @@ def PickupLoop(th_info, ct, arm, options):
   sm['grasp_prev'].Actions[-1]= action_quit
   sm['grasp_prev'].NewAction()
   sm['grasp_prev'].Actions[-1].Condition= lambda: l.g_motion==0
-  #sm['grasp_prev'].Actions[-1].Action= lambda: ct.Run('fv.finger3','stop_detect_obj',arm)
+  #sm['grasp_prev'].Actions[-1].Action= lambda: ct.Run('fv.fv','stop_detect_obj',arm)
   sm['grasp_prev'].Actions[-1].NextState= 'wait2'
   sm['grasp_prev'].ElseAction= action_ctrlstep
 
@@ -407,9 +407,9 @@ def PickupLoop(th_info, ct, arm, options):
     sm.Run()
 
   finally:
-    ct.callback.vs_finger_pv[LRToStrS(arm)]= [None,None]
+    ct.callback.fv_objinfo[ct.robot.ArmStrS(arm)]= [None,None]
     if options['stop_velctrl']:  l.velctrl.Finish()
-    if options['resume_detect_obj']: ct.Run('fv.finger3','start_detect_obj',arm)
+    if options['resume_detect_obj']: ct.Run('fv.fv','start_detect_obj',arm)
 
   if options['keep_thread_after_exit']:
     while not action_quit.Condition():
@@ -433,11 +433,8 @@ def Run(ct,*args):
     if 'vs_pickup2a'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_pickup2a'+LRToStrS(arm),'is already on'
 
-    if not ct.HasAttr(TMP,'vs_finger'+LRToStrS(arm)) or not ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm)).running:
-      #CPrint(0,'fv.finger3 is not ready. Do you want to setup now?')
-      #if not ct.AskYesNo():
-        #return
-      ct.Run('fv.finger3','setup',arm)
+    if not all(ct.Run('fv.fv','is_active',arm)):
+      ct.Run('fv.fv','on',arm)
 
     print 'Turn on:','vs_pickup2a'+LRToStrS(arm)
     ct.thread_manager.Add(name='vs_pickup2a'+LRToStrS(arm), target=lambda th_info: PickupLoop(th_info,ct,arm,options))
@@ -462,11 +459,8 @@ def Run(ct,*args):
     if 'log' in user_options:  options['log']= user_options['log']
     options['auto_stop']= True
 
-    if not ct.HasAttr(TMP,'vs_finger'+LRToStrS(arm)) or not ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm)).running:
-      #CPrint(0,'fv.finger3 is not ready. Do you want to setup now?')
-      #if not ct.AskYesNo():
-        #return
-      ct.Run('fv.finger3','setup',arm)
+    if not all(ct.Run('fv.fv','is_active',arm)):
+      ct.Run('fv.fv','on',arm)
 
     PickupLoop(None, ct, arm, options=options)
 

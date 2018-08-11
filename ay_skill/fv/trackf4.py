@@ -16,9 +16,6 @@ def Help():
       Stop all threads. Equivalent to:
         fv.trackf4 'off' LEFT
         fv.trackf4 'off' RIGHT'''
-#def VSFFilter(ct, vs_finger, side):
-  #...
-#ct.callback.vs_finger_bm[LRToStrS(arm)]= [VSFFilter,VSFFilter]
 
 def WrenchToList2(wrench,l):
   force= wrench['force']
@@ -31,13 +28,13 @@ def WrenchToList2(wrench,l):
   l[5]= torque.z
 
 def TrackingLoop(th_info, ct, arm, ctrl_type):
-  vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
+  fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
 
   #Stop object detection
-  #ct.Run('fv.finger3','stop_detect_obj',arm)
+  #ct.Run('fv.fv','stop_detect_obj',arm)
 
-  #f0= Vec(copy.deepcopy(vs_finger.force))
-  #f_diff= lambda side: Vec(vs_finger.force[side]) - f0[side]
+  #f0= Vec(copy.deepcopy(fv_data.force))
+  #f_diff= lambda side: Vec(fv_data.force[side]) - f0[side]
 
   pfa_scale= [None,None]
   pfa0= [None,None]
@@ -45,12 +42,12 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
   t_finit= [None]
   def UpdateF0():
     for side in (RIGHT,LEFT):
-      pfa_scale[side]= [max(1.0, la.norm(p_f[2:])/2.0) for p_f in vs_finger.posforce_array[side]]
-      #pfa0= copy.deepcopy(vs_finger.posforce_array)
-      pfa0[side]= [[p_f[0],p_f[1],  p_f[2]/scale,p_f[3]/scale,p_f[4]/scale] for p_f,scale in zip(vs_finger.posforce_array[side], pfa_scale[side])]
+      pfa_scale[side]= [max(1.0, la.norm(p_f[2:])/2.0) for p_f in fv_data.posforce_array[side]]
+      #pfa0= copy.deepcopy(fv_data.posforce_array)
+      pfa0[side]= [[p_f[0],p_f[1],  p_f[2]/scale,p_f[3]/scale,p_f[4]/scale] for p_f,scale in zip(fv_data.posforce_array[side], pfa_scale[side])]
       pfa_filtered[side]= copy.deepcopy(pfa0[side])
       ##FIXME: This should be a distance of (x,y) or (x,y,z) (z is estimated by x,y though...). Do not use torque.
-      #n_change= lambda side: sum([1 if Dist(f[:6],f0[:6])>0.9 else 0 for f,f0 in zip(vs_finger.posforce_array[side],fa0[side])])
+      #n_change= lambda side: sum([1 if Dist(f[:6],f0[:6])>0.9 else 0 for f,f0 in zip(fv_data.posforce_array[side],fa0[side])])
     t_finit[0]= rospy.Time.now()
   UpdateF0()
 
@@ -58,14 +55,14 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
     #We will consider only [fx,fz] since they are most reliable.
     th_f= 5.0
     #Each element in posforce_array is [x,z,fx,fy,fz]
-    #pfa= vs_finger.posforce_array[side]
-    pfa= [[p_f[0],p_f[1],  p_f[2]/scale,p_f[3]/scale,p_f[4]/scale] for p_f,scale in zip(vs_finger.posforce_array[side], pfa_scale[side])]
+    #pfa= fv_data.posforce_array[side]
+    pfa= [[p_f[0],p_f[1],  p_f[2]/scale,p_f[3]/scale,p_f[4]/scale] for p_f,scale in zip(fv_data.posforce_array[side], pfa_scale[side])]
     num_tracking= len(pfa_filtered[side])
     pfa_filtered[side]= [p_f if (abs(p_f[2]-p_f_f[2])<th_f and abs(p_f[4]-p_f_f[4])<th_f)
                               else None
                          for p_f,p_f0,p_f_f in zip(pfa,pfa0[side],pfa_filtered[side]) if p_f_f is not None]
     if num_tracking>len(pfa_filtered[side]):
-      CPrint(0,'Lost some points in tracking,',vs_finger.vs_finger,LRToStrS(side),len(pfa_filtered[side]))
+      CPrint(0,'Lost some points in tracking,',fv_data.fv_data,LRToStrS(side),len(pfa_filtered[side]))
   warned= [False,False]
   def FDiff():
     force_array= []
@@ -74,7 +71,7 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
                 for p_f0,p_f_f in zip(pfa0[side],pfa_filtered[side]) if p_f_f is not None]
       if len(diff_pfa)==0:
         if not warned[side]:
-          CPrint(4,'All points are out of track,',vs_finger.vs_finger,LRToStrS(side))
+          CPrint(4,'All points are out of track,',fv_data.fv_data,LRToStrS(side))
           warned[side]= True
         return Vec([0.0]*6)
       gpos= (-1.0,1.0)[side]*ct.robot.GripperPos(arm)
@@ -84,7 +81,7 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
 
   def out_of_track():
     #return False
-    obj_area= 0.5*(vs_finger.obj_area[0] + vs_finger.obj_area[1])
+    obj_area= 0.5*(fv_data.obj_area[0] + fv_data.obj_area[1])
     #print obj_area
     if obj_area < 0.02:  return True
     return False
@@ -141,7 +138,7 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
 
   finally:
     velctrl.Finish()
-    ct.Run('fv.finger3','start_detect_obj',arm)
+    ct.Run('fv.fv','start_detect_obj',arm)
 
 def Run(ct,*args):
   if not ct.robot.Is('Baxter'):
@@ -159,11 +156,8 @@ def Run(ct,*args):
     if 'vs_trackf4'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_trackf4'+LRToStrS(arm),'is already on'
 
-    if not ct.HasAttr(TMP,'vs_finger'+LRToStrS(arm)) or not ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm)).running:
-      #CPrint(0,'fv.finger3 is not ready. Do you want to setup now?')
-      #if not ct.AskYesNo():
-        #return
-      ct.Run('fv.finger3','setup',arm)
+    if not all(ct.Run('fv.fv','is_active',arm)):
+      ct.Run('fv.fv','on',arm)
 
     ct.Run('fv.grasp','off',arm)
     ct.Run('fv.hold','off',arm)

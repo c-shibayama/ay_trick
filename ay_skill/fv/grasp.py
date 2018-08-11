@@ -18,18 +18,18 @@ def Help():
 
 #Force change detector class.
 class TForceChangeDetector(object):
-  #Setup.  vs_finger: dictionary of observation that is expected to be updated by other thread.
+  #Setup.  fv_data: dictionary of observation that is expected to be updated by other thread.
   #th: threshold to stop, filter_len: temporal filter length.
-  def __init__(self, vs_finger, th=3, filter_len=4, dstate_th=3):
-    self.vs_finger= vs_finger
+  def __init__(self, fv_data, th=3, filter_len=4, dstate_th=3):
+    self.fv_data= fv_data
     self.dth= th
     self.smoothing_filter_len= filter_len
     self.dstate_th= dstate_th
 
   #Get discrete state for robust force change detection.
   def GetDState(self,side):
-    #return vs_finger.dstate[side]
-    return len([ds for ds in self.vs_finger.dstate_array[side] if ds>=self.dstate_th])
+    #return fv_data.dstate[side]
+    return len([ds for ds in self.fv_data.dstate_array[side] if ds>=self.dstate_th])
 
   #Initialize the internal state.
   def Init(self):
@@ -38,14 +38,14 @@ class TForceChangeDetector(object):
     self.dstate_list= [[],[]]  #list of self.GetDState(0) and self.GetDState(1)
     for side in (0,1):
       self.dstate_list[side].append(self.GetDState(side))
-    self.tm_last= max(self.vs_finger.tm_last_topic[:2])
+    self.tm_last= max(self.fv_data.tm_last_topic[:2])
     self.mean= Median
     self.is_initialized= False
     self.is_detected= False
 
   #Update dstate_list.
   def Update(self):
-    if self.tm_last<max(self.vs_finger.tm_last_topic[:2]):
+    if self.tm_last<max(self.fv_data.tm_last_topic[:2]):
       for side in (0,1):
         self.dstate_list[side].append(self.GetDState(side))
         if len(self.dstate_list[side])>self.smoothing_filter_len:
@@ -53,11 +53,11 @@ class TForceChangeDetector(object):
           if not self.is_initialized:
             self.dstate0= [self.mean(self.dstate_list[0]), self.mean(self.dstate_list[1])]
             self.is_initialized= True
-      self.tm_last= max(self.vs_finger.tm_last_topic[:2])
+      self.tm_last= max(self.fv_data.tm_last_topic[:2])
 
       if self.is_initialized:
         #print self.dstate_list
-        #print self.vs_finger.dstate_array
+        #print self.fv_data.dstate_array
         #print self.mean(self.dstate_list[0])-self.dstate0[0], self.mean(self.dstate_list[1])-self.dstate0[1]
         if self.mean(self.dstate_list[0])>=self.dstate0[0]+self.dth or self.mean(self.dstate_list[1])>=self.dstate0[1]+self.dth:
           self.is_detected= True
@@ -80,20 +80,20 @@ class TForceChangeDetector(object):
 
 def GraspLoop(th_info, ct, arm):
   ct.Run('fv.ctrl_params')
-  vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
-  #fa0= vs_finger.force_array[arm]
-  #n_change= lambda: sum([1 if Dist(f[:6],f0[:6])>0.9 else 0 for f,f0 in zip(vs_finger.force_array[arm],fa0)])
+  fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
+  #fa0= fv_data.force_array[arm]
+  #n_change= lambda: sum([1 if Dist(f[:6],f0[:6])>0.9 else 0 for f,f0 in zip(fv_data.force_array[arm],fa0)])
   #dth= 7
-  #dth= max(vs_finger.dstate[0],vs_finger.dstate[1]) + 4
-  #continue_cond= lambda: vs_finger.dstate[0]<dth and vs_finger.dstate[1]<dth
+  #dth= max(fv_data.dstate[0],fv_data.dstate[1]) + 4
+  #continue_cond= lambda: fv_data.dstate[0]<dth and fv_data.dstate[1]<dth
 
-  force_detector= TForceChangeDetector(vs_finger)
+  force_detector= TForceChangeDetector(fv_data)
   force_detector.Init()
 
   #continue_cond= lambda: n_change()<5
 
   #Stop object detection
-  ct.Run('fv.finger3','stop_detect_obj',arm)
+  ct.Run('fv.fv','stop_detect_obj',arm)
 
   #g_pos= ct.robot.GripperPos(arm)
   #if arm==RIGHT:
@@ -135,7 +135,7 @@ def GraspLoop(th_info, ct, arm):
   #if ct.AskYesNo():
     #ct.robot.OpenGripper(arm)
     ##Start object detection
-    #ct.Run('fv.finger3','start_detect_obj',arm)
+    #ct.Run('fv.fv','start_detect_obj',arm)
 
 def Run(ct,*args):
   if len(args)==0:
@@ -149,11 +149,8 @@ def Run(ct,*args):
     if 'vs_grasp'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_grasp'+LRToStrS(arm),'is already on'
 
-    if not ct.HasAttr(TMP,'vs_finger'+LRToStrS(arm)) or not ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm)).running:
-      #CPrint(0,'fv.finger3 is not ready. Do you want to setup now?')
-      #if not ct.AskYesNo():
-        #return
-      ct.Run('fv.finger3','setup',arm)
+    if not all(ct.Run('fv.fv','is_active',arm)):
+      ct.Run('fv.fv','on',arm)
 
     print 'Turn on:','vs_grasp'+LRToStrS(arm)
     ct.thread_manager.Add(name='vs_grasp'+LRToStrS(arm), target=lambda th_info: GraspLoop(th_info,ct,arm))

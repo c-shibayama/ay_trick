@@ -16,14 +16,14 @@ def Help():
         fv.pickup 'off' LEFT
         fv.pickup 'off' RIGHT'''
 def PickupLoop(th_info, ct, arm):
-  vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
+  fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
 
   #Stop object detection
-  ct.Run('fv.finger3','stop_detect_obj',arm)
+  ct.Run('fv.fv','stop_detect_obj',arm)
 
   #g_pos= ct.robot.GripperPos(arm)
   #while th_info.IsRunning() and not rospy.is_shutdown():
-    #if sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>0.1:
+    #if sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>0.1:
       #g_pos-= 0.0005 if arm==LEFT else 0.002
       ##ct.robot.MoveGripper(pos=g_pos, arm=arm, speed=100.0, blocking=False)
       ##rospy.sleep(0.001)
@@ -47,7 +47,7 @@ def PickupLoop(th_info, ct, arm):
   try:
     velctrl= ct.Run('velctrl',arm)
     while th_info.IsRunning() and not rospy.is_shutdown():
-      if sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>0.1:
+      if sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>0.1:
         slip_detected= True
 
       if g_motion is None:
@@ -105,7 +105,7 @@ def PickupLoop(th_info, ct, arm):
 
   finally:
     velctrl.Finish()
-    ct.Run('fv.finger3','start_detect_obj',arm)
+    ct.Run('fv.fv','start_detect_obj',arm)
 
 def Run(ct,*args):
   if len(args)==0:
@@ -119,11 +119,8 @@ def Run(ct,*args):
     if 'vs_pickup'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_pickup'+LRToStrS(arm),'is already on'
 
-    if not ct.HasAttr(TMP,'vs_finger'+LRToStrS(arm)) or not ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm)).running:
-      #CPrint(0,'fv.finger3 is not ready. Do you want to setup now?')
-      #if not ct.AskYesNo():
-        #return
-      ct.Run('fv.finger3','setup',arm)
+    if not all(ct.Run('fv.fv','is_active',arm)):
+      ct.Run('fv.fv','on',arm)
 
     print 'Turn on:','vs_pickup'+LRToStrS(arm)
     ct.thread_manager.Add(name='vs_pickup'+LRToStrS(arm), target=lambda th_info: PickupLoop(th_info,ct,arm))

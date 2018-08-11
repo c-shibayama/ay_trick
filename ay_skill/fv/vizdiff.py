@@ -17,22 +17,22 @@ def Help():
         fv.vizdiff 'off' RIGHT'''
 
 def VizLoop(th_info, ct, arm):
-  vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
-  m_vsf= ct.Load('fv.finger3')
+  fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
+  m_vsf= ct.Load('fv.fv')
 
-  pfa_scale= [[max(1.0, la.norm(p_f[2:])/2.0) for p_f in vs_finger.posforce_array[side]] for side in range(2)]
-  #pfa0= copy.deepcopy(vs_finger.posforce_array)
-  pfa0= [[[p_f[0],p_f[1],  p_f[2]/scale,p_f[3]/scale,p_f[4]/scale] for p_f,scale in zip(vs_finger.posforce_array[side], pfa_scale[side])] for side in range(2)]
+  pfa_scale= [[max(1.0, la.norm(p_f[2:])/2.0) for p_f in fv_data.posforce_array[side]] for side in range(2)]
+  #pfa0= copy.deepcopy(fv_data.posforce_array)
+  pfa0= [[[p_f[0],p_f[1],  p_f[2]/scale,p_f[3]/scale,p_f[4]/scale] for p_f,scale in zip(fv_data.posforce_array[side], pfa_scale[side])] for side in range(2)]
   pfa_filtered= copy.deepcopy(pfa0)
   ##FIXME: This should be a distance of (x,y) or (x,y,z) (z is estimated by x,y though...). Do not use torque.
-  #n_change= lambda side: sum([1 if Dist(f[:6],f0[:6])>0.9 else 0 for f,f0 in zip(vs_finger.posforce_array[side],fa0[side])])
+  #n_change= lambda side: sum([1 if Dist(f[:6],f0[:6])>0.9 else 0 for f,f0 in zip(fv_data.posforce_array[side],fa0[side])])
 
   def StepFilter(side):
     #We will consider only [fx,fz] since they are most reliable.
     th_f= 5.0
     #Each element in posforce_array is [x,z,fx,fy,fz]
-    #pfa= vs_finger.posforce_array[side]
-    pfa= [[p_f[0],p_f[1],  p_f[2]/scale,p_f[3]/scale,p_f[4]/scale] for p_f,scale in zip(vs_finger.posforce_array[side], pfa_scale[side])]
+    #pfa= fv_data.posforce_array[side]
+    pfa= [[p_f[0],p_f[1],  p_f[2]/scale,p_f[3]/scale,p_f[4]/scale] for p_f,scale in zip(fv_data.posforce_array[side], pfa_scale[side])]
     pfa_filtered[side]= pfa
   warned= [False,False]
   def FDiff():
@@ -45,8 +45,8 @@ def VizLoop(th_info, ct, arm):
     f_diff= [sum([force[d] for force in force_array])/float(len(force_array)) for d in xrange(6)]
     return Vec(f_diff)
 
-  #f0= Vec(vs_finger.force[0]) + Vec(vs_finger.force[1])
-  #FDiff= lambda: (Vec(vs_finger.force[0]) + Vec(vs_finger.force[1])) - f0
+  #f0= Vec(fv_data.force[0]) + Vec(fv_data.force[1])
+  #FDiff= lambda: (Vec(fv_data.force[0]) + Vec(fv_data.force[1])) - f0
 
   rate_adjuster= rospy.Rate(30)
   while th_info.IsRunning() and not rospy.is_shutdown():
@@ -70,11 +70,8 @@ def Run(ct,*args):
     if 'vs_vizdiff'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_vizdiff'+LRToStrS(arm),'is already on'
 
-    if not ct.HasAttr(TMP,'vs_finger'+LRToStrS(arm)) or not ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm)).running:
-      #CPrint(0,'fv.finger3 is not ready. Do you want to setup now?')
-      #if not ct.AskYesNo():
-        #return
-      ct.Run('fv.finger3','setup',arm)
+    if not all(ct.Run('fv.fv','is_active',arm)):
+      ct.Run('fv.fv','on',arm)
 
     ct.Run('fv.grasp','off',arm)
     ct.Run('fv.hold','off',arm)

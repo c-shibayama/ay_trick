@@ -15,13 +15,13 @@ def Help():
         fv.trackf 'off' LEFT
         fv.trackf 'off' RIGHT'''
 def TrackingLoop(th_info, ct, arm):
-  vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
+  fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
 
   #Stop object detection
-  ct.Run('fv.finger3','stop_detect_obj',arm)
+  ct.Run('fv.fv','stop_detect_obj',arm)
 
-  f0= Vec(copy.deepcopy(vs_finger.force))
-  f_diff= lambda side: Vec(vs_finger.force[side]) - f0[side]
+  f0= Vec(copy.deepcopy(fv_data.force))
+  f_diff= lambda side: Vec(fv_data.force[side]) - f0[side]
 
   try:
     velctrl= ct.Run('velctrl',arm)
@@ -52,7 +52,7 @@ def TrackingLoop(th_info, ct, arm):
 
   finally:
     velctrl.Finish()
-    ct.Run('fv.finger3','start_detect_obj',arm)
+    ct.Run('fv.fv','start_detect_obj',arm)
 
 def Run(ct,*args):
   if len(args)==0:
@@ -66,11 +66,8 @@ def Run(ct,*args):
     if 'vs_trackf'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_trackf'+LRToStrS(arm),'is already on'
 
-    if not ct.HasAttr(TMP,'vs_finger'+LRToStrS(arm)) or not ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm)).running:
-      #CPrint(0,'fv.finger3 is not ready. Do you want to setup now?')
-      #if not ct.AskYesNo():
-        #return
-      ct.Run('fv.finger3','setup',arm)
+    if not all(ct.Run('fv.fv','is_active',arm)):
+      ct.Run('fv.fv','on',arm)
 
     ct.Run('fv.grasp','off',arm)
     ct.Run('fv.hold','off',arm)

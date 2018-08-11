@@ -11,5 +11,5 @@ def Run(ct,*args):
   ct.Run('fv.openif','off',arm)
   #ct.robot.OpenGripper(arm)
   ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+0.02, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
-  ct.Run('fv.finger3','start_detect_obj',arm)
+  ct.Run('fv.fv','start_detect_obj',arm)
 

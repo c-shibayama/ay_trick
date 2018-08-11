@@ -17,17 +17,17 @@ def Help():
         fv.hold 'off' RIGHT'''
 def HoldLoop(th_info, ct, arm):
   ct.Run('fv.ctrl_params')
-  vs_finger= ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm))
+  fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
 
   #Stop object detection
-  ct.Run('fv.finger3','stop_detect_obj',arm)
+  ct.Run('fv.fv','stop_detect_obj',arm)
 
   #if ct.robot.EndEff(arm).Is('DxlGripper'):
     #ct.robot.EndEff(arm).StartHolding()
 
   g_pos= ct.robot.GripperPos(arm)
   while th_info.IsRunning() and not rospy.is_shutdown():
-    if sum(vs_finger.mv_s[0])+sum(vs_finger.mv_s[1])>0.06: #0.1
+    if sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>0.06: #0.1
       print 'slip',rospy.Time.now()
       #g_pos-= 0.0005 if arm==LEFT else 0.002
       g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
@@ -50,7 +50,7 @@ def HoldLoop(th_info, ct, arm):
   #if ct.AskYesNo():
     #ct.robot.OpenGripper(arm)
     ##Start object detection
-    #ct.Run('fv.finger3','start_detect_obj',arm)
+    #ct.Run('fv.fv','start_detect_obj',arm)
 
 def Run(ct,*args):
   if len(args)==0:
@@ -64,11 +64,8 @@ def Run(ct,*args):
     if 'vs_hold'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_hold'+LRToStrS(arm),'is already on'
 
-    if not ct.HasAttr(TMP,'vs_finger'+LRToStrS(arm)) or not ct.GetAttr(TMP,'vs_finger'+LRToStrS(arm)).running:
-      #CPrint(0,'fv.finger3 is not ready. Do you want to setup now?')
-      #if not ct.AskYesNo():
-        #return
-      ct.Run('fv.finger3','setup',arm)
+    if not all(ct.Run('fv.fv','is_active',arm)):
+      ct.Run('fv.fv','on',arm)
 
     print 'Turn on:','vs_hold'+LRToStrS(arm)
     ct.thread_manager.Add(name='vs_hold'+LRToStrS(arm), target=lambda th_info: HoldLoop(th_info,ct,arm))
