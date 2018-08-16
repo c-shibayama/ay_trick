@@ -34,7 +34,7 @@ def Help():
   '''
 
 #Return a table of FV topics and services for each (robot, arm).
-def RobotToFV(robot, arm):
+def RobotToFV(robot, arm, no_exception=False):
   if robot.Is('Baxter'):
     if arm==RIGHT:
       return {
@@ -98,8 +98,9 @@ def RobotToFV(robot, arm):
       'stop_detect_obj_r':  '/fingervision/fv_pi13_r/stop_detect_obj',
       'stop_detect_obj_l':  '/fingervision/fv_pi13_l/stop_detect_obj',
       }
-  else:
+  elif not no_exception:
     raise Exception('fv.fv: No info in the RobotToFV for: {robot}=Arm-{arm}'.format(robot=robot.Name,arm=robot.ArmStr(arm)))
+  return None
 
 def Filter1Wrench(ct,l,msg):
   table= RobotToFV(ct.robot, l.arm)
@@ -211,7 +212,8 @@ def Run(ct,*args):
       if 'fv_wrench' in ct.callback:  ct.callback.fv_wrench[arm_S]= [None,None]
       if 'fv_objinfo' in ct.callback:  ct.callback.fv_objinfo[arm_S]= [None,None]
 
-      table= RobotToFV(ct.robot, arm)
+      table= RobotToFV(ct.robot, arm, no_exception=True)
+      if table is None:  continue
       armstr= ct.robot.ArmStr(arm)+'_'
       for x in ('fv_filter1_wrench','fv_filter1_objinfo'):
         ct.DelSub(x)
