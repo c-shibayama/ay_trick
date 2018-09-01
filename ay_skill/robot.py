@@ -17,6 +17,7 @@ def Help():
       'motos','Motoman_SIM',
       'mikata','Mikata',
       'mikatas','Mikata_SIM',
+      'mikata2','Mikata2',
       'ur','UR',
       'urs','UR_SIM',
       'urdxlg','URDxlG',
@@ -42,6 +43,7 @@ def Run(ct,*args):
       'motos':'Motoman_SIM',
       'mikata':'Mikata',
       'mikatas':'Mikata_SIM',
+      'mikata2':'Mikata2',
       'ur':'UR',
       'urs':'UR_SIM',
       'urdxlg':'URDxlG',
@@ -88,9 +90,19 @@ def Run(ct,*args):
     ct.robot= mod.TRobotMotoman(is_sim=(robot=='Motoman_SIM'))
 
   elif robot in ('Mikata','Mikata_SIM'):
+    if robot=='Mikata':
+      print '''We recommend to use Mikata2 (mikata2), where you need to launch:
+$ roslaunch ay_util mikata_rot_real2.launch  # Or, mikata_real2.launch
+Do you want to abort?'''
+      if AskYesNo():  return
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_mikata')
     ct.robot= mod.TRobotMikata(dev=serial_dev,is_sim=(robot=='Mikata_SIM'))
+
+  elif robot in ('Mikata2',):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_mikata2')
+    ct.robot= mod.TRobotMikata2()
 
   elif robot in ('UR','UR_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_ur')
@@ -125,7 +137,7 @@ def Run(ct,*args):
   if False in res:
     CPrint(4, 'Failed to setup robot:',robot)
 
-  if robot in ('PR2','Baxter','BaxterN','Motoman','Mikata','UR','URDxlG'):
+  if robot in ('PR2','Baxter','BaxterN','Motoman','Mikata','Mikata2','UR','URDxlG'):
     ct.SetAttr('environment', 'real')
   elif robot in ('PR2_SIM','Baxter_SIM','Motoman_SIM','Mikata_SIM','UR_SIM','URDxlG_SIM'):
     ct.SetAttr('environment', 'sim')

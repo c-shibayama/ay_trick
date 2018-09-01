@@ -49,7 +49,7 @@ class TVelCtrl(object):
     if (rospy.Time.now()-self.t_prev).to_sec()<5.0*self.TimeStep():
       q= self.q_prev  #ct.robot.Q(arm=arm)
     else:  #For safety, when the interval between previous frame is large, we use the robot state.
-      print 'velctrl_p reset', (rospy.Time.now()-self.t_prev).to_sec()
+      print 'velctrl_p reset', (rospy.Time.now()-self.t_prev).to_sec(), self.TimeStep()
       q= ct.robot.Q(arm=arm)
     q2= [0.0]*4
     for j,(qi,dqi,qmini,qmaxi) in enumerate(zip(q,dq,*ct.robot.JointLimits(arm))):
@@ -61,14 +61,17 @@ class TVelCtrl(object):
         q2[j]= qmaxi-q_limit_th
         dq[j]= (q2[j]-qi)/dt
 
-    t_traj= [0.0, dt]
-    q_traj= [q, q2]
     #dq_traj= [ct.robot.DQ(arm=arm), dq]
     #if len(dq_traj[0])==0:  dq_traj[0]= self.dq_prev
     #traj= ToROSTrajectory(ct.robot.JointNames(arm), q_traj, t_traj, dq_traj)
     with ct.robot.control_locker:
       #ct.robot.pub.joint_path_command.publish(traj)
-      ct.robot.FollowQTraj(q_traj, t_traj, blocking=False)
+      if ct.robot.Is('Mikata2'):
+        ct.robot.mikata.MoveTo(dict(zip(ct.robot.JointNames(arm),q2)), blocking=False)
+      else:
+        t_traj= [0.0, dt]
+        q_traj= [q, q2]
+        ct.robot.FollowQTraj(q_traj, t_traj, blocking=False)
     self.q_prev= q2
     self.t_prev= rospy.Time.now()
     #self.dq_prev= dq
