@@ -21,15 +21,25 @@ def Run(ct,*args):
   arm= args[0] if len(args)>0 else ct.robot.Arm
 
   if ct.robot.Is('Baxter'):
-    velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+    if 'velctrl' not in ct.m or ct.m.velctrl.TVelCtrl.NumReferences(arm)==0:
+      ct.m.velctrl= ct.Load('bx.velctrl')
+    velctrl= ct.m.velctrl.TVelCtrl(arm,ct)
   elif ct.robot.Is('Motoman'):
-    #velctrl= ct.Load('moto.velctrl').TVelCtrl(ct)
+    #if 'velctrl' not in ct.m or ct.m.velctrl.TVelCtrl.NumReferences(arm)==0:
+      #ct.m.velctrl= ct.Load('moto.velctrl')
+    #velctrl= ct.m.velctrl.TVelCtrl(arm,ct)
     raise Exception('Velocity control of {robot} does not work.'.format(robot=ct.robot.Name))
   elif ct.robot.Is('Mikata'):
-    velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
+    if 'velctrl' not in ct.m or ct.m.velctrl.TVelCtrl.NumReferences(arm)==0:
+      ct.m.velctrl= ct.Load('mikata.velctrl_p')
+    velctrl= ct.m.velctrl.TVelCtrl(arm,ct)
   elif ct.robot.Is('UR'):
-    velctrl= ct.Load('ur.velctrl').TVelCtrl(ct,arm=arm)
+    if 'velctrl' not in ct.m or ct.m.velctrl.TVelCtrl.NumReferences(arm)==0:
+      ct.m.velctrl= ct.Load('ur.velctrl')
+    velctrl= ct.m.velctrl.TVelCtrl(arm,ct)
   else:
     raise Exception('{robot} does not support velocity control.'.format(robot=ct.robot.Name))
+
+  print 'TVelCtrl.NumReferences=',ct.m.velctrl.TVelCtrl.NumReferences(arm)
 
   return velctrl

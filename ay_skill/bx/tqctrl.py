@@ -3,7 +3,7 @@ from core_tool import *
 def Help():
   return '''Torque control tools for Baxter.  Do not use this directly.
     Usage:
-      tqctrl= ct.Load('bx.tqctrl').TTqCtrl(ct,arm=LEFT)
+      tqctrl= ct.Load('bx.tqctrl').TTqCtrl(arm,ct)
       try:
         while ...:
           tq= [...]
@@ -15,9 +15,11 @@ def Run(ct,*args):
   print 'Error:',Help()
 
 class TTqCtrl(object):
+  __metaclass__= TMultiSingleton
+
   #ct: core_tool.
   #rate: Control time cycle in Hz.
-  def __init__(self, ct, arm, rate=500):
+  def __init__(self, arm, ct, rate=500):
     self.rate= rate
     self.ct= ct
     self.arm= arm
@@ -54,6 +56,8 @@ class TTqCtrl(object):
     if sleep:  self.rate_adjuster.sleep()
 
   def Finish(self):
+    self.__class__.Delete(self.arm)
+    if self.__class__.NumReferences(self.arm)>0:  return
     ct= self.ct
     arm= self.arm
     ct.robot.limbs[arm].exit_control_mode()

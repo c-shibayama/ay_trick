@@ -205,7 +205,7 @@ Command:
         state[1]= 'no_cmd'
       elif state[1]=='key_p' or state[1]=='cmd_Y':
         if 'vs_pickup2a'+LRToStrS(arm) not in ct.thread_manager.thread_list:
-          options= {'stop_velctrl':False, 'keep_thread_after_exit':True}  #,'resume_detect_obj':False
+          options= {'keep_thread_after_exit':True}  #,'resume_detect_obj':False
           ct.Run('fv.pickup2a','on',arm,options)
           suppress_velctrl= True
         else:

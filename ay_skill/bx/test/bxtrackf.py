@@ -59,7 +59,7 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
 
   f0= None
 
-  velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=arm)
+  velctrl= ct.Load('bx.velctrl').TVelCtrl(arm,ct)
   time0= rospy.Time.now()
 
   try:

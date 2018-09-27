@@ -3,7 +3,7 @@ from core_tool import *
 def Help():
   return '''Velocity control tools for Motoman.  Do not use this directly.
     Usage:
-      velctrl= ct.Load('moto.velctrl').TVelCtrl(ct)
+      velctrl= ct.Load('moto.velctrl').TVelCtrl(arm,ct)
       try:
         while ...:
           dq= [...]
@@ -15,12 +15,14 @@ def Run(ct,*args):
   print 'Error:',Help()
 
 class TVelCtrl(object):
+  __metaclass__= TMultiSingleton
+
   #ct: core_tool.
   #rate: Control time cycle in Hz.
-  def __init__(self, ct, rate=40):
+  def __init__(self, arm, ct, rate=40):
     self.rate= rate
     self.ct= ct
-    self.arm= 0
+    self.arm= arm
     self.rate_adjuster= rospy.Rate(self.rate)
     self.dq_prev= [0.0]*7  #Hack for missing joint velocity.
 
@@ -66,6 +68,8 @@ class TVelCtrl(object):
     if sleep:  self.rate_adjuster.sleep()
 
   def Finish(self):
+    self.__class__.Delete(self.arm)
+    if self.__class__.NumReferences(self.arm)>0:  return
     ct= self.ct
     arm= self.arm
     dt= self.TimeStep()

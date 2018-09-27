@@ -3,7 +3,7 @@ from core_tool import *
 def Help():
   return '''Velocity control tools for UR.  Do not use this directly.
     Usage:
-      velctrl= ct.Load('ur.velctrl').TVelCtrl(ct,arm=LEFT)
+      velctrl= ct.Load('ur.velctrl').TVelCtrl(arm,ct)
       try:
         while ...:
           dq= [...]
@@ -155,12 +155,14 @@ class TURVelCtrl(object):
       raise Exception('Command was not sent properly; cmd {cmd} byte, sent {sent} byte'.format(cmd=len(cmd),sent=len_sent))
 
 class TVelCtrl(object):
+  __metaclass__= TMultiSingleton
+
   #ct: core_tool.
   #rate: Control time cycle in Hz.
   #dq_lim: Limit of joint angular velocity (rad/s).
   #ddq_lim: Limit of joint angular acceleration (rad/s**2).
   #q_limit_th: Threshold to detect if a joint angle is on the limit.
-  def __init__(self, ct, arm, rate=125, dq_lim=40.0, ddq_lim=3.0, q_limit_th=0.02):
+  def __init__(self, arm, ct, rate=125, dq_lim=40.0, ddq_lim=3.0, q_limit_th=0.02):
     self.rate= rate
     self.dq_lim= dq_lim
     self.ddq_lim= ddq_lim
@@ -235,4 +237,7 @@ class TVelCtrl(object):
     if sleep:  self.rate_adjuster.sleep()
 
   def Finish(self):
+    self.__class__.Delete(self.arm)
+    if self.__class__.NumReferences(self.arm)>0:  return
     self.velctrl.Finish()
+

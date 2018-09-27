@@ -4,7 +4,7 @@ import std_msgs.msg
 def Help():
   return '''Velocity control tools for Baxter.  Do not use this directly.
     Usage:
-      velctrl= ct.Load('bx.velctrl').TVelCtrl(ct,arm=LEFT)
+      velctrl= ct.Load('bx.velctrl').TVelCtrl(arm,ct)
       try:
         while ...:
           dq= [...]
@@ -16,9 +16,11 @@ def Run(ct,*args):
   print 'Error:',Help()
 
 class TVelCtrl(object):
+  __metaclass__= TMultiSingleton
+
   #ct: core_tool.
   #rate: Control time cycle in Hz.
-  def __init__(self, ct, arm, rate=500):
+  def __init__(self, arm, ct, rate=500):
     self.rate= rate
     self.ct= ct
     self.arm= arm
@@ -63,6 +65,8 @@ class TVelCtrl(object):
     if sleep:  self.rate_adjuster.sleep()
 
   def Finish(self):
+    self.__class__.Delete(self.arm)
+    if self.__class__.NumReferences(self.arm)>0:  return
     ct= self.ct
     arm= self.arm
     cmd= {joint: 0.0 for j,joint in enumerate(ct.robot.JointNames(arm))}

@@ -19,7 +19,7 @@ def Help():
 
 def TrackingLoop(th_info, ct, arm, ctrl_type):
 
-  tqctrl= ct.Load('bx.tqctrl').TTqCtrl(ct,arm=arm)
+  tqctrl= ct.Load('bx.tqctrl').TTqCtrl(arm,ct)
   #kp= [20.0, 20.0, 20.0, 20.0, 10.0, 15.0, 5.0]
   #kd= [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
   kp= [40.0, 60.0, 40.0, 40.0, 30.0, 20.0, 1.0]

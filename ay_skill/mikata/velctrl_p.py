@@ -4,7 +4,7 @@ def Help():
   return '''Velocity control tools for Mikata Arm emulated with position control.
       Do not use this directly.
     Usage:
-      velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(ct)
+      velctrl= ct.Load('mikata.velctrl_p').TVelCtrl(arm,ct)
       try:
         while ...:
           dq= [...]
@@ -16,12 +16,14 @@ def Run(ct,*args):
   print 'Error:',Help()
 
 class TVelCtrl(object):
+  __metaclass__= TMultiSingleton
+
   #ct: core_tool.
   #rate: Control time cycle in Hz.
-  def __init__(self, ct, rate=100):
+  def __init__(self, arm, ct, rate=100):
     self.rate= rate
     self.ct= ct
-    self.arm= 0
+    self.arm= arm
     self.rate_adjuster= rospy.Rate(self.rate)
     self.q_prev= ct.robot.Q(arm=self.arm)
     self.t_prev= rospy.Time.now()
@@ -79,6 +81,8 @@ class TVelCtrl(object):
     if sleep:  self.rate_adjuster.sleep()
 
   def Finish(self):
+    self.__class__.Delete(self.arm)
+    if self.__class__.NumReferences(self.arm)>0:  return
     ct= self.ct
     arm= self.arm
     dt= self.TimeStep()

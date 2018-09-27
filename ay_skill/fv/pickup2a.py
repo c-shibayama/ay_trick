@@ -32,7 +32,6 @@ def PickupLoopDefaultOptions(ct):
     'obj_area_filter_len': 5,  #Filter length for obj_area.
     'auto_stop': False,  #Whether automatically stops when pickup is completed.
     'time_out': None,  #Timeout in seconds, or no timeout (None).
-    'stop_velctrl': True,  #Exit velocity control mode after execution.
     'resume_detect_obj': False,  #Restart object detection after execution.
     'bring_up_after_exit': False,  #Even if an exit condition is satisfied, robot brings up an object to target height.
     'keep_thread_after_exit': False,  #Keep PickupLoop thread after everything has finished.
@@ -408,7 +407,7 @@ def PickupLoop(th_info, ct, arm, options):
 
   finally:
     ct.callback.fv_objinfo[ct.robot.ArmStrS(arm)]= [None,None]
-    if options['stop_velctrl']:  l.velctrl.Finish()
+    l.velctrl.Finish()
     if options['resume_detect_obj']: ct.Run('fv.fv','start_detect_obj',arm)
 
   if options['keep_thread_after_exit']:
