@@ -65,17 +65,22 @@ def Run(ct,*args):
 
     with ct.robot.sensor_locker:
       x_w_lr= [ct.robot.FK(arm=arm) for arm in range(ct.robot.NumArms)]
-      #Add physical collision models
-      if ct.robot.Is('Baxter'):
-        for wobj in ('wrist_r','wrist_l','wl_m100','wr_stereo'):
+      #Add virtual collision models
+      virtual_components= ['wrist_r']
+      if ct.robot.Is('Baxter'): virtual_components= ['wrist_r','wrist_l','wl_m100','wr_stereo']
+
+      for wobj in virtual_components:
+        if ct.HasAttr(wobj):
           bound_box= ct.GetAttr(wobj, 'bound_box')
           arm= StrToLR(ct.GetAttr(wobj, 'kinematics_chain','parent_arm'))
           lw_xe= ct.GetAttr(wobj,'lx')
-          xe= Vec(Transform(x_w_lr[arm],lw_xe))
+          #xe= Vec(Transform(x_w_lr[arm],lw_xe))
           lx_bb= bound_box['center']
           dim_bb= Vec(bound_box['dim'])*bb_margin
-          x_bb= Transform(xe, lx_bb)
-          lwx_bb= TransformLeftInv(x_w_lr[arm], x_bb)
+          x_bb= Transform(x_w_lr[arm], lx_bb) #Transform(xe, lx_bb)  #A
+          #lwx_bb= TransformLeftInv(x_w_lr[arm], x_bb)  #A
+          lwx_bb= lx_bb  #A
+          #A: Modified on 2018-10-16 for fixing the bug, tested with Motoman.
           ct.state_validity_checker.AddBoxToRobotHand(lwx_bb,dim_bb,arm=arm,name=wobj)
           ct.viz.scene.AddCube(x_bb, dim_bb, rgb=ct.viz.scene.ICol(1), alpha=0.3)
           if displavel>0:  CPrint(3, '  attaching %r to %s-hand'%(wobj,ct.robot.ArmToStr(arm)))
