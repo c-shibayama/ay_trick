@@ -97,7 +97,7 @@ def VizLoop(th_info, ct, objs):
             if x_o_cvste is not None:  #The mouth is tracked by cvstedge1
               p_pour_e_set2= map(lambda p: Transform(x_o_cvste,p), l_p_pour_e_set)
               mid= viz.AddPoints(p_pour_e_set2, scale=[0.008,0.008], rgb=viz.ICol(1), alpha=1.0, mid=mid)
-          l_x_grab= ct.GetAttrOr(None, obj,'l_x_grab')
+          l_x_grab= ct.GetAttrOr(None, obj,'grabbed','l_x_grab')
           if l_x_grab is not None:
             x_g= Transform(x_o,l_x_grab)
             mid= viz.AddCube(x_g, scale=[0.06,0.04,0.01], rgb=viz.ICol(5), alpha=0.7, mid=mid)
@@ -154,7 +154,7 @@ def VizLoop(th_info, ct, objs):
       '''
 
       #Sleep until next visualization frame...
-      time.sleep(100.0e-3)
+      rospy.sleep(100.0e-3)
       #End of: while Running...
   except Exception as e:
     PrintException(e, ' in viz')

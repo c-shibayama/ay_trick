@@ -28,6 +28,13 @@ def Help():
       VISUALIZE: Visualize or not (default: False)
       Return: validity, result of IK checker, result of scene checker
         Note: IGN_OBJS will be included in the result of scene checker
+    scene 'grab', ARM, OBJ
+      Virtually attach OBJ to the hand of ARM.
+      ARM: Hand ID
+      OBJ: Object
+    scene 'release', OBJ
+      Virtually detach the OBJ from the hand.
+      OBJ: Object
   '''
 def Run(ct,*args):
   res= True
@@ -83,7 +90,7 @@ def Run(ct,*args):
           #A: Modified on 2018-10-16 for fixing the bug, tested with Motoman.
           ct.state_validity_checker.AddBoxToRobotHand(lwx_bb,dim_bb,arm=arm,name=wobj)
           ct.viz.scene.AddCube(x_bb, dim_bb, rgb=ct.viz.scene.ICol(1), alpha=0.3)
-          if displavel>0:  CPrint(3, '  attaching %r to %s-hand'%(wobj,ct.robot.ArmToStr(arm)))
+          if displavel>0:  CPrint(3, '  attaching %r to %s-hand'%(wobj,ct.robot.ArmStr(arm)))
       #Add virtual collision models
       for obj in objs:
         ct.Run('adv.infer_x', obj)
@@ -136,7 +143,8 @@ def Run(ct,*args):
       elif ct.robot.Is('Motoman'):
         ign_combinations= (('base_link', 'link_s'),
                            ('link_s', 'link_l'),('link_l', 'link_e'),('link_e', 'link_u'),
-                           ('link_u', 'link_r'),('link_r', 'link_b'),('link_b', 'link_t'))
+                           ('link_u', 'link_r'),('link_r', 'link_b'),('link_b', 'link_t'),
+                           ('link_b', 'wrist_r'),('link_t', 'wrist_r'))
       elif ct.robot.Is('Mikata'):
         ign_combinations= (('base_link','link_2'),('link_2','link_3'),('link_3','link_4'),('link_4','link_5'),
                            ('link_5','right_gripper'),('link_5','left_gripper'),('right_gripper','left_gripper'))
@@ -191,6 +199,34 @@ def Run(ct,*args):
       else:
         col_objs= GetCollidingObjects(res2.contacts, ign_objs)
         return len(col_objs)==0, res1, res2
+
+  elif command=='grab':
+    arm= args[0]
+    obj= args[1]
+    if ct.HasAttr(obj,'grabbed'):
+      print 'Error: already grabbed: ',obj
+      return False
+    x_o= ct.GetAttr(obj,'x')
+    arms= ct.robot.ArmStrs(arm)
+    grab_attr= {}
+    grab_attr['grabber']= 'gripper_'+arms
+    grab_attr['grabber_wrist']= 'wrist_'+LRToStrs(arm)
+    grab_attr['grabber_hand']= arms
+    grab_attr['grabber_handid']= arm
+    grab_attr['joint_angles']= ct.robot.Q(arm)
+    grab_attr['grabbed_x']= x_o
+    grab_attr['l_x_grab']= TransformLeftInv(ct.robot.FK(x_ext=ct.GetAttr('wrist_'+LRToStrs(arm),'lx'),arm=arm),x_o)
+    ct.AddDictAttr(obj,'grabbed',  grab_attr)
+    return True
+
+  elif command=='release':
+    obj= args[0]
+    if not ct.HasAttr(obj,'grabbed'):
+      print 'Error: not grabbed: ',obj
+      return False
+    arm= ct.GetAttr(obj,'grabbed','grabber_handid')
+    ct.DelAttr(obj,'grabbed')
+    return True
 
   else:
     raise Exception('Invalid command: %r'%command)
