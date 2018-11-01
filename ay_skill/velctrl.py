@@ -29,7 +29,7 @@ def Run(ct,*args):
       #ct.m.velctrl= ct.Load('moto.velctrl')
     #velctrl= ct.m.velctrl.TVelCtrl(arm,ct)
     raise Exception('Velocity control of {robot} does not work.'.format(robot=ct.robot.Name))
-  elif ct.robot.Is('Mikata'):
+  elif ct.robot.Is('Mikata'):  #NOTE: This is also used for CraneX7.
     if 'velctrl' not in ct.m or ct.m.velctrl.TVelCtrl.NumReferences(arm)==0:
       ct.m.velctrl= ct.Load('mikata.velctrl_p')
     velctrl= ct.m.velctrl.TVelCtrl(arm,ct)

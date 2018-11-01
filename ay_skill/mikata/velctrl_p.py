@@ -20,7 +20,7 @@ class TVelCtrl(object):
 
   #ct: core_tool.
   #rate: Control time cycle in Hz.
-  def __init__(self, arm, ct, rate=100):
+  def __init__(self, arm, ct, rate=50):
     self.rate= rate
     self.ct= ct
     self.arm= arm
@@ -48,12 +48,12 @@ class TVelCtrl(object):
     dq_max= max(map(abs,dq))
     if dq_max>dq_lim:  dq= [v*(dq_lim/dq_max) for v in dq]
 
-    if (rospy.Time.now()-self.t_prev).to_sec()<5.0*self.TimeStep():
+    if (rospy.Time.now()-self.t_prev).to_sec()<10.0*self.TimeStep():
       q= self.q_prev  #ct.robot.Q(arm=arm)
     else:  #For safety, when the interval between previous frame is large, we use the robot state.
       print 'velctrl_p reset', (rospy.Time.now()-self.t_prev).to_sec(), self.TimeStep()
       q= ct.robot.Q(arm=arm)
-    q2= [0.0]*4
+    q2= [0.0]*len(q)
     for j,(qi,dqi,qmini,qmaxi) in enumerate(zip(q,dq,*ct.robot.JointLimits(arm))):
       q2[j]= qi+dt*dqi
       if q2[j]<qmini+q_limit_th:
