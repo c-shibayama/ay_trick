@@ -10,5 +10,6 @@ def Run(ct,*args):
   elif ct.robot.Is('UR'):         ct.Run('keyctrl3')
   elif ct.robot.Is('RobotiqNB'):  ct.Run('keyctrlrq')
   elif ct.robot.Is('DxlGripper'):  ct.Run('keyctrlrq')
+  elif ct.robot.Is('RHP12RNGripper'):  ct.Run('keyctrlrq')
   else:
     CPrint(4,'Joystick-control selector is not defined for:',ct.robot.Name)

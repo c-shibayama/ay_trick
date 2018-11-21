@@ -13,6 +13,7 @@ def Help():
       'bxn','BaxterN',
       'rq','RobotiqNB',
       'dxlg','DxlGripper',
+      'thg','RHP12RNGripper',
       'moto','Motoman',
       'motos','Motoman_SIM',
       'mikata','Mikata',
@@ -23,10 +24,12 @@ def Help():
       'urs','UR_SIM',
       'urdxlg','URDxlG',
       'urdxlgs','URDxlG_SIM',
+      'urthg','URThG',
+      'urthgs','URThG_SIM',
     If ROBOT_NAME is omitted, we assume 'NoRobot'.
 
     Definition of OPT1 depends on ROBOT_NAME.
-      'dxlg','mikata','urdxlg': Device name (default='/dev/ttyUSB0')
+      'dxlg','mikata','urdxlg','urthg': Device name (default='/dev/ttyUSB0')
 
   '''
 def Run(ct,*args):
@@ -40,6 +43,7 @@ def Run(ct,*args):
       'bxn':'BaxterN',
       'rq':'RobotiqNB',
       'dxlg':'DxlGripper',
+      'thg':'RHP12RNGripper',
       'moto':'Motoman',
       'motos':'Motoman_SIM',
       'mikata':'Mikata',
@@ -50,6 +54,8 @@ def Run(ct,*args):
       'urs':'UR_SIM',
       'urdxlg':'URDxlG',
       'urdxlgs':'URDxlG_SIM',
+      'urthg':'URThG',
+      'urthgs':'URThG_SIM',
     }
   if robot in alias:  robot= alias[robot]
 
@@ -87,6 +93,11 @@ def Run(ct,*args):
     #serial_dev= os.environ['DXLG_DEV'] if 'DXLG_DEV' in os.environ else '/dev/ttyUSB0'
     ct.robot= mod.TRobotDxlGripper(dev=serial_dev)
 
+  elif robot in ('RHP12RNGripper',):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_rhp12rn')
+    ct.robot= mod.TRobotRHP12RNGripper(dev=serial_dev)
+
   elif robot in ('Motoman','Motoman_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_moto')
     ct.robot= mod.TRobotMotoman(is_sim=(robot=='Motoman_SIM'))
@@ -120,6 +131,11 @@ Do you want to abort?''')
     mod= SmartImportReload('ay_py.ros.rbt_urdxlg')
     ct.robot= mod.TRobotURDxlG(is_sim=(robot=='URDxlG_SIM'),dev=serial_dev)
 
+  elif robot in ('URThG','URThG_SIM'):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_urthg')
+    ct.robot= mod.TRobotURThG(is_sim=(robot=='URThG_SIM'),dev=serial_dev)
+
   elif robot=='NoRobot':
     ct.robot= TFakeRobot()
   else:
@@ -129,7 +145,7 @@ Do you want to abort?''')
 
   ct.br= tf.TransformBroadcaster()
 
-  if any((ct.robot.Is('PR2'),ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'),ct.robot.Is('UR'),ct.robot.Is('URDxlG'))):
+  if any((ct.robot.Is('PR2'),ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'),ct.robot.Is('UR'),ct.robot.Is('URDxlG'),ct.robot.Is('URThG'))):
     ct.state_validity_checker= TStateValidityCheckerMI()
   else:
     ct.state_validity_checker= None
@@ -144,9 +160,9 @@ Do you want to abort?''')
   if False in res:
     CPrint(4, 'Failed to setup robot:',robot)
 
-  if robot in ('PR2','Baxter','BaxterN','Motoman','Mikata','Mikata2','CraneX7','UR','URDxlG'):
+  if robot in ('PR2','Baxter','BaxterN','Motoman','Mikata','Mikata2','CraneX7','UR','URDxlG','URThG'):
     ct.SetAttr('environment', 'real')
-  elif robot in ('PR2_SIM','Baxter_SIM','Motoman_SIM','Mikata_SIM','UR_SIM','URDxlG_SIM'):
+  elif robot in ('PR2_SIM','Baxter_SIM','Motoman_SIM','Mikata_SIM','UR_SIM','URDxlG_SIM','URThG_SIM'):
     ct.SetAttr('environment', 'sim')
 
   #ct.Run('model_loader')
@@ -160,10 +176,14 @@ Do you want to abort?''')
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_rqnb.yaml'))
   elif ct.robot.Is('DxlGripper'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlg.yaml'))
+  elif ct.robot.Is('RHP12RNGripper'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_thg.yaml'))
   elif ct.robot.Is('Motoman'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_moto.yaml'))
   elif ct.robot.Is('Mikata'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_mikata.yaml'))
   elif ct.robot.Is('URDxlG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_urdxlg.yaml'))
+  elif ct.robot.Is('URThG'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_urthg.yaml'))
   ct.SetAttr('default_frame', ct.robot.BaseFrame)

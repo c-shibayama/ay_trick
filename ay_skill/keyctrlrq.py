@@ -5,12 +5,12 @@ from keyctrl3 import Callback
 import sensor_msgs.msg
 
 def Help():
-  return '''Joystick controller for RobotiqNB and DxlGripper.
+  return '''Joystick controller for RobotiqNB, DxlGripper, and RHP12RNGripper.
   Usage: keyctrlrq'''
 
 def Run(ct,*args):
-  if not (ct.robot.Is('RobotiqNB') or ct.robot.Is('DxlGripper')):
-    CPrint(4,'This program works only with RobotiqNB and DxlGripper.')
+  if not (ct.robot.Is('RobotiqNB') or ct.robot.Is('DxlGripper') or ct.robot.Is('RHP12RNGripper')):
+    CPrint(4,'This program works only with RobotiqNB, DxlGripper, and RHP12RNGripper.')
     return
 
   arm= ct.robot.Arm

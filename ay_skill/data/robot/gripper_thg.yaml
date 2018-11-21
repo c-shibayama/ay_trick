@@ -1,0 +1,17 @@
+#Gripper of RHP12RNGripper
+#FIXME: Change names: wrist_* --> grip_*
+
+#Right gripper
+wrist_r:
+  #Kinematics information:
+  kinematics_chain:
+    #Right or left arm:
+    parent_arm: r
+  #Gripper pose (Q=QFromAxisAngle([0.,1.,0.],-math.pi/2.0))
+  lx: [0,0,0, 0.0,-0.70710678,0.0,0.70710678]  #Optical skin
+  #Bounding box is attached to the local frame of 'lx'.
+  bound_box:
+    #Optical skin:
+    dim: [0.18,0.08,0.02]
+    center: [-0.09,0.0,0.0, 0.0,0.0,0.0,1.0]
+
