@@ -435,17 +435,17 @@ def Run(ct,*args):
     if not all(ct.Run('fv.fv','is_active',arm)):
       ct.Run('fv.fv','on',arm)
 
-    print 'Turn on:','vs_pickup2a'+LRToStrS(arm)
+    CPrint(1,'Turn on:','vs_pickup2a'+LRToStrS(arm))
     ct.thread_manager.Add(name='vs_pickup2a'+LRToStrS(arm), target=lambda th_info: PickupLoop(th_info,ct,arm,options))
 
   elif command=='off':
     arm= args[0] if len(args)>0 else ct.robot.Arm
-    print 'Turn off:','vs_pickup2a'+LRToStrS(arm)
+    CPrint(2,'Turn off:','vs_pickup2a'+LRToStrS(arm))
     ct.thread_manager.Stop(name='vs_pickup2a'+LRToStrS(arm))
 
   elif command=='clear':
-    print 'Turn off:','vs_pickup2a'+LRToStrS(RIGHT)
-    print 'Turn off:','vs_pickup2a'+LRToStrS(LEFT)
+    CPrint(2,'Turn off:','vs_pickup2a'+LRToStrS(RIGHT))
+    CPrint(2,'Turn off:','vs_pickup2a'+LRToStrS(LEFT))
     ct.thread_manager.Stop(name='vs_pickup2a'+LRToStrS(RIGHT))
     ct.thread_manager.Stop(name='vs_pickup2a'+LRToStrS(LEFT))
 

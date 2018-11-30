@@ -8,6 +8,8 @@ def Run(ct,*args):
   ct.SetAttr('fv_ctrl','min_gstep', [0.0005,0.0005])
   ct.SetAttr('fv_ctrl','effort', [1.0,1.0])
   ct.SetAttr('fv_ctrl','tracko_gain', [[0.5,0.5,0.5]]*2)
+  ct.SetAttr('fv_ctrl','trackf2_flen', 30)
+  ct.SetAttr('fv_ctrl','trackf2_kp', 0.1)
   #ct.SetAttr('fv_ctrl','pickup2a_kp', [1.0,1.0, 15.0,  1.0,1.0,1.0])
   #ct.SetAttr('fv_ctrl','pickup2a_kd', [0.1,0.1, 2.5,  0.1,0.1,0.1])
   ct.SetAttr('fv_ctrl','pickup2a_kp', [1.0,1.0, 5.0,  1.0,1.0,1.0])

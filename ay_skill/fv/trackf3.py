@@ -52,7 +52,7 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
                               else None
                          for p_f,p_f0,p_f_f in zip(pfa,pfa0[side],pfa_filtered[side]) if p_f_f is not None]
     if num_tracking>len(pfa_filtered[side]):
-      CPrint(0,'Lost some points in tracking,',fv_data.fv_data,LRToStrS(side),len(pfa_filtered[side]))
+      CPrint(0,'Lost some points in tracking,',fv_data.fv,LRToStrS(side),len(pfa_filtered[side]))
   warned= [False,False]
   def FDiff():
     force_array= []
@@ -61,7 +61,7 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
                 for p_f0,p_f_f in zip(pfa0[side],pfa_filtered[side]) if p_f_f is not None]
       if len(diff_pfa)==0:
         if not warned[side]:
-          CPrint(4,'All points are out of track,',fv_data.fv_data,LRToStrS(side))
+          CPrint(4,'All points are out of track,',fv_data.fv,LRToStrS(side))
           warned[side]= True
         return Vec([0.0]*6)
       gpos= (-1.0,1.0)[side]*ct.robot.GripperPos(arm)

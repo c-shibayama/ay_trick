@@ -24,13 +24,19 @@ def Callback(state, steps, wsteps, gsteps, data):
     state[0]= 'quit'
     return
 
+  #if data.buttons[1] > 0:  #B
+    #state[1]= 'arm_switch'
+    #state[2]= RIGHT
+    ##return
+  #if data.buttons[2] > 0:  #X
+    #state[1]= 'arm_switch'
+    #state[2]= LEFT
+    ##return
   if data.buttons[1] > 0:  #B
-    state[1]= 'arm_switch'
-    state[2]= RIGHT
+    state[1]= 'cmd_B'
     #return
   if data.buttons[2] > 0:  #X
-    state[1]= 'arm_switch'
-    state[2]= LEFT
+    state[1]= 'cmd_X'
     #return
 
   if data.buttons[3] > 0:  #Y
@@ -173,7 +179,7 @@ Command:
         else:
           ct.Run('fv.inhand','off',arm)
         state[1]= 'no_cmd'
-      elif state[1]=='key_t':
+      elif state[1]=='key_t' or state[1]=='cmd_X':
         trackf= 'trackf4' if ct.robot.Is('Baxter') else 'trackf2'
         if 'vs_'+trackf+LRToStrS(arm) not in ct.thread_manager.thread_list:
           ct.Run('fv.'+trackf,'on',arm)
@@ -195,7 +201,7 @@ Command:
         else:
           CPrint(4,'{robot} does not have two arms.'.format(robot=ct.robot.Name))
         state[1]= 'no_cmd'
-      elif state[1]=='key_o':
+      elif state[1]=='key_o' or state[1]=='cmd_B':
         if 'vs_tracko'+LRToStrS(arm) not in ct.thread_manager.thread_list:
           ct.Run('fv.tracko','on',arm)
           suppress_velctrl= True
@@ -214,10 +220,12 @@ Command:
         state[1]= 'no_cmd'
 
       elif state[1]=='arm_switch':
-        #ct.robot.limbs[arm].exit_control_mode()
-        velctrl[arm].Finish()
-        arm= state[2]
-        print 'Switched arm:',LRToStr(arm)
+        CPrint(4,'arm_switch: This code is incomplete since velctrl.Finish destroys an instance of the singleton.')
+        if None:
+          #ct.robot.limbs[arm].exit_control_mode()
+          velctrl[arm].Finish()
+          arm= state[2]
+          print 'Switched arm:',LRToStr(arm)
         state[1]= 'no_cmd'
 
       #elif state[1]=='cmd_Y':
@@ -299,5 +307,9 @@ Command:
         if active_holding[arm]:
           ct.robot.EndEff(arm).StopHolding()
           active_holding[arm]= False
+    for thread in filter(lambda th:th[:3]=='vs_', ct.thread_manager.thread_list):
+      print 'Turn off:',thread
+      ct.thread_manager.Stop(name=thread)
+
     ct.DelSub('joy')
     print 'Finished'

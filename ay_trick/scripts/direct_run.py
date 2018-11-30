@@ -20,7 +20,7 @@ Usage:
 import sys
 import roslib; roslib.load_manifest('ay_trick')
 import rospy
-from core_tool import TCoreTool, CPrint
+from core_tool import TCoreTool, CPrint, PrintException
 from cui_tool import ParseAndRun
 
 if __name__ == '__main__':
@@ -29,29 +29,38 @@ if __name__ == '__main__':
   print motions
   #motions= ['tsim2.test_replay']
 
-  rospy.init_node('direct_run')
-  ct= TCoreTool()
+  try:
 
-  if ct.Exists('_default'):
-    print 'Running _default...'
-    ct.Run('_default')
-    print 'Waiting thread _default...'
-    ct.thread_manager.Join('_default')
-  else:
-    print '(info: script _default does not exist)'
+    rospy.init_node('direct_run')
+    ct= TCoreTool()
 
-  for motion in motions:
-    CPrint(2,'+++Start running:',motion)
-    #res= ct.Run(motion)
-    res= ParseAndRun(ct, motion)
-    if res!=None:  print 'Result:',res
-    CPrint(2,'+++Finished running:',motion)
+    if ct.Exists('_default'):
+      print 'Running _default...'
+      ct.Run('_default')
+      print 'Waiting thread _default...'
+      ct.thread_manager.Join('_default')
+    else:
+      print '(info: script _default does not exist)'
 
-  if ct.Exists('_exit'):
-    print 'Running _exit...'
-    ct.Run('_exit')
-  else:
-    print '(info: script _exit does not exist)'
+    for motion in motions:
+      CPrint(2,'+++Start running:',motion)
+      #res= ct.Run(motion)
+      res= ParseAndRun(ct, motion)
+      if res!=None:  print 'Result:',res
+      CPrint(2,'+++Finished running:',motion)
 
-  print 'TCoreTool.Cleanup...'
-  ct.Cleanup()
+    if ct.Exists('_exit'):
+      print 'Running _exit...'
+      ct.Run('_exit')
+    else:
+      print '(info: script _exit does not exist)'
+
+    rospy.signal_shutdown('Finished.')
+    print 'TCoreTool.Cleanup...'
+    ct.Cleanup()
+
+  except Exception as e:
+    PrintException(e,' in CUI')
+    rospy.signal_shutdown('Finished due to the exception.')
+    print 'TCoreTool.Cleanup...'
+    ct.Cleanup()

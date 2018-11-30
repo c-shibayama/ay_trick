@@ -78,17 +78,17 @@ def Run(ct,*args):
     if not all(ct.Run('fv.fv','is_active',arm)):
       ct.Run('fv.fv','on',arm)
 
-    print 'Turn on:','vs_inhand'+LRToStrS(arm)
+    CPrint(1,'Turn on:','vs_inhand'+LRToStrS(arm))
     ct.thread_manager.Add(name='vs_inhand'+LRToStrS(arm), target=lambda th_info: ManipLoop(th_info,ct,arm))
 
   elif command=='off':
     arm= args[0] if len(args)>0 else ct.robot.Arm
-    print 'Turn off:','vs_inhand'+LRToStrS(arm)
+    CPrint(2,'Turn off:','vs_inhand'+LRToStrS(arm))
     ct.thread_manager.Stop(name='vs_inhand'+LRToStrS(arm))
 
   elif command=='clear':
-    print 'Turn off:','vs_inhand'+LRToStrS(RIGHT)
-    print 'Turn off:','vs_inhand'+LRToStrS(LEFT)
+    CPrint(2,'Turn off:','vs_inhand'+LRToStrS(RIGHT))
+    CPrint(2,'Turn off:','vs_inhand'+LRToStrS(LEFT))
     ct.thread_manager.Stop(name='vs_inhand'+LRToStrS(RIGHT))
     ct.thread_manager.Stop(name='vs_inhand'+LRToStrS(LEFT))
 

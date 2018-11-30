@@ -91,9 +91,9 @@ class TCUITool(object):
         ct.Run('_exit')
       else:
         print '(info: script _exit does not exist)'
+      rospy.signal_shutdown('quit...')
       print 'TCoreTool.Cleanup...'
       ct.Cleanup()
-      rospy.signal_shutdown('quit...')
       self.done_exit_proc= True
 
   def SaveHistory(self):

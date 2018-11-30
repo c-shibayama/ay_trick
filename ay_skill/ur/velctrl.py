@@ -163,6 +163,7 @@ class TVelCtrl(object):
   #ddq_lim: Limit of joint angular acceleration (rad/s**2).
   #q_limit_th: Threshold to detect if a joint angle is on the limit.
   def __init__(self, arm, ct, rate=125, dq_lim=40.0, ddq_lim=3.0, q_limit_th=0.02):
+    #ddq_lim can be: lambda dq:3.0 if max(map(abs,dq))>0.1 else 1.0
     self.rate= rate
     self.dq_lim= dq_lim
     self.ddq_lim= ddq_lim
@@ -185,31 +186,39 @@ class TVelCtrl(object):
     ct= self.ct
     arm= self.arm
     dof= ct.robot.DoF(arm)
-    dq= copy.deepcopy(dq)
+    #dq= copy.deepcopy(dq)
+    dq= [v if abs(v)<vmax else v/vmax for v,vmax in zip(dq,ct.robot.JointVelLimits(arm))]
     dt= self.TimeStep()
     #print ' '.join(map(lambda f:'%0.2f'%f,dq))
 
     if not ct.robot.IsNormal():
-      self.Finish()
+      #self.Finish()  #Do not call self.Finish since it deletes the singleton instance.
+      self.velctrl.Finish()
       raise Exception('TVelCtrl has stopped as the robot is not normal state.')
+
+    if self.rate_adjuster.remaining().to_sec()<0:
+      CPrint(4,'Loosing real-time control(0):', self.rate_adjuster.remaining().to_sec())
+      self.last_dq= ct.robot.DQ(arm=arm)
 
     #Get current state:
     q= ct.robot.Q(arm=arm)
     #dq0= ct.robot.DQ(arm=arm)
     dq0= self.last_dq
     '''NOTE
-    We use last dq (target velocities) rather than current actual velocities
+    We use last-dq (target velocities) rather than current actual velocities
     in order to avoid oscillation.
     '''
+    #dq0= 0.9*np.array(self.last_dq)+0.1*np.array(ct.robot.DQ(arm=arm))
 
     #Limit accelerations:
     ddq_max= max([abs(v-v0)/dt for v,v0 in zip(dq,dq0)])
-    if ddq_max>self.ddq_lim:
-      scale= self.ddq_lim/ddq_max
+    ddq_lim= self.ddq_lim if not callable(self.ddq_lim) else self.ddq_lim(dq0)
+    if ddq_max>ddq_lim:
+      scale= ddq_lim/ddq_max
       #print dq, dq0, [(v-v0)/dt for v,v0 in zip(dq,dq0)], scale
       dq= [scale*v+(1.0-scale)*v0 for v,v0 in zip(dq,dq0)]
-      CPrint(3,'ur.velctrl: dq is modified due to exceeding ddq_lim;',ddq_max,self.ddq_lim)
-      #print scale,dq0,dqtmp,dq
+      CPrint(3,'ur.velctrl: dq is modified due to exceeding ddq_lim;',ddq_max,ddq_lim)
+      #print scale,dq0,dq
     #Limit velocities:
     dq_max= max(map(abs,dq))
     if dq_max>self.dq_lim:
@@ -229,11 +238,14 @@ class TVelCtrl(object):
         dq[j]= (q2[j]-qi)/dt
         CPrint(3,'ur.velctrl: Joint angle is exceeding the limit;',qi,dqi,qmini,qmaxi)
 
+    #if self.rate_adjuster.remaining().to_sec()<0:
+      #CPrint(4,'Loosing real-time control(1):', self.rate_adjuster.remaining().to_sec())
     self.velctrl.Step(dq, 100.0)
     self.last_dq= dq
     #print 'ur.velctrl:rate_adjuster.remaining:',self.rate_adjuster.remaining().to_sec()
     if self.rate_adjuster.remaining().to_sec()<0:
-      CPrint(4,'Loosing real-time control:', self.rate_adjuster.remaining().to_sec())
+      CPrint(4,'Loosing real-time control(2):', self.rate_adjuster.remaining().to_sec())
+      self.last_dq= ct.robot.DQ(arm=arm)
     if sleep:  self.rate_adjuster.sleep()
 
   def Finish(self):

@@ -24,6 +24,7 @@ def OpeningLoopDefaultOptions():
     }
 
 def OpeningLoop(th_info, ct, arm, options):
+  ct.Run('fv.ctrl_params')
   fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
 
   #Stop object detection
@@ -73,17 +74,17 @@ def Run(ct,*args):
     ct.Run('fv.grasp','off',arm)
     ct.Run('fv.hold','off',arm)
 
-    print 'Turn on:','vs_openif'+LRToStrS(arm)
+    CPrint(1,'Turn on:','vs_openif'+LRToStrS(arm))
     ct.thread_manager.Add(name='vs_openif'+LRToStrS(arm), target=lambda th_info: OpeningLoop(th_info,ct,arm,options))
 
   elif command=='off':
     arm= args[0] if len(args)>0 else ct.robot.Arm
-    print 'Turn off:','vs_openif'+LRToStrS(arm)
+    CPrint(2,'Turn off:','vs_openif'+LRToStrS(arm))
     ct.thread_manager.Stop(name='vs_openif'+LRToStrS(arm))
 
   elif command=='clear':
-    print 'Turn off:','vs_openif'+LRToStrS(RIGHT)
-    print 'Turn off:','vs_openif'+LRToStrS(LEFT)
+    CPrint(2,'Turn off:','vs_openif'+LRToStrS(RIGHT))
+    CPrint(2,'Turn off:','vs_openif'+LRToStrS(LEFT))
     ct.thread_manager.Stop(name='vs_openif'+LRToStrS(RIGHT))
     ct.thread_manager.Stop(name='vs_openif'+LRToStrS(LEFT))
 

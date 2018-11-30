@@ -62,7 +62,7 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
                               else None
                          for p_f,p_f0,p_f_f in zip(pfa,pfa0[side],pfa_filtered[side]) if p_f_f is not None]
     if num_tracking>len(pfa_filtered[side]):
-      CPrint(0,'Lost some points in tracking,',fv_data.fv_data,LRToStrS(side),len(pfa_filtered[side]))
+      CPrint(0,'Lost some points in tracking,',fv_data.fv,LRToStrS(side),len(pfa_filtered[side]))
   warned= [False,False]
   def FDiff():
     force_array= []
@@ -71,7 +71,7 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
                 for p_f0,p_f_f in zip(pfa0[side],pfa_filtered[side]) if p_f_f is not None]
       if len(diff_pfa)==0:
         if not warned[side]:
-          CPrint(4,'All points are out of track,',fv_data.fv_data,LRToStrS(side))
+          CPrint(4,'All points are out of track,',fv_data.fv,LRToStrS(side))
           warned[side]= True
         return Vec([0.0]*6)
       gpos= (-1.0,1.0)[side]*ct.robot.GripperPos(arm)
@@ -162,17 +162,17 @@ def Run(ct,*args):
     ct.Run('fv.grasp','off',arm)
     ct.Run('fv.hold','off',arm)
 
-    print 'Turn on:','vs_trackf4'+LRToStrS(arm)
+    CPrint(1,'Turn on:','vs_trackf4'+LRToStrS(arm))
     ct.thread_manager.Add(name='vs_trackf4'+LRToStrS(arm), target=lambda th_info: TrackingLoop(th_info,ct,arm,ctrl_type))
 
   elif command=='off':
     arm= args[0] if len(args)>0 else ct.robot.Arm
-    print 'Turn off:','vs_trackf4'+LRToStrS(arm)
+    CPrint(2,'Turn off:','vs_trackf4'+LRToStrS(arm))
     ct.thread_manager.Stop(name='vs_trackf4'+LRToStrS(arm))
 
   elif command=='clear':
-    print 'Turn off:','vs_trackf4'+LRToStrS(RIGHT)
-    print 'Turn off:','vs_trackf4'+LRToStrS(LEFT)
+    CPrint(2,'Turn off:','vs_trackf4'+LRToStrS(RIGHT))
+    CPrint(2,'Turn off:','vs_trackf4'+LRToStrS(LEFT))
     ct.thread_manager.Stop(name='vs_trackf4'+LRToStrS(RIGHT))
     ct.thread_manager.Stop(name='vs_trackf4'+LRToStrS(LEFT))
 
