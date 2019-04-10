@@ -43,7 +43,8 @@ def Run(ct,*args):
       keyposes[0].append([0.0, -1.04, 2.1, -math.pi*0.5-1.06, 0.0, -math.pi])
       #keyposes[0].append([0.0, -2.1, -2.1, -2.1, -math.pi*0.5, math.pi])
       keyposes[0].append([0.0, -1.04, 2.1, -1.06, math.pi*0.5, -math.pi])
-      #keyposes[0].append([0.0]*4)
+      #Obtained from: x=[0.35, 0.0, 0.3]+ToList(QFromAxisAngle([1,1,0],math.pi))
+      keyposes[0].append([-0.32589942613710576, -1.4305718580829065, 1.4837894439697266, -1.6240127722369593, -1.5707820097552698, -3.467499558125631])
     q_trg= keyposes[ct.robot.Arm][q_trg]
   assert(len(q_trg)==ct.robot.DoF())
   print 'Move to q:',q_trg

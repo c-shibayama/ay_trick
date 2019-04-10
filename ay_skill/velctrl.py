@@ -35,7 +35,8 @@ def Run(ct,*args):
     velctrl= ct.m.velctrl.TVelCtrl(arm,ct)
   elif ct.robot.Is('UR'):
     if 'velctrl' not in ct.m or ct.m.velctrl.TVelCtrl.NumReferences(arm)==0:
-      ct.m.velctrl= ct.Load('ur.velctrl')
+      if not ct.robot.Is('sim'):  ct.m.velctrl= ct.Load('ur.velctrl')
+      else:                       ct.m.velctrl= ct.Load('ur.velctrl_ros')
     velctrl= ct.m.velctrl.TVelCtrl(arm,ct)
   else:
     raise Exception('{robot} does not support velocity control.'.format(robot=ct.robot.Name))
