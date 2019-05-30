@@ -114,31 +114,37 @@ class TURVelCtrl(object):
     self.socketobj= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.socketobj.connect((self.robot_hostname, port))
     self.dt= None  #Control time step.
-    if self.robot_ver>=3.3:
-      #self.dt= 0.008
-      self.dt= 0.016
-      '''NOTE: Since the robot is operated at 125 Hz, the control time step should be
-      0.008 sec.  However when the computer looses the real-time, the robot stops,
-      which causes a shaky motion.
-      To avoid this, we use a larger control time step.'''
-    elif self.robot_ver>=3.1:
-      pass
-    else:
-      self.dt= 0.02
-      #This value is from ur_modern_driver/src/ur_realtime_communication.cpp UrRealtimeCommunication::setSpeed
+    #if self.robot_ver>=3.3:
+      ##self.dt= 0.008
+      ##self.dt= 0.016
+      #self.dt= 0.02
+      #'''NOTE: Since the robot is operated at 125 Hz, the control time step should be
+      #0.008 sec.  However when the computer looses the real-time, the robot stops,
+      #which causes a shaky motion.
+      #To avoid this, we use a larger control time step.'''
+    #elif self.robot_ver>=3.1:
+      #pass
+    #else:
+      #self.dt= 0.02
+      ##This value is from ur_modern_driver/src/ur_realtime_communication.cpp UrRealtimeCommunication::setSpeed
+    self.dt= 0.02  #NOTE@20190529: This value (0.02) was copied from the latest version of ur_modern_driver.
     self.Step([0.0]*6, 10.0)
 
   #Control step.  NOTE: This is expected to be running at 125 Hz.
   def Step(self, dq, acc):
-    if self.robot_ver>=3.3:
-      cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f, %f)\n" % (
-              dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc,self.dt)
-    elif self.robot_ver>=3.1:
-      cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f)\n" % (
-              dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc)
-    else:
-      cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f, %f)\n" % (
-              dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc,self.dt)
+    #This swich for the version was implemented previously as the handler of the joint_speed topic,
+    #but as of 20190529 that topic is removed and the alternative hardware interface uses the following.
+    #if self.robot_ver>=3.3:
+      #cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f, %f)\n" % (
+              #dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc,self.dt)
+    #elif self.robot_ver>=3.1:
+      #cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f)\n" % (
+              #dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc)
+    #else:
+      #cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f, %f)\n" % (
+              #dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc,self.dt)
+    cmd= "speedj([%1.5f, %1.5f, %1.5f, %1.5f, %1.5f, %1.5f], %f, %f)\n" % (
+            dq[0],dq[1],dq[2],dq[3],dq[4],dq[5],acc,self.dt)
     self.AddCommandToQueue(cmd)
     #CPrint(2,cmd)
 
@@ -162,15 +168,16 @@ class TVelCtrl(object):
   #dq_lim: Limit of joint angular velocity (rad/s).
   #ddq_lim: Limit of joint angular acceleration (rad/s**2).
   #q_limit_th: Threshold to detect if a joint angle is on the limit.
-  def __init__(self, arm, ct, rate=125, dq_lim=40.0, ddq_lim=3.0, q_limit_th=0.02):
+  def __init__(self, arm, ct, rate=None, dq_lim=40.0, ddq_lim=3.0, q_limit_th=0.02):
     #ddq_lim can be: lambda dq:3.0 if max(map(abs,dq))>0.1 else 1.0
+    if rate is None:  rate= 500 if ct.robot.Is('E') else 125
     self.rate= rate
     self.dq_lim= dq_lim
     self.ddq_lim= ddq_lim
     self.q_limit_th= q_limit_th
     self.ct= ct
     self.arm= arm
-    self.velctrl= TURVelCtrl('ur3a')  #FIXME:Get robot hostname from somewhere else
+    self.velctrl= TURVelCtrl(ct.robot.RobotIP())
     self.velctrl.Init()
     self.rate_adjuster= rospy.Rate(self.rate)
     self.last_dq= [0.0]*ct.robot.DoF(self.arm)
@@ -198,7 +205,7 @@ class TVelCtrl(object):
 
     if self.rate_adjuster.remaining().to_sec()<0:
       CPrint(4,'Loosing real-time control(0):', self.rate_adjuster.remaining().to_sec())
-      self.last_dq= ct.robot.DQ(arm=arm)
+      #self.last_dq= ct.robot.DQ(arm=arm)
 
     #Get current state:
     q= ct.robot.Q(arm=arm)
@@ -245,7 +252,7 @@ class TVelCtrl(object):
     #print 'ur.velctrl:rate_adjuster.remaining:',self.rate_adjuster.remaining().to_sec()
     if self.rate_adjuster.remaining().to_sec()<0:
       CPrint(4,'Loosing real-time control(2):', self.rate_adjuster.remaining().to_sec())
-      self.last_dq= ct.robot.DQ(arm=arm)
+      #self.last_dq= ct.robot.DQ(arm=arm)
     if sleep:  self.rate_adjuster.sleep()
 
   def Finish(self):

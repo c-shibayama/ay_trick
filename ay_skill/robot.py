@@ -20,12 +20,16 @@ def Help():
       'mikatas','Mikata_SIM',
       'mikata2','Mikata2',
       'cx7','CraneX7',
-      'ur','UR',
-      'urs','UR_SIM',
-      'urdxlg','URDxlG',
-      'urdxlgs','URDxlG_SIM',
-      'urthg','URThG',
-      'urthgs','URThG_SIM',
+      'ur3','UR3',
+      'ur3s','UR3_SIM',
+      'ur3dxlg','UR3DxlG',
+      'ur3dxlgs','UR3DxlG_SIM',
+      'ur3thg','UR3ThG',
+      'ur3thgs','UR3ThG_SIM',
+      'ur3e','UR3e',
+      'ur3es','UR3e_SIM',
+      'ur3ethg','UR3eThG',
+      'ur3ethgs','UR3eThG_SIM',
     If ROBOT_NAME is omitted, we assume 'NoRobot'.
 
     Definition of OPT1 depends on ROBOT_NAME.
@@ -50,12 +54,16 @@ def Run(ct,*args):
       'mikatas':'Mikata_SIM',
       'mikata2':'Mikata2',
       'cx7':'CraneX7',
-      'ur':'UR',
-      'urs':'UR_SIM',
-      'urdxlg':'URDxlG',
-      'urdxlgs':'URDxlG_SIM',
-      'urthg':'URThG',
-      'urthgs':'URThG_SIM',
+      'ur3':'UR3',
+      'ur3s':'UR3_SIM',
+      'ur3dxlg':'UR3DxlG',
+      'ur3dxlgs':'UR3DxlG_SIM',
+      'ur3thg':'UR3ThG',
+      'ur3thgs':'UR3ThG_SIM',
+      'ur3e':'UR3e',
+      'ur3es':'UR3e_SIM',
+      'ur3ethg':'UR3eThG',
+      'ur3ethgs':'UR3eThG_SIM',
     }
   if robot in alias:  robot= alias[robot]
 
@@ -122,30 +130,40 @@ Do you want to abort?''')
     mod= SmartImportReload('ay_py.ros.rbt_cranex7')
     ct.robot= mod.TRobotCraneX7()
 
-  elif robot in ('UR','UR_SIM'):
+  elif robot in ('UR3','UR3_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_ur')
-    ct.robot= mod.TRobotUR(is_sim=(robot=='UR_SIM'))
+    ct.robot= mod.TRobotUR(ur_series='CB',is_sim=(robot=='UR3_SIM'))
 
-  elif robot in ('URDxlG','URDxlG_SIM'):
+  elif robot in ('UR3DxlG','UR3DxlG_SIM'):
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urdxlg')
-    ct.robot= mod.TRobotURDxlG(is_sim=(robot=='URDxlG_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURDxlG(ur_series='CB',is_sim=(robot=='UR3DxlG_SIM'),dev=serial_dev)
 
-  elif robot in ('URThG','URThG_SIM'):
+  elif robot in ('UR3ThG','UR3ThG_SIM'):
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urthg')
-    ct.robot= mod.TRobotURThG(is_sim=(robot=='URThG_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURThG(ur_series='CB',is_sim=(robot=='UR3ThG_SIM'),dev=serial_dev)
+
+  elif robot in ('UR3e','UR3e_SIM'):
+    mod= SmartImportReload('ay_py.ros.rbt_ur')
+    ct.robot= mod.TRobotUR(ur_series='E',is_sim=(robot=='UR3e_SIM'))
+
+  elif robot in ('UR3eThG','UR3eThG_SIM'):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_urthg')
+    ct.robot= mod.TRobotURThG(ur_series='E',is_sim=(robot=='UR3eThG_SIM'),dev=serial_dev)
 
   elif robot=='NoRobot':
     ct.robot= TFakeRobot()
   else:
     raise Exception('Unknown robot: %s'%robot)
 
-  if robot=='NoRobot':  return
+  if robot=='NoRobot' or ct.robot is None:  return
 
   ct.br= tf.TransformBroadcaster()
 
-  if any((ct.robot.Is('PR2'),ct.robot.Is('Baxter'),ct.robot.Is('Motoman'),ct.robot.Is('Mikata'),ct.robot.Is('UR'),ct.robot.Is('URDxlG'),ct.robot.Is('URThG'))):
+  robots_with_state_validity_checker= ('PR2','Baxter','Motoman','Mikata','UR')
+  if any([ct.robot.Is(rbt) for rbt in robots_with_state_validity_checker]):
     ct.state_validity_checker= TStateValidityCheckerMI()
   else:
     ct.state_validity_checker= None
@@ -160,9 +178,10 @@ Do you want to abort?''')
   if False in res:
     CPrint(4, 'Failed to setup robot:',robot)
 
-  if robot in ('PR2','Baxter','BaxterN','Motoman','Mikata','Mikata2','CraneX7','UR','URDxlG','URThG'):
+  # Is this attribute ('environment') used?? --> OBSOLETE_CANDIDATE
+  if not ct.robot.Is('sim'):
     ct.SetAttr('environment', 'real')
-  elif robot in ('PR2_SIM','Baxter_SIM','Motoman_SIM','Mikata_SIM','UR_SIM','URDxlG_SIM','URThG_SIM'):
+  elif ct.robot.Is('sim'):
     ct.SetAttr('environment', 'sim')
 
   #ct.Run('model_loader')
@@ -182,8 +201,10 @@ Do you want to abort?''')
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_moto.yaml'))
   elif ct.robot.Is('Mikata'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_mikata.yaml'))
-  elif ct.robot.Is('URDxlG'):
-    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_urdxlg.yaml'))
-  elif ct.robot.Is('URThG'):
-    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_urthg.yaml'))
+  elif ct.robot.Is('UR3DxlG'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3dxlg.yaml'))
+  elif ct.robot.Is('UR3ThG'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3thg.yaml'))
+  elif ct.robot.Is('UR3eThG'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3ethg.yaml'))
   ct.SetAttr('default_frame', ct.robot.BaseFrame)
