@@ -19,6 +19,8 @@ def Help():
       'mikata','Mikata',
       'mikatas','Mikata_SIM',
       'mikata2','Mikata2',
+      'mikata6','Mikata6',
+      'mikata6s','Mikata6_SIM',
       'cx7','CraneX7',
       'ur3','UR3',
       'ur3s','UR3_SIM',
@@ -53,6 +55,8 @@ def Run(ct,*args):
       'mikata':'Mikata',
       'mikatas':'Mikata_SIM',
       'mikata2':'Mikata2',
+      'mikata6':'Mikata6',
+      'mikata6s':'Mikata6_SIM',
       'cx7':'CraneX7',
       'ur3':'UR3',
       'ur3s':'UR3_SIM',
@@ -124,6 +128,11 @@ Do you want to abort?''')
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_mikata2')
     ct.robot= mod.TRobotMikata2()
+
+  elif robot in ('Mikata6',):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_mikata6')
+    ct.robot= mod.TRobotMikata6()
 
   elif robot in ('CraneX7',):
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
