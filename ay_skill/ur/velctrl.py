@@ -127,7 +127,8 @@ class TURVelCtrl(object):
     #else:
       #self.dt= 0.02
       ##This value is from ur_modern_driver/src/ur_realtime_communication.cpp UrRealtimeCommunication::setSpeed
-    self.dt= 0.02  #NOTE@20190529: This value (0.02) was copied from the latest version of ur_modern_driver.
+    #self.dt= 0.02  #NOTE@20190529: This value (0.02) was copied from the latest version of ur_modern_driver.
+    self.dt= 0.04  #NOTE@20190531: Increased dt since there were frame drops in the control loop.
     self.Step([0.0]*6, 10.0)
 
   #Control step.  NOTE: This is expected to be running at 125 Hz.
@@ -181,6 +182,8 @@ class TVelCtrl(object):
     self.velctrl.Init()
     self.rate_adjuster= rospy.Rate(self.rate)
     self.last_dq= [0.0]*ct.robot.DoF(self.arm)
+    #self.dbglogger= open('/tmp/urvctrl.log','w')
+    #self.dbglogger_start= rospy.Time.now()
 
   def Rate(self):
     return self.rate
@@ -195,6 +198,7 @@ class TVelCtrl(object):
     dof= ct.robot.DoF(arm)
     #dq= copy.deepcopy(dq)
     dq= [v if abs(v)<vmax else v/vmax for v,vmax in zip(dq,ct.robot.JointVelLimits(arm))]
+    dq_original= copy.deepcopy(dq)
     dt= self.TimeStep()
     #print ' '.join(map(lambda f:'%0.2f'%f,dq))
 
@@ -203,9 +207,10 @@ class TVelCtrl(object):
       self.velctrl.Finish()
       raise Exception('TVelCtrl has stopped as the robot is not normal state.')
 
-    if self.rate_adjuster.remaining().to_sec()<0:
+    if self.rate_adjuster.remaining().to_sec()<-self.velctrl.dt:
       CPrint(4,'Loosing real-time control(0):', self.rate_adjuster.remaining().to_sec())
       #self.last_dq= ct.robot.DQ(arm=arm)
+      self.last_dq= [0.0]*dof
 
     #Get current state:
     q= ct.robot.Q(arm=arm)
@@ -249,14 +254,19 @@ class TVelCtrl(object):
       #CPrint(4,'Loosing real-time control(1):', self.rate_adjuster.remaining().to_sec())
     self.velctrl.Step(dq, 100.0)
     self.last_dq= dq
+    #if self.dbglogger is not None:
+      #self.dbglogger.write('{time} {rate_remain} {dq} {dq_original} {robot_dq}\n'.format(time=(rospy.Time.now()-self.dbglogger_start).to_sec(),rate_remain=self.rate_adjuster.remaining().to_sec(),dq=ToStr(dq),dq_original=ToStr(dq_original),robot_dq=ToStr(ct.robot.DQ(arm=arm)) ))
     #print 'ur.velctrl:rate_adjuster.remaining:',self.rate_adjuster.remaining().to_sec()
-    if self.rate_adjuster.remaining().to_sec()<0:
+    if self.rate_adjuster.remaining().to_sec()<-self.velctrl.dt:
       CPrint(4,'Loosing real-time control(2):', self.rate_adjuster.remaining().to_sec())
       #self.last_dq= ct.robot.DQ(arm=arm)
+      self.last_dq= [0.0]*dof
     if sleep:  self.rate_adjuster.sleep()
 
   def Finish(self):
     self.__class__.Delete(self.arm)
     if self.__class__.NumReferences(self.arm)>0:  return
     self.velctrl.Finish()
+    #self.dbglogger.close()
+    #self.dbglogger= None
 

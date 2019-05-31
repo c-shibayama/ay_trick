@@ -132,26 +132,26 @@ Do you want to abort?''')
 
   elif robot in ('UR3','UR3_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_ur')
-    ct.robot= mod.TRobotUR(ur_series='CB',is_sim=(robot=='UR3_SIM'))
+    ct.robot= mod.TRobotUR(name='UR3',ur_series='CB',is_sim=(robot=='UR3_SIM'))
 
   elif robot in ('UR3DxlG','UR3DxlG_SIM'):
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urdxlg')
-    ct.robot= mod.TRobotURDxlG(ur_series='CB',is_sim=(robot=='UR3DxlG_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURDxlG(name='UR3DxlG',ur_series='CB',is_sim=(robot=='UR3DxlG_SIM'),dev=serial_dev)
 
   elif robot in ('UR3ThG','UR3ThG_SIM'):
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urthg')
-    ct.robot= mod.TRobotURThG(ur_series='CB',is_sim=(robot=='UR3ThG_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURThG(name='UR3ThG',ur_series='CB',is_sim=(robot=='UR3ThG_SIM'),dev=serial_dev)
 
   elif robot in ('UR3e','UR3e_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_ur')
-    ct.robot= mod.TRobotUR(ur_series='E',is_sim=(robot=='UR3e_SIM'))
+    ct.robot= mod.TRobotUR(name='UR3e',ur_series='E',is_sim=(robot=='UR3e_SIM'))
 
   elif robot in ('UR3eThG','UR3eThG_SIM'):
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urthg')
-    ct.robot= mod.TRobotURThG(ur_series='E',is_sim=(robot=='UR3eThG_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURThG(name='UR3eThG',ur_series='E',is_sim=(robot=='UR3eThG_SIM'),dev=serial_dev)
 
   elif robot=='NoRobot':
     ct.robot= TFakeRobot()
