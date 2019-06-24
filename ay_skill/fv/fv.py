@@ -84,7 +84,7 @@ def RobotToFV(robot, arm, no_exception=False):
       'stop_detect_obj_r':  '/fingervision/fv_pi11_r/stop_detect_obj',
       'stop_detect_obj_l':  '/fingervision/fv_pi11_l/stop_detect_obj',
       }
-  elif robot.Is('URDxlG') or robot.Is('URThG') or robot.Is('RHP12RNGripper'):
+  elif not robot.Is('UR5eThG') and (robot.Is('URDxlG') or robot.Is('URThG') or robot.Is('RHP12RNGripper')):
     return {
       'srv_separated':      True,
       'fv_pi13_r':          RIGHT,
@@ -97,6 +97,20 @@ def RobotToFV(robot, arm, no_exception=False):
       'start_detect_obj_l': '/fingervision/fv_pi13_l/start_detect_obj',
       'stop_detect_obj_r':  '/fingervision/fv_pi13_r/stop_detect_obj',
       'stop_detect_obj_l':  '/fingervision/fv_pi13_l/stop_detect_obj',
+      }
+  elif robot.Is('UR5eThG'):
+    return {
+      'srv_separated':      True,
+      'fv_pi15_r':          RIGHT,
+      'fv_pi15_l':          LEFT,
+      'clear_obj_r':        '/fingervision/fv_pi15_r/clear_obj',
+      'clear_obj_l':        '/fingervision/fv_pi15_l/clear_obj',
+      'set_frame_skip_r':   '/fingervision/fv_pi15_r/set_frame_skip',
+      'set_frame_skip_l':   '/fingervision/fv_pi15_l/set_frame_skip',
+      'start_detect_obj_r': '/fingervision/fv_pi15_r/start_detect_obj',
+      'start_detect_obj_l': '/fingervision/fv_pi15_l/start_detect_obj',
+      'stop_detect_obj_r':  '/fingervision/fv_pi15_r/stop_detect_obj',
+      'stop_detect_obj_l':  '/fingervision/fv_pi15_l/stop_detect_obj',
       }
   elif not no_exception:
     raise Exception('fv.fv: No info in the RobotToFV for: {robot}=Arm-{arm}'.format(robot=robot.Name,arm=robot.ArmStr(arm)))
