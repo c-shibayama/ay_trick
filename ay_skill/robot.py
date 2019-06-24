@@ -32,10 +32,14 @@ def Help():
       'ur3es','UR3e_SIM',
       'ur3ethg','UR3eThG',
       'ur3ethgs','UR3eThG_SIM',
+      'ur5e','UR5e',
+      'ur5es','UR5e_SIM',
+      'ur5ethg','UR5eThG',
+      'ur5ethgs','UR5eThG_SIM',
     If ROBOT_NAME is omitted, we assume 'NoRobot'.
 
     Definition of OPT1 depends on ROBOT_NAME.
-      'dxlg','mikata','urdxlg','urthg': Device name (default='/dev/ttyUSB0')
+      'dxlg','mikata','ur*dxlg','ur*thg': Device name (default='/dev/ttyUSB0')
 
   '''
 def Run(ct,*args):
@@ -68,6 +72,10 @@ def Run(ct,*args):
       'ur3es':'UR3e_SIM',
       'ur3ethg':'UR3eThG',
       'ur3ethgs':'UR3eThG_SIM',
+      'ur5e':'UR5e',
+      'ur5es':'UR5e_SIM',
+      'ur5ethg':'UR5eThG',
+      'ur5ethgs':'UR5eThG_SIM',
     }
   if robot in alias:  robot= alias[robot]
 
@@ -162,6 +170,15 @@ Do you want to abort?''')
     mod= SmartImportReload('ay_py.ros.rbt_urthg')
     ct.robot= mod.TRobotURThG(name='UR3eThG',ur_series='E',is_sim=(robot=='UR3eThG_SIM'),dev=serial_dev)
 
+  elif robot in ('UR5e','UR5e_SIM'):
+    mod= SmartImportReload('ay_py.ros.rbt_ur')
+    ct.robot= mod.TRobotUR(name='UR5e',ur_series='E',is_sim=(robot=='UR5e_SIM'))
+
+  elif robot in ('UR5eThG','UR5eThG_SIM'):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_urthg')
+    ct.robot= mod.TRobotURThG(name='UR5eThG',ur_series='E',is_sim=(robot=='UR5eThG_SIM'),dev=serial_dev)
+
   elif robot=='NoRobot':
     ct.robot= TFakeRobot()
   else:
@@ -216,4 +233,6 @@ Do you want to abort?''')
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3thg.yaml'))
   elif ct.robot.Is('UR3eThG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3ethg.yaml'))
+  elif ct.robot.Is('UR5eThG'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur5ethg.yaml'))
   ct.SetAttr('default_frame', ct.robot.BaseFrame)
