@@ -18,6 +18,11 @@ def Help():
 def HoldLoop(th_info, ct, arm):
   ct.Run('fv.ctrl_params')
   fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
+  #slip_detect1= lambda: (sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>0.06,)  #0.1
+  slip_detect2= lambda: ((sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>0.06,  #0.1
+                          np.max(fv_data.d_obj_center_filtered)>0.2,
+                          np.max(fv_data.d_obj_orientation_filtered)>0.5,
+                          np.max(fv_data.d_obj_area_filtered)>0.3))
 
   #Stop object detection
   ct.Run('fv.fv','stop_detect_obj',arm)
@@ -27,8 +32,8 @@ def HoldLoop(th_info, ct, arm):
 
   g_pos= ct.robot.GripperPos(arm)
   while th_info.IsRunning() and not rospy.is_shutdown():
-    if sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>0.06: #0.1
-      print 'slip',rospy.Time.now()
+    if any(slip_detect2()):
+      print 'slip',slip_detect2(),rospy.Time.now()
       #g_pos-= 0.0005 if arm==LEFT else 0.002
       g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
       #ct.robot.MoveGripper(pos=g_pos, arm=arm, speed=100.0, blocking=False)

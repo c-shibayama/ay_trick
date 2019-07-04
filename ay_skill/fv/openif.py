@@ -18,7 +18,11 @@ def Help():
 
 def OpeningLoopDefaultOptions():
   return {
-    'slip_threshold': 0.3,  #Threshold of slip amount to open the gripper.
+    #'slip_threshold': 0.3,  #Threshold of slip amount to open the gripper.
+    'sensitivity_slip': 0.3,  #Sensitivity of slip detection (smaller is more sensitive).
+    'sensitivity_oc':0.3,  #Sensitivity of object-center-movement detection (smaller is more sensitive).
+    'sensitivity_oo':0.8,  #Sensitivity of object-orientation-movement detection (smaller is more sensitive).
+    'sensitivity_oa':0.3,  #Sensitivity of object-area-change detection (smaller is more sensitive).
     'nforce_threshold': 7,  #Threshold of number of force changing points to open the gripper.
     'dw_grip': 0.02,  #Displacement of gripper movement.
     }
@@ -34,6 +38,10 @@ def OpeningLoop(th_info, ct, arm, options):
   #FIXME: This should be a distance of (x,y) or (x,y,z) (z is estimated by x,y though...). Do not use torque.
   n_change= lambda side: sum([1 if Dist(f[:6],f0[:6])>0.9 else 0 for f,f0 in zip(fv_data.force_array[side],fa0[side])])
   #dth= 5
+  slip_detect2= lambda: ((sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>options['sensitivity_slip'],
+                          np.max(fv_data.d_obj_center_filtered)>options['sensitivity_oc'],
+                          np.max(fv_data.d_obj_orientation_filtered)>options['sensitivity_oo'],
+                          np.max(fv_data.d_obj_area_filtered)>options['sensitivity_oa']))
 
   while th_info.IsRunning() and not rospy.is_shutdown():
     if n_change(0)+n_change(1)>options['nforce_threshold']:
@@ -41,8 +49,9 @@ def OpeningLoop(th_info, ct, arm, options):
       #ct.robot.OpenGripper(arm)
       ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+options['dw_grip'], arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
       break
-    elif sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>options['slip_threshold']:
-      print 'Slip is detected'
+    #elif sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>options['slip_threshold']:
+    elif any(slip_detect2()):
+      print 'Slip is detected',slip_detect2()
       #ct.robot.OpenGripper(arm)
       ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+options['dw_grip'], arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
       break
@@ -87,6 +96,3 @@ def Run(ct,*args):
     CPrint(2,'Turn off:','vs_openif'+LRToStrS(LEFT))
     ct.thread_manager.Stop(name='vs_openif'+LRToStrS(RIGHT))
     ct.thread_manager.Stop(name='vs_openif'+LRToStrS(LEFT))
-
-
-

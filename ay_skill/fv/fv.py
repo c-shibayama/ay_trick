@@ -144,6 +144,13 @@ def Filter1ObjInfo(ct,l,msg):
   l.obj_center[side]= msg.obj_center
   l.obj_orientation[side]= msg.obj_orientation
   l.obj_area[side]= msg.obj_area
+  l.d_obj_center[side]= msg.d_obj_center
+  l.d_obj_orientation[side]= msg.d_obj_orientation
+  l.d_obj_area[side]= msg.d_obj_area
+  l.obj_area_filtered[side]= msg.obj_area_filtered
+  l.d_obj_center_filtered[side]= msg.d_obj_center_filtered
+  l.d_obj_orientation_filtered[side]= msg.d_obj_orientation_filtered
+  l.d_obj_area_filtered[side]= msg.d_obj_area_filtered
   l.tm_last_topic[2+side]= msg.header.stamp
 
   if ct.callback.fv_objinfo[ct.robot.ArmStrS(l.arm)][side] is not None:
@@ -183,6 +190,13 @@ def Run(ct,*args):
       l.obj_center= [None,None]
       l.obj_orientation= [None,None]
       l.obj_area= [None,None]
+      l.d_obj_center= [None,None]
+      l.d_obj_orientation= [None,None]
+      l.d_obj_area= [None,None]
+      l.obj_area_filtered= [None,None]
+      l.d_obj_center_filtered= [None,None]
+      l.d_obj_orientation_filtered= [None,None]
+      l.d_obj_area_filtered= [None,None]
       l.tm_last_topic= [None,None,None,None]  #ros time of last topic receiving. wrench-r,l, objinfo-r,l
       l.running= True
 

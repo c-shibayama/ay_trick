@@ -94,6 +94,9 @@ def Run(ct,*args):
     CPrint(4,'This program works only with Baxter, Mikata, CraneX7, and UR.')
     return
 
+  speed_gain= 1.0
+  if ct.robot.Is('UR'):  speed_gain= 0.4
+
   arm= ct.robot.Arm
 
   is_dxlg= [ct.robot.EndEff(a) is not None and ct.robot.EndEff(a).Is('DxlGripper') for a in range(ct.robot.NumArms)]
@@ -210,12 +213,12 @@ Command:
           suppress_velctrl= False
         state[1]= 'no_cmd'
       elif state[1]=='key_p' or state[1]=='cmd_Y':
-        if 'vs_pickup2a'+LRToStrS(arm) not in ct.thread_manager.thread_list:
+        if 'vs_pickup2b'+LRToStrS(arm) not in ct.thread_manager.thread_list:
           options= {'keep_thread_after_exit':True}  #,'resume_detect_obj':False
-          ct.Run('fv.pickup2a','on',arm,options)
+          ct.Run('fv.pickup2b','on',arm,options)
           suppress_velctrl= True
         else:
-          ct.Run('fv.pickup2a','off',arm)
+          ct.Run('fv.pickup2b','off',arm)
           suppress_velctrl= False
         state[1]= 'no_cmd'
 
@@ -277,9 +280,7 @@ Command:
 
       if state[3] and state[1] in ('position','orientation'):
         q= ct.robot.Q(arm=arm)
-        f= 1.0
-        #f= 0.2
-        vx= map(lambda x:f*0.4*x,steps)+map(lambda x:f*1.0*x,wsteps)
+        vx= map(lambda x:speed_gain*0.4*x,steps)+map(lambda x:speed_gain*1.0*x,wsteps)
         if ct.robot.DoF(arm=arm)>=6:
           dq= ToList(la.pinv(ct.robot.J(q,arm=arm))*MCVec(vx))
         else:  #e.g. Mikata Arm

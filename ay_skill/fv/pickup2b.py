@@ -1,22 +1,22 @@
 #!/usr/bin/python
 from core_tool import *
 def Help():
-  return '''Slip-based picking up version 2a.
+  return '''Slip-based picking up version 2b.
     Similar to vs_hold, but the motion is automated.
   Usage:
-    fv.pickup2a 'on' [, ARM [, OPTIONS]]
+    fv.pickup2b 'on' [, ARM [, OPTIONS]]
       Turn on the thread.
       ARM: RIGHT or LEFT. Default: ct.robot.Arm
       OPTIONS: Options of PickupLoop (see PickupLoopDefaultOptions).
-    fv.pickup2a 'off' [, ARM]
+    fv.pickup2b 'off' [, ARM]
       Stop the thread.
       ARM: RIGHT or LEFT. Default: ct.robot.Arm
-    fv.pickup2a
-    fv.pickup2a 'clear'
+    fv.pickup2b
+    fv.pickup2b 'clear'
       Stop all threads. Equivalent to:
-        fv.pickup2a 'off' LEFT
-        fv.pickup2a 'off' RIGHT
-    fv.pickup2a 'once' [, ARM [, OPTIONS]]
+        fv.pickup2b 'off' LEFT
+        fv.pickup2b 'off' RIGHT
+    fv.pickup2b 'once' [, ARM [, OPTIONS]]
       Execute motion once (not thread).
       ARM: RIGHT or LEFT. Default: ct.robot.Arm
       OPTIONS: Options of PickupLoop (see PickupLoopDefaultOptions).
@@ -25,7 +25,10 @@ def Help():
 def PickupLoopDefaultOptions(ct):
   ct.Run('fv.ctrl_params')
   return {
-    'slip_sensitivity': 0.4,  #Slip sensitivity (smaller is more sensitive).
+    'sensitivity_slip': 0.06,  #Sensitivity of slip detection (smaller is more sensitive).
+    'sensitivity_oc':0.2,  #Sensitivity of object-center-movement detection (smaller is more sensitive).
+    'sensitivity_oo':0.5,  #Sensitivity of object-orientation-movement detection (smaller is more sensitive).
+    'sensitivity_oa':0.3,  #Sensitivity of object-area-change detection (smaller is more sensitive).
     #'area_drop_rate': 0.8,
     'area_drop_rate': 0.6,  #If object area becomes smaller than this rate, it's considered as dropped.
     'z_final': ct.GetAttr('fv_ctrl','pickup2a_z_final'),  #Final height (offset from the beginning).
@@ -41,35 +44,6 @@ def PickupLoopDefaultOptions(ct):
 def PickupLoop(th_info, ct, arm, options):
   ct.Run('fv.ctrl_params')
   fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
-
-  #Updated: obj_area_filtered is provided by fv_filter1 of fingervision.
-  #fv_data.obj_area_tm= [fv_data.tm_last_topic[2+side] for side in [0,1]]
-  #fv_data.obj_area_log= [([fv_data.obj_area[side]] if fv_data.obj_area[side] is not None else []) for side in [0,1]]
-  #fv_data.obj_area_filtered= [None for side in [0,1]]
-  #def ObjAreaFilter(ct, l, side):
-    #if l.obj_area_tm[side] is None or l.tm_last_topic[2+side]>l.obj_area_tm[side]:
-      #fv_data.obj_area_tm[side]= l.tm_last_topic[2+side]
-      #fv_data.obj_area_log[side].append(fv_data.obj_area[side])
-      #if len(fv_data.obj_area_log[side])>options['obj_area_filter_len']:
-        #fv_data.obj_area_log[side].pop(0)
-      #fv_data.obj_area_filtered[side]= sum(fv_data.obj_area_log[side])/len(fv_data.obj_area_log[side])
-  #ct.callback.fv_objinfo[ct.robot.ArmStrS(arm)]= [ObjAreaFilter,ObjAreaFilter]
-  ##Wait for obj_area_filtered
-  #for i in range(100):
-    #if len(fv_data.obj_area_log[0])>=options['obj_area_filter_len']:  break
-    #rospy.sleep(0.01)
-
-  #get_center= lambda: [0.5*(fv_data.obj_center[0][0]-fv_data.obj_center[1][0]),
-                       #0.5*(fv_data.obj_center[0][1]+fv_data.obj_center[1][1]) ]
-  #def get_center():
-    #xy= [[],[]]
-    #area_min= 0.1
-    #for side in range(2):
-      #if fv_data.obj_area[side]>area_min:
-        #xy[0].append(fv_data.obj_center[side][0])
-        #xy[1].append(fv_data.obj_center[side][1])
-    #if len(xy[0])==0:  return [0.0,0.0]
-    #return [sum(xy[0])/float(len(xy[0])), sum(xy[1])/float(len(xy[1]))]
 
   #Get object center computed as a sum of object centers from both fingers
   #weighted with their areas.
@@ -87,12 +61,11 @@ def PickupLoop(th_info, ct, arm, options):
   #Slip computation for log.
   get_slip1= lambda: sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])
   #Slip computation for control.
-  get_slip1_nml= lambda: sum(fv_data.mv_s[0])/obj_area0_reg[0]+sum(fv_data.mv_s[1])/obj_area0_reg[1]
-  #def get_slip2():
-    #center= get_center()
-    #center_set.append(center)
-    #if len(center_set)>2000:  center_set.pop(0)
-    #return Dist(center,center_set[0])
+  #get_slip1_nml= lambda: sum(fv_data.mv_s[0])/obj_area0_reg[0]+sum(fv_data.mv_s[1])/obj_area0_reg[1]
+  slip_detect2= lambda: ((sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>options['sensitivity_slip'],
+                          np.max(fv_data.d_obj_center_filtered)>options['sensitivity_oc'],
+                          np.max(fv_data.d_obj_orientation_filtered)>options['sensitivity_oo'],
+                          np.max(fv_data.d_obj_area_filtered)>options['sensitivity_oa']))
 
   #Stop object detection
   ct.Run('fv.fv','stop_detect_obj',arm)
@@ -205,7 +178,6 @@ def PickupLoop(th_info, ct, arm, options):
       tm= rospy.Time.now().to_sec()
       l.log['area'].append([tm,sum(fv_data.obj_area)])
       l.log['slip'].append([tm,get_slip1()])
-      l.log['slip_nml'].append([tm,get_slip1_nml()])
       l.log['center'].append([tm,get_center_avr()])
       l.log['f'].append([tm,map(float,fv_data.force[0][:3])+map(float,fv_data.force[1][:3])])
       l.log['g_pos'].append([tm,ct.robot.GripperPos(arm)])
@@ -216,8 +188,9 @@ def PickupLoop(th_info, ct, arm, options):
 
     #l.slip_curr= get_slip1()
     #if l.slip_curr>0.1:
-    l.slip_curr= get_slip1_nml()  #Normalized by object area.
-    if l.slip_curr>options['slip_sensitivity']:
+    #l.slip_curr= get_slip1_nml()  #Normalized by object area.
+    if any(slip_detect2()):
+      CPrint(1,'slip_detection:', rospy.Time.now().to_sec(), slip_detect2())
       #print get_slip1(), get_slip1_nml()
       #l.slip_detected= True
       if not l.suppress_slipavd and l.g_motion==0 and not IsDropped():
@@ -265,10 +238,11 @@ def PickupLoop(th_info, ct, arm, options):
       #When the slip is large, we move the robot slowly.
       #keypts= ([0.3,1.0], [0.7,0.0])
       #slip_to_kp_rate= max(keypts[1][1],min(keypts[1][0],(keypts[1][1]-keypts[0][1])/(keypts[1][0]-keypts[0][0])*(l.slip_curr-keypts[0][0])+keypts[0][1]))
-      s0,s1= 0.3, 0.7  #Slip range
-      r0,r1= 1.0, 0.5  #Corresponding kp rate
-      slip_to_kp_rate= max(r1,min(r0,(r1-r0)/(s1-s0)*(l.slip_curr-s0)+r0))
-      if z_err<0.0:  slip_to_kp_rate= 1.0
+      #s0,s1= 0.3, 0.7  #Slip range
+      #r0,r1= 1.0, 0.5  #Corresponding kp rate
+      #slip_to_kp_rate= max(r1,min(r0,(r1-r0)/(s1-s0)*(l.slip_curr-s0)+r0))
+      #if z_err<0.0:  slip_to_kp_rate= 1.0
+      slip_to_kp_rate= 1.0
 
       #vx= [0.0,0.0, kp*z_err-kd*vx1[2,0], 0.0,0.0,0.0]
       vx= [kp[d]*(l.x0[d]-x1[d]) - kd[d]*vx1[d,0] for d in range(6)]
@@ -331,7 +305,7 @@ def PickupLoop(th_info, ct, arm, options):
   sm['to_initial'].Actions[-1]= action_quit
   sm['to_initial'].NewAction()
   sm['to_initial'].Actions[-1].Condition= l.force_detector.IsDetected  #Stop when large force is detected.
-  sm['to_initial'].Actions[-1].Action= lambda: (SetZCtrl(None,'high'), CPrint(4,'fv.pickup2a: Large force is detected. Stopping...'))
+  sm['to_initial'].Actions[-1].Action= lambda: (SetZCtrl(None,'high'), CPrint(4,'fv.pickup2b: Large force is detected. Stopping...'))
   #sm['to_initial'].Actions[-1].NextState= 'grasp_prev'
   sm['to_initial'].Actions[-1].NextState= action_quit.NextState
   sm['to_initial'].NewAction()
@@ -431,25 +405,25 @@ def Run(ct,*args):
     InsertDict(options, user_options)
     if 'log' in user_options:  options['log']= user_options['log']
 
-    if 'vs_pickup2a'+LRToStrS(arm) in ct.thread_manager.thread_list:
-      print 'vs_pickup2a'+LRToStrS(arm),'is already on'
+    if 'vs_pickup2b'+LRToStrS(arm) in ct.thread_manager.thread_list:
+      print 'vs_pickup2b'+LRToStrS(arm),'is already on'
 
     if not all(ct.Run('fv.fv','is_active',arm)):
       ct.Run('fv.fv','on',arm)
 
-    CPrint(1,'Turn on:','vs_pickup2a'+LRToStrS(arm))
-    ct.thread_manager.Add(name='vs_pickup2a'+LRToStrS(arm), target=lambda th_info: PickupLoop(th_info,ct,arm,options))
+    CPrint(1,'Turn on:','vs_pickup2b'+LRToStrS(arm))
+    ct.thread_manager.Add(name='vs_pickup2b'+LRToStrS(arm), target=lambda th_info: PickupLoop(th_info,ct,arm,options))
 
   elif command=='off':
     arm= args[0] if len(args)>0 else ct.robot.Arm
-    CPrint(2,'Turn off:','vs_pickup2a'+LRToStrS(arm))
-    ct.thread_manager.Stop(name='vs_pickup2a'+LRToStrS(arm))
+    CPrint(2,'Turn off:','vs_pickup2b'+LRToStrS(arm))
+    ct.thread_manager.Stop(name='vs_pickup2b'+LRToStrS(arm))
 
   elif command=='clear':
-    CPrint(2,'Turn off:','vs_pickup2a'+LRToStrS(RIGHT))
-    CPrint(2,'Turn off:','vs_pickup2a'+LRToStrS(LEFT))
-    ct.thread_manager.Stop(name='vs_pickup2a'+LRToStrS(RIGHT))
-    ct.thread_manager.Stop(name='vs_pickup2a'+LRToStrS(LEFT))
+    CPrint(2,'Turn off:','vs_pickup2b'+LRToStrS(RIGHT))
+    CPrint(2,'Turn off:','vs_pickup2b'+LRToStrS(LEFT))
+    ct.thread_manager.Stop(name='vs_pickup2b'+LRToStrS(RIGHT))
+    ct.thread_manager.Stop(name='vs_pickup2b'+LRToStrS(LEFT))
 
   elif command=='once':
     arm= args[0] if len(args)>0 else ct.robot.Arm
