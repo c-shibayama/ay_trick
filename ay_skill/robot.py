@@ -14,6 +14,7 @@ def Help():
       'rq','RobotiqNB',
       'dxlg','DxlGripper',
       'thg','RHP12RNGripper',
+      'ezg','EZGripper',
       'moto','Motoman',
       'motos','Motoman_SIM',
       'mikata','Mikata',
@@ -54,6 +55,7 @@ def Run(ct,*args):
       'rq':'RobotiqNB',
       'dxlg':'DxlGripper',
       'thg':'RHP12RNGripper',
+      'ezg':'EZGripper',
       'moto':'Motoman',
       'motos':'Motoman_SIM',
       'mikata':'Mikata',
@@ -117,6 +119,11 @@ def Run(ct,*args):
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_rhp12rn')
     ct.robot= mod.TRobotRHP12RNGripper(dev=serial_dev)
+
+  elif robot in ('EZGripper',):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_ezg')
+    ct.robot= mod.TRobotEZGripper(dev=serial_dev)
 
   elif robot in ('Motoman','Motoman_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_moto')
@@ -223,6 +230,8 @@ Do you want to abort?''')
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlg.yaml'))
   elif ct.robot.Is('RHP12RNGripper'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_thg.yaml'))
+  elif ct.robot.Is('EZGripper'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ezg.yaml'))
   elif ct.robot.Is('Motoman'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_moto.yaml'))
   elif ct.robot.Is('Mikata'):

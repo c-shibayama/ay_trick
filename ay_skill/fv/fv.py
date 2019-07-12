@@ -84,7 +84,7 @@ def RobotToFV(robot, arm, no_exception=False):
       'stop_detect_obj_r':  '/fingervision/fv_pi11_r/stop_detect_obj',
       'stop_detect_obj_l':  '/fingervision/fv_pi11_l/stop_detect_obj',
       }
-  elif not robot.Is('UR5eThG') and (robot.Is('URDxlG') or robot.Is('URThG') or robot.Is('RHP12RNGripper')):
+  elif not robot.Is('UR5eThG') and (robot.Is('URDxlG') or robot.Is('URThG') or robot.Is('RHP12RNGripper') or robot.Is('EZGripper')):
     return {
       'srv_separated':      True,
       'fv_pi13_r':          RIGHT,
