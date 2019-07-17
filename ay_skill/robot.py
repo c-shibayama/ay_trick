@@ -144,10 +144,10 @@ Do you want to abort?''')
     mod= SmartImportReload('ay_py.ros.rbt_mikata2')
     ct.robot= mod.TRobotMikata2()
 
-  elif robot in ('Mikata6',):
+  elif robot in ('Mikata6','Mikata6_SIM'):
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_mikata6')
-    ct.robot= mod.TRobotMikata6()
+    ct.robot= mod.TRobotMikata6(is_sim=(robot=='Mikata6_SIM'))
 
   elif robot in ('CraneX7',):
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
