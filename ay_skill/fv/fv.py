@@ -226,8 +226,8 @@ def Run(ct,*args):
         ct.srvp[armstr+'start_detect_obj'](std_srvs.srv.EmptyRequest())
         #ct.srvp[armstr+'clear_obj'](std_srvs.srv.EmptyRequest())
 
-    ct.AddSub('fv_filter1_wrench', '/fingervision/fv_filter1_wrench', fingervision_msgs.msg.Filter1Wrench, lambda msg,l=l:Filter1Wrench(ct,l,msg))
-    ct.AddSub('fv_filter1_objinfo', '/fingervision/fv_filter1_objinfo', fingervision_msgs.msg.Filter1ObjInfo, lambda msg,l=l:Filter1ObjInfo(ct,l,msg))
+    ct.AddSubW('fv_filter1_wrench', '/fingervision/fv_filter1_wrench', fingervision_msgs.msg.Filter1Wrench, lambda msg,l=l:Filter1Wrench(ct,l,msg), time_out=3.0)
+    ct.AddSubW('fv_filter1_objinfo', '/fingervision/fv_filter1_objinfo', fingervision_msgs.msg.Filter1ObjInfo, lambda msg,l=l:Filter1ObjInfo(ct,l,msg), time_out=3.0)
 
   elif command=='clear':
     if len(args)==0:  args= ['all']
