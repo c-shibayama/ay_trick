@@ -8,6 +8,7 @@ def Run(ct,*args):
   #elif ct.robot.Is('Motoman'):    ct.Run('keyctrl3')
   elif ct.robot.Is('Mikata'):     ct.Run('keyctrl3')
   elif ct.robot.Is('UR'):         ct.Run('keyctrl3')
+  elif ct.robot.Is('Gen3'):       ct.Run('keyctrl3')
   elif ct.robot.Is('RobotiqNB'):  ct.Run('keyctrlrq')
   elif ct.robot.Is('DxlGripper'):  ct.Run('keyctrlrq')
   elif ct.robot.Is('RHP12RNGripper'):  ct.Run('keyctrlrq')

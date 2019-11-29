@@ -90,8 +90,8 @@ def Callback(state, steps, wsteps, gsteps, data):
       wsteps[2]= multiplier * axes[3]
 
 def Run(ct,*args):
-  if not any((ct.robot.Is('Baxter'),ct.robot.Is('Mikata'),ct.robot.Is('CraneX7'),ct.robot.Is('UR'))):     #,ct.robot.Is('Motoman')
-    CPrint(4,'This program works only with Baxter, Mikata, CraneX7, and UR.')
+  if not any((ct.robot.Is('Baxter'),ct.robot.Is('Mikata'),ct.robot.Is('CraneX7'),ct.robot.Is('UR'),ct.robot.Is('Gen3'))):     #,ct.robot.Is('Motoman')
+    CPrint(4,'This program works only with Baxter, Mikata, CraneX7, UR, and Gen3.')
     return
 
   speed_gain= 1.0

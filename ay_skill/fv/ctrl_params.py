@@ -45,3 +45,6 @@ def Run(ct,*args):
   elif ct.robot.Is('UR'):
     ct.SetAttr('fv_ctrl','pickup2a_kp', [1.0,1.0, 4.0,  1.0,1.0,1.0])
     ct.SetAttr('fv_ctrl','pickup2a_kd', [0.01,0.01, 0.03,  0.01,0.01,0.01])
+  elif ct.robot.Is('Gen3'):
+    ct.SetAttr('fv_ctrl','pickup2a_kp', [1.0,1.0, 4.0,  1.0,1.0,1.0])
+    ct.SetAttr('fv_ctrl','pickup2a_kd', [0.01,0.01, 0.03,  0.01,0.01,0.01])

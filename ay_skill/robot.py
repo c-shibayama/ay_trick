@@ -37,6 +37,10 @@ def Help():
       'ur5es','UR5e_SIM',
       'ur5ethg','UR5eThG',
       'ur5ethgs','UR5eThG_SIM',
+      'gen3','Gen3',
+      'gen3s','Gen3_SIM',
+      'gen3thg','Gen3ThG',
+      'gen3thgs','Gen3ThG_SIM',
     If ROBOT_NAME is omitted, we assume 'NoRobot'.
 
     Definition of OPT1 depends on ROBOT_NAME.
@@ -78,6 +82,10 @@ def Run(ct,*args):
       'ur5es':'UR5e_SIM',
       'ur5ethg':'UR5eThG',
       'ur5ethgs':'UR5eThG_SIM',
+      'gen3':'Gen3',
+      'gen3s':'Gen3_SIM',
+      'gen3thg':'Gen3ThG',
+      'gen3thgs':'Gen3ThG_SIM',
     }
   if robot in alias:  robot= alias[robot]
 
@@ -186,6 +194,15 @@ Do you want to abort?''')
     mod= SmartImportReload('ay_py.ros.rbt_urthg')
     ct.robot= mod.TRobotURThG(name='UR5eThG',ur_series='E',is_sim=(robot=='UR5eThG_SIM'),dev=serial_dev)
 
+  elif robot in ('Gen3','Gen3_SIM'):
+    mod= SmartImportReload('ay_py.ros.rbt_gen3')
+    ct.robot= mod.TRobotGen3(gen3ns='gen3a', is_sim=(robot=='Gen3_SIM'))
+
+  elif robot in ('Gen3ThG','Gen3ThG_SIM'):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_gen3thg')
+    ct.robot= mod.TRobotGen3ThG(gen3ns='gen3a', is_sim=(robot=='Gen3ThG_SIM'),dev=serial_dev)
+
   elif robot=='NoRobot':
     ct.robot= TFakeRobot()
   else:
@@ -195,7 +212,7 @@ Do you want to abort?''')
 
   ct.br= tf.TransformBroadcaster()
 
-  robots_with_state_validity_checker= ('PR2','Baxter','Motoman','Mikata','UR')
+  robots_with_state_validity_checker= ('PR2','Baxter','Motoman','Mikata','UR','Gen3')
   if any([ct.robot.Is(rbt) for rbt in robots_with_state_validity_checker]):
     ct.state_validity_checker= TStateValidityCheckerMI()
   else:
@@ -244,4 +261,6 @@ Do you want to abort?''')
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3ethg.yaml'))
   elif ct.robot.Is('UR5eThG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur5ethg.yaml'))
+  elif ct.robot.Is('Gen3ThG'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_gen3thg.yaml'))
   ct.SetAttr('default_frame', ct.robot.BaseFrame)
