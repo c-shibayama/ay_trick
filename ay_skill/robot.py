@@ -33,6 +33,8 @@ def Help():
       'ur3es','UR3e_SIM',
       'ur3ethg','UR3eThG',
       'ur3ethgs','UR3eThG_SIM',
+      'ur3edxlg','UR3eDxlG',
+      'ur3edxlgs','UR3eDxlG_SIM',
       'ur5e','UR5e',
       'ur5es','UR5e_SIM',
       'ur5ethg','UR5eThG',
@@ -78,6 +80,8 @@ def Run(ct,*args):
       'ur3es':'UR3e_SIM',
       'ur3ethg':'UR3eThG',
       'ur3ethgs':'UR3eThG_SIM',
+      'ur3edxlg':'UR3eDxlG',
+      'ur3edxlgs':'UR3eDxlG_SIM',
       'ur5e':'UR5e',
       'ur5es':'UR5e_SIM',
       'ur5ethg':'UR5eThG',
@@ -185,6 +189,11 @@ Do you want to abort?''')
     mod= SmartImportReload('ay_py.ros.rbt_urthg')
     ct.robot= mod.TRobotURThG(name='UR3eThG',ur_series='E',is_sim=(robot=='UR3eThG_SIM'),dev=serial_dev)
 
+  elif robot in ('UR3eDxlG','UR3eDxlG_SIM'):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_urdxlg')
+    ct.robot= mod.TRobotURDxlG(name='UR3eDxlG',ur_series='E',is_sim=(robot=='UR3eDxlG_SIM'),dev=serial_dev)
+
   elif robot in ('UR5e','UR5e_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_ur')
     ct.robot= mod.TRobotUR(name='UR5e',ur_series='E',is_sim=(robot=='UR5e_SIM'))
@@ -259,6 +268,8 @@ Do you want to abort?''')
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3thg.yaml'))
   elif ct.robot.Is('UR3eThG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3ethg.yaml'))
+  elif ct.robot.Is('UR3eDxlG'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3edxlg.yaml'))
   elif ct.robot.Is('UR5eThG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur5ethg.yaml'))
   elif ct.robot.Is('Gen3ThG'):
