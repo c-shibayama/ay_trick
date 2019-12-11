@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from core_tool import *
+import tf
 def Help():
   return '''One time tf listening.
     Useful when obtaining static transformation.
@@ -19,5 +20,8 @@ def Run(ct,*args):
   except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
     CPrint(0,'transformation not found')
     return
-  ct.SetAttr(*(attr_keys + (trans+rot,)))
+  trans_rot= trans+rot
+  if attr_keys is not None:
+    ct.SetAttr(*(attr_keys + (trans_rot,)))
+  return trans_rot
 
