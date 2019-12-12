@@ -134,7 +134,7 @@ def Filter1Wrench(ct,l,msg):
   gpos= ct.robot.GripperPos(l.arm)
   lw_xg= Transform(lw_xe,[0,(-0.5*gpos,+0.5*gpos)[side],0, 0,0,0,1])
   ct.br.sendTransform(lw_xg[0:3],lw_xg[3:],
-      rospy.Time.now(), msg.header.frame_id, ct.robot.EndLink(l.arm))
+      msg.header.stamp, msg.header.frame_id, ct.robot.EndLink(l.arm))
 
 def Filter1ObjInfo(ct,l,msg):
   table= RobotToFV(ct.robot, l.arm)

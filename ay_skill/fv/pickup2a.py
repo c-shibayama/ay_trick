@@ -270,7 +270,7 @@ def PickupLoop(th_info, ct, arm, options):
       slip_to_kp_rate= max(r1,min(r0,(r1-r0)/(s1-s0)*(l.slip_curr-s0)+r0))
       if z_err<0.0:  slip_to_kp_rate= 1.0
 
-      x_err= DiffX(x1[d],l.x0[d])
+      x_err= DiffX(x1,l.x0)
       vx= [kp[d]*x_err[d] - kd[d]*vx1[d,0] for d in range(6)]
       if l.z_gain_mode=='low':
         vx[2]= ct.GetAttr('fv_ctrl','pickup2a_lowgain')*slip_to_kp_rate*kp[2]*z_err-kd[2]*vx1[2,0]

@@ -166,7 +166,7 @@ Command:
     t: Run fv.trackf4 (or fv.trackf2) 'on'/'off' arm (Tai Chi)
     y: Run fv.trackf4 (or fv.trackf2) for BOTH ARM   (Tai Chi)
     o: Run fv.tracko 'on'/'off' arm  (Proximity vision-based tracking)
-    p: Run fv.pickup2a 'on'/'off' arm (Slip-based automatic picking up) '''
+    p: Run fv.pickup2b 'on'/'off' arm (Slip-based automatic picking up) '''
         state[1]= 'no_cmd'
 
       elif state[1]=='key_l' or state[1]=='key_r':
