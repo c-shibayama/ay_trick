@@ -3,7 +3,7 @@ from core_tool import *
 def Help():
   return '''Opening gripper if an external force is applied.
   Usage:
-    fv.openif 'on' [, ARM]
+    fv.openif 'on' [, ARM [, OPTIONS]]
       Turn on an opening thread.
       ARM: RIGHT or LEFT. Default: ct.robot.Arm
       OPTIONS: Options of OpeningLoop (see OpeningLoopDefaultOptions).
@@ -25,6 +25,7 @@ def OpeningLoopDefaultOptions():
     'sensitivity_oa':0.3,  #Sensitivity of object-area-change detection (smaller is more sensitive).
     'nforce_threshold': 7,  #Threshold of number of force changing points to open the gripper.
     'dw_grip': 0.02,  #Displacement of gripper movement.
+    'log': {},  #[output] Execution results are stored into this dictionary.
     }
 
 def OpeningLoop(th_info, ct, arm, options):
@@ -33,6 +34,9 @@ def OpeningLoop(th_info, ct, arm, options):
 
   #Stop object detection
   ct.Run('fv.fv','stop_detect_obj',arm)
+  options['log']['opened']= False
+  options['log']['detected']= None
+  options['log']['fv_data_at_detection']= None
 
   fa0= copy.deepcopy(fv_data.force_array)
   #FIXME: This should be a distance of (x,y) or (x,y,z) (z is estimated by x,y though...). Do not use torque.
@@ -46,17 +50,23 @@ def OpeningLoop(th_info, ct, arm, options):
   while th_info.IsRunning() and not rospy.is_shutdown():
     if n_change(0)+n_change(1)>options['nforce_threshold']:
       print 'Force is applied'
+      options['log']['opened']= True
+      options['log']['detected']= 'force'
+      options['log']['fv_data_at_detection']= copy.deepcopy(fv_data)
       #ct.robot.OpenGripper(arm)
       ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+options['dw_grip'], arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
       break
     #elif sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>options['slip_threshold']:
     elif any(slip_detect2()):
       print 'Slip is detected',slip_detect2()
+      options['log']['opened']= True
+      options['log']['detected']= 'slip'
+      options['log']['fv_data_at_detection']= copy.deepcopy(fv_data)
       #ct.robot.OpenGripper(arm)
       ct.robot.MoveGripper(pos=ct.robot.GripperPos(arm)+options['dw_grip'], arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm])
       break
     else:
-      rospy.sleep(0.02)
+      rospy.sleep(0.005)
 
   ct.Run('fv.fv','start_detect_obj',arm)
 
@@ -73,6 +83,7 @@ def Run(ct,*args):
 
     options= OpeningLoopDefaultOptions()
     InsertDict(options, user_options)
+    if 'log' in user_options:  options['log']= user_options['log']
 
     if 'vs_openif'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_openif'+LRToStrS(arm),'is already on'

@@ -18,6 +18,12 @@ def Help():
     fv.fv 'is_active' [, ARM1 [, ARM2]]
       Check if FingerVision is working properly.
       ARM*: RIGHT, LEFT, or 'all' (all arms). Default: 'all'
+    fv.fv 'pause' [, ARM1 [, ARM2]]
+      Pause video processing.
+      ARM*: RIGHT, LEFT, or 'all' (all arms). Default: 'all'
+    fv.fv 'resume' [, ARM1 [, ARM2]]
+      Resume video processing.
+      ARM*: RIGHT, LEFT, or 'all' (all arms). Default: 'all'
     fv.fv 'frame_skip', SKIP [, ARM1 [, ARM2]]
       Set frame-skip to SKIP.
       SKIP: Frames to be skipped. 0: No skip.
@@ -42,6 +48,8 @@ def RobotToFV(robot, arm, no_exception=False):
         'fv_pi01_r':        RIGHT,
         'fv_pi01_l':        LEFT,
         'clear_obj':        '/fingervision/fv_pi01/clear_obj',
+        'pause':            '/fingervision/fv_pi01/pause',
+        'resume':           '/fingervision/fv_pi01/resume',
         'set_frame_skip':   '/fingervision/fv_pi01/set_frame_skip',
         'start_detect_obj': '/fingervision/fv_pi01/start_detect_obj',
         'stop_detect_obj':  '/fingervision/fv_pi01/stop_detect_obj',
@@ -52,6 +60,8 @@ def RobotToFV(robot, arm, no_exception=False):
         'fv_pi02_r':        RIGHT,
         'fv_pi02_l':        LEFT,
         'clear_obj':        '/fingervision/fv_pi02/clear_obj',
+        'pause':            '/fingervision/fv_pi02/pause',
+        'resume':           '/fingervision/fv_pi02/resume',
         'set_frame_skip':   '/fingervision/fv_pi02/set_frame_skip',
         'start_detect_obj': '/fingervision/fv_pi02/start_detect_obj',
         'stop_detect_obj':  '/fingervision/fv_pi02/stop_detect_obj',
@@ -63,6 +73,10 @@ def RobotToFV(robot, arm, no_exception=False):
       'fv_pi10_l':          LEFT,
       'clear_obj_r':        '/fingervision/fv_pi10_r/clear_obj',
       'clear_obj_l':        '/fingervision/fv_pi10_l/clear_obj',
+      'pause_r':            '/fingervision/fv_pi10_r/pause',
+      'pause_l':            '/fingervision/fv_pi10_l/pause',
+      'resume_r':           '/fingervision/fv_pi10_r/resume',
+      'resume_l':           '/fingervision/fv_pi10_l/resume',
       'set_frame_skip_r':   '/fingervision/fv_pi10_r/set_frame_skip',
       'set_frame_skip_l':   '/fingervision/fv_pi10_l/set_frame_skip',
       'start_detect_obj_r': '/fingervision/fv_pi10_r/start_detect_obj',
@@ -77,6 +91,10 @@ def RobotToFV(robot, arm, no_exception=False):
       'fv_pi11_l':          LEFT,
       'clear_obj_r':        '/fingervision/fv_pi11_r/clear_obj',
       'clear_obj_l':        '/fingervision/fv_pi11_l/clear_obj',
+      'pause_r':            '/fingervision/fv_pi11_r/pause',
+      'pause_l':            '/fingervision/fv_pi11_l/pause',
+      'resume_r':           '/fingervision/fv_pi11_r/resume',
+      'resume_l':           '/fingervision/fv_pi11_l/resume',
       'set_frame_skip_r':   '/fingervision/fv_pi11_r/set_frame_skip',
       'set_frame_skip_l':   '/fingervision/fv_pi11_l/set_frame_skip',
       'start_detect_obj_r': '/fingervision/fv_pi11_r/start_detect_obj',
@@ -91,6 +109,10 @@ def RobotToFV(robot, arm, no_exception=False):
       'fv_pi13_l':          LEFT,
       'clear_obj_r':        '/fingervision/fv_pi13_r/clear_obj',
       'clear_obj_l':        '/fingervision/fv_pi13_l/clear_obj',
+      'pause_r':            '/fingervision/fv_pi13_r/pause',
+      'pause_l':            '/fingervision/fv_pi13_l/pause',
+      'resume_r':           '/fingervision/fv_pi13_r/resume',
+      'resume_l':           '/fingervision/fv_pi13_l/resume',
       'set_frame_skip_r':   '/fingervision/fv_pi13_r/set_frame_skip',
       'set_frame_skip_l':   '/fingervision/fv_pi13_l/set_frame_skip',
       'start_detect_obj_r': '/fingervision/fv_pi13_r/start_detect_obj',
@@ -105,6 +127,10 @@ def RobotToFV(robot, arm, no_exception=False):
       'fv_pi15_l':          LEFT,
       'clear_obj_r':        '/fingervision/fv_pi15_r/clear_obj',
       'clear_obj_l':        '/fingervision/fv_pi15_l/clear_obj',
+      'pause_r':            '/fingervision/fv_pi15_r/pause',
+      'pause_l':            '/fingervision/fv_pi15_l/pause',
+      'resume_r':           '/fingervision/fv_pi15_r/resume',
+      'resume_l':           '/fingervision/fv_pi15_l/resume',
       'set_frame_skip_r':   '/fingervision/fv_pi15_r/set_frame_skip',
       'set_frame_skip_l':   '/fingervision/fv_pi15_l/set_frame_skip',
       'start_detect_obj_r': '/fingervision/fv_pi15_r/start_detect_obj',
@@ -205,6 +231,10 @@ def Run(ct,*args):
       if table['srv_separated']:
         x='clear_obj_r'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
         x='clear_obj_l'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='pause_r'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='pause_l'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='resume_r'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='resume_l'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
         x='set_frame_skip_r'; ct.AddSrvP(armstr+x, table[x], fingervision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
         x='set_frame_skip_l'; ct.AddSrvP(armstr+x, table[x], fingervision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
         x='start_detect_obj_r'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
@@ -213,6 +243,8 @@ def Run(ct,*args):
         x='stop_detect_obj_l'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
       else:
         x='clear_obj'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='pause'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
+        x='resume'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
         x='set_frame_skip'; ct.AddSrvP(armstr+x, table[x], fingervision_msgs.srv.SetInt32, persistent=False, time_out=3.0)
         x='start_detect_obj'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
         x='stop_detect_obj'; ct.AddSrvP(armstr+x, table[x], std_srvs.srv.Empty, persistent=False, time_out=3.0)
@@ -246,11 +278,11 @@ def Run(ct,*args):
       for x in ('fv_filter1_wrench','fv_filter1_objinfo'):
         ct.DelSub(x)
       if table['srv_separated']:
-        for x in ('clear_obj_r','clear_obj_l','set_frame_skip_r','set_frame_skip_l',
+        for x in ('clear_obj_r','clear_obj_l','pause_r','pause_l','resume_r','resume_l','set_frame_skip_r','set_frame_skip_l',
                   'start_detect_obj_r','start_detect_obj_l','stop_detect_obj_r','stop_detect_obj_l'):
           ct.DelSrvP(armstr+x)
       else:
-        for x in ('clear_obj','set_frame_skip','start_detect_obj','stop_detect_obj'):
+        for x in ('clear_obj','pause','resume','set_frame_skip','start_detect_obj','stop_detect_obj'):
           ct.DelSrvP(armstr+x)
 
   elif command=='is_active':
@@ -265,6 +297,30 @@ def Run(ct,*args):
         is_active[arm]= None not in ct.GetAttr(TMP,'fv'+arm_S).tm_last_topic \
           and (rospy.Time.now()-min(ct.GetAttr(TMP,'fv'+arm_S).tm_last_topic)).to_sec()<0.2
     return is_active
+
+  elif command=='pause':
+    if len(args)==0:  args= ['all']
+    arms= set(sum([range(ct.robot.NumArms) if a=='all' else [a] for a in args],[]))
+    for arm in arms:
+      table= RobotToFV(ct.robot, arm)
+      armstr= ct.robot.ArmStr(arm)+'_'
+      if table['srv_separated']:
+        ct.srvp[armstr+'pause_r'](std_srvs.srv.EmptyRequest())
+        ct.srvp[armstr+'pause_l'](std_srvs.srv.EmptyRequest())
+      else:
+        ct.srvp[armstr+'pause'](std_srvs.srv.EmptyRequest())
+
+  elif command=='resume':
+    if len(args)==0:  args= ['all']
+    arms= set(sum([range(ct.robot.NumArms) if a=='all' else [a] for a in args],[]))
+    for arm in arms:
+      table= RobotToFV(ct.robot, arm)
+      armstr= ct.robot.ArmStr(arm)+'_'
+      if table['srv_separated']:
+        ct.srvp[armstr+'resume_r'](std_srvs.srv.EmptyRequest())
+        ct.srvp[armstr+'resume_l'](std_srvs.srv.EmptyRequest())
+      else:
+        ct.srvp[armstr+'resume'](std_srvs.srv.EmptyRequest())
 
   elif command=='frame_skip':
     skip= args[0] if len(args)>0 else None

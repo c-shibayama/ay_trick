@@ -96,6 +96,7 @@ def PickupLoop(th_info, ct, arm, options):
   l.log['g_pos']= []
   l.log['z_trg']= []
   l.log['x']= []
+  l.log['grasped']= False
 
   l.velctrl= ct.Run('velctrl',arm)
   l.ctrl_step= 0  #Counter for logging cycle control.
@@ -110,7 +111,9 @@ def PickupLoop(th_info, ct, arm, options):
   def IsDropped():
     #sum --> max for robustness.
     print 'area:',max(fv_data.obj_area_filtered),max(l.obj_area0),max(fv_data.obj_area_filtered)/max(max(l.obj_area0),1.0e-6)
-    if max(fv_data.obj_area_filtered) < options['area_drop_rate']*max(l.obj_area0):  return True
+    if max(fv_data.obj_area_filtered) < options['area_drop_rate']*max(l.obj_area0):
+      l.log['grasped']= False
+      return True
     return False
 
   def SetZOffset(z_offset):
@@ -286,6 +289,7 @@ def PickupLoop(th_info, ct, arm, options):
   sm['bring_test'].Actions[-1].NextState= 'grasp_init'
   sm['bring_test'].NewAction()
   sm['bring_test'].Actions[-1].Condition= lambda: abs(ZTrgErr()[1])<0.002
+  sm['bring_test'].Actions[-1].Action= lambda: l.log.__setitem__('grasped',True)
   sm['bring_test'].Actions[-1].NextState= 'bring_up'
   sm['bring_test'].ElseAction= action_ctrlstep
 
