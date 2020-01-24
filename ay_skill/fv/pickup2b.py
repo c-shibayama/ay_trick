@@ -255,6 +255,12 @@ def PickupLoop(th_info, ct, arm, options):
         vx[2]= slip_to_kp_rate*kp[2]*z_err-kd[2]*vx1[2,0]
       #print vx
 
+      if any(np.concatenate([np.abs(x_err[:2])>0.01, np.abs(x_err[3:])>0.05])):
+        CPrint(4,'fv.pickup2b: Too large pose error:',x_err)
+        PrintLog('Stop by too large x_err',x_err)
+        velctrl.Step([0.0]*ct.robot.DoF(arm))
+        raise Exception('fv.pickup2b: Too large pose error')
+
       if ct.robot.DoF(arm=arm)>=6:
         dq= ToList(la.pinv(J)*MCVec(vx))
       else:  #e.g. Mikata Arm
@@ -387,6 +393,7 @@ def PickupLoop(th_info, ct, arm, options):
 
   finally:
     ct.callback.fv_objinfo[ct.robot.ArmStrS(arm)]= [None,None]
+    l.velctrl.Step([0.0]*7)
     l.velctrl.Finish()
     if options['resume_detect_obj']: ct.Run('fv.fv','start_detect_obj',arm)
 

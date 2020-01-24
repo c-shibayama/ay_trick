@@ -19,10 +19,10 @@ def Help():
 def OpeningLoopDefaultOptions():
   return {
     #'slip_threshold': 0.3,  #Threshold of slip amount to open the gripper.
-    'sensitivity_slip': 0.3,  #Sensitivity of slip detection (smaller is more sensitive).
+    'sensitivity_slip': 0.6,  #Sensitivity of slip detection (smaller is more sensitive).
     'sensitivity_oc':0.3,  #Sensitivity of object-center-movement detection (smaller is more sensitive).
-    'sensitivity_oo':1.0,  #Sensitivity of object-orientation-movement detection (smaller is more sensitive).
-    'sensitivity_oa':0.3,  #Sensitivity of object-area-change detection (smaller is more sensitive).
+    'sensitivity_oo':2.0,  #Sensitivity of object-orientation-movement detection (smaller is more sensitive).
+    'sensitivity_oa':0.6,  #Sensitivity of object-area-change detection (smaller is more sensitive).
     'nforce_threshold': 7,  #Threshold of number of force changing points to open the gripper.
     'dw_grip': 0.02,  #Displacement of gripper movement.
     'log': {},  #[output] Execution results are stored into this dictionary.
