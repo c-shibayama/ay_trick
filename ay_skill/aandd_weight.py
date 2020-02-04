@@ -45,7 +45,7 @@ def Run(ct,*args):
   if command in ('on','setup'):
     node= args[0] if len(args)>0 else 'weight'
 
-    ct.SetAttr(TMP,node, TContainer(debug=True))
+    ct.SetAttr(TMP,node, TContainer())
     l= ct.GetAttr(TMP,node)
     l.node= node
     l.value= None  #Weight in gram.

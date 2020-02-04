@@ -91,11 +91,11 @@ def Run(ct,*args):
     InsertDict(options, user_options)
     UnSubscribe(options['rs_attr'])
 
-    ct.SetAttr(TMP,'{rs_attr}_helper'.format(rs_attr=options['rs_attr']), TContainer(debug=True))
+    ct.SetAttr(TMP,'{rs_attr}_helper'.format(rs_attr=options['rs_attr']), TContainer())
     lh= ct.GetAttr(TMP,'{rs_attr}_helper'.format(rs_attr=options['rs_attr']))
     lh.cvbridge= CvBridge()
     lh.thread_locker= threading.RLock()
-    ct.SetAttr(TMP,options['rs_attr'], TContainer(debug=True))
+    ct.SetAttr(TMP,options['rs_attr'], TContainer())
     l= ct.GetAttr(TMP,options['rs_attr'])
     l.options= options
     l.proj_mat= GetCameraProjectionMatrix()
