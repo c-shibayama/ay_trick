@@ -9,8 +9,8 @@ def Help():
   Usage: keyctrlrq'''
 
 def Run(ct,*args):
-  if not any((ct.robot.Is('RobotiqNB'),ct.robot.Is('DxlGripper'),ct.robot.Is('RHP12RNGripper'),ct.robot.Is('EZGripper'),ct.robot.Is('DxlpO2Gripper'))):
-    CPrint(4,'This program works only with RobotiqNB, DxlGripper, RHP12RNGripper, EZGripper, and DxlpO2Gripper.')
+  if not any((ct.robot.Is('RobotiqNB'),ct.robot.Is('DxlGripper'),ct.robot.Is('RHP12RNGripper'),ct.robot.Is('EZGripper'),ct.robot.Is('DxlpO2Gripper'),ct.robot.Is('DxlO3Gripper'))):
+    CPrint(4,'This program works only with RobotiqNB, DxlGripper, RHP12RNGripper, EZGripper, DxlpO2Gripper, and DxlO3Gripper.')
     return
 
   arm= ct.robot.Arm
@@ -24,10 +24,11 @@ def Run(ct,*args):
   gsteps= [0.0]
   state= ['run', 'no_cmd', arm, False]  #run/quit, no_cmd/CMD, ARM, ACTIVE_BTN
 
-  gstate_range= [ct.robot.GripperRange(RIGHT),ct.robot.GripperRange(LEFT)]
-  gstate= [ct.robot.GripperPos(RIGHT), ct.robot.GripperPos(LEFT)]
-  ct.robot.MoveGripper(gstate[RIGHT],arm=RIGHT)
-  ct.robot.MoveGripper(gstate[LEFT],arm=LEFT)
+  gstate_range= [ct.robot.GripperRange(a) for a in range(ct.robot.NumArms)]
+  gstate= [ct.robot.GripperPos(a) if ct.robot.EndEff(a).IsInitialized else 0.0 for a in range(ct.robot.NumArms)]
+  for a in range(ct.robot.NumArms):
+    if ct.robot.EndEff(a).IsInitialized:
+      ct.robot.MoveGripper(gstate[a],arm=a)
 
   ct.AddSub('joy', 'joy', sensor_msgs.msg.Joy, lambda msg: Callback(state, steps, wsteps, gsteps, msg))
 

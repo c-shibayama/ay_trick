@@ -1,0 +1,16 @@
+#Gripper of DxlO3
+#FIXME: Change names: wrist_* --> grip_*
+
+#Gripper
+wrist_r:
+  #Kinematics information:
+  kinematics_chain:
+    #Right or left arm:
+    parent_arm: r
+  #Gripper pose (Q=QFromAxisAngle([-1,1,-1],-2.0/3.0*math.pi)):
+  lx: [0.0,0.0,0.192, 0.5,-0.5,0.5,0.5]
+  #Bounding box is attached to the local frame of 'lx'.
+  bound_box:
+    #FV+:
+    dim: [0.14,0.077,0.192]
+    center: [0.0,0.0,0.096, 0.0,0.0,0.0,1.0]

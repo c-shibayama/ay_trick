@@ -16,6 +16,7 @@ def Help():
       'thg','RHP12RNGripper',
       'ezg','EZGripper',
       'dxlpo2','DxlpO2Gripper',
+      'dxlo3','DxlO3Gripper',
       'moto','Motoman',
       'motos','Motoman_SIM',
       'mikata','Mikata',
@@ -48,6 +49,8 @@ def Help():
       'gen3s','Gen3_SIM',
       'gen3thg','Gen3ThG',
       'gen3thgs','Gen3ThG_SIM',
+      'gen3dxlo3','Gen3DxlO3',
+      'gen3dxlo3s','Gen3DxlO3_SIM',
     If ROBOT_NAME is omitted, we assume 'NoRobot'.
 
     Definition of OPT1 depends on ROBOT_NAME.
@@ -68,6 +71,7 @@ def Run(ct,*args):
       'thg':'RHP12RNGripper',
       'ezg':'EZGripper',
       'dxlpo2':'DxlpO2Gripper',
+      'dxlo3':'DxlO3Gripper',
       'moto':'Motoman',
       'motos':'Motoman_SIM',
       'mikata':'Mikata',
@@ -100,6 +104,8 @@ def Run(ct,*args):
       'gen3s':'Gen3_SIM',
       'gen3thg':'Gen3ThG',
       'gen3thgs':'Gen3ThG_SIM',
+      'gen3dxlo3':'Gen3DxlO3',
+      'gen3dxlo3s':'Gen3DxlO3_SIM',
     }
   if robot in alias:  robot= alias[robot]
 
@@ -151,6 +157,11 @@ def Run(ct,*args):
     serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_dxlpo2')
     ct.robot= mod.TRobotDxlpO2Gripper(dev=serial_dev)
+
+  elif robot in ('DxlO3Gripper',):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_dxlo3')
+    ct.robot= mod.TRobotDxlO3Gripper(dev=serial_dev)
 
   elif robot in ('Motoman','Motoman_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_moto')
@@ -237,6 +248,11 @@ Do you want to abort?''')
     mod= SmartImportReload('ay_py.ros.rbt_gen3thg')
     ct.robot= mod.TRobotGen3ThG(gen3ns='gen3a', is_sim=(robot=='Gen3ThG_SIM'),dev=serial_dev)
 
+  elif robot in ('Gen3DxlO3','Gen3DxlO3_SIM'):
+    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
+    mod= SmartImportReload('ay_py.ros.rbt_gen3dxlo3')
+    ct.robot= mod.TRobotGen3DxlO3(gen3ns='gen3a', is_sim=(robot=='Gen3DxlO3_SIM'),dev=serial_dev)
+
   elif robot=='NoRobot':
     ct.robot= TFakeRobot()
   else:
@@ -285,6 +301,8 @@ Do you want to abort?''')
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ezg.yaml'))
   elif ct.robot.Is('DxlpO2Gripper'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlpo2.yaml'))
+  elif ct.robot.Is('DxlO3Gripper'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlo3.yaml'))
   elif ct.robot.Is('Motoman'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_moto.yaml'))
   elif ct.robot.Is('Mikata'):
@@ -305,4 +323,6 @@ Do you want to abort?''')
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur5ethg.yaml'))
   elif ct.robot.Is('Gen3ThG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_gen3thg.yaml'))
+  elif ct.robot.Is('Gen3DxlO3'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_gen3dxlo3.yaml'))
   ct.SetAttr('default_frame', ct.robot.BaseFrame)
