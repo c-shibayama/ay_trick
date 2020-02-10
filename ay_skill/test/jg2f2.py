@@ -71,14 +71,20 @@ def Run(ct,*args):
         gsteps[1]= multiplier * (-joyst['AXIS3'])
       gripper_motion= any(np.abs(gsteps)>0)
 
+      if joyst['A']:
+        g_trg[:]= [0.5*(g_trg[0]+g_trg[1])]*2
+        gripper_motion= True
+
       if gripper_motion:
         gripper_range= ct.robot.GripperRange2(arm=arm)
         for d in (0,1):
-          g_trg[d]+= 0.005*gsteps[d]*dt
+          g_trg[d]+= 0.5*gsteps[d]*dt
           if not IsIn(g_trg[d],[gripper_range[0][d],gripper_range[1][d]]):
             g_trg[d]= min(max(g_trg[d],gripper_range[0][d]),gripper_range[1][d])
         ct.robot.MoveGripper2(g_trg,arm=arm)
         print g_trg
+
+      rate_adjuster.sleep()
 
     print ''
 
