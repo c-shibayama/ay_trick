@@ -258,9 +258,8 @@ Do you want to abort?''')
   else:
     raise Exception('Unknown robot: %s'%robot)
 
-  if robot=='NoRobot' or ct.robot is None:  return
-
   ct.br= tf.TransformBroadcaster()
+  if robot=='NoRobot' or ct.robot is None:  return
 
   robots_with_state_validity_checker= ('PR2','Baxter','Motoman','Mikata','UR','Gen3')
   if any([ct.robot.Is(rbt) for rbt in robots_with_state_validity_checker]):
