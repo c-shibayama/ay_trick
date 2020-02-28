@@ -17,7 +17,7 @@ def Run(ct,*args):
   ct.SetAttr('fv_ctrl','pickup2a_lowgain', 0.3)
   ct.SetAttr('fv_ctrl','pickup2a_gtimeout1', 50)
   ct.SetAttr('fv_ctrl','pickup2a_gtimeout2', 250)
-  ct.SetAttr('fv_ctrl','pickup2a_z_final', 0.15)
+  ct.SetAttr('fv_ctrl','pickup2a_z_final', 0.07)
   for arm in range(ct.robot.NumArms):
     if ct.robot.EndEff(arm).Is('BaxterEPG'):
       ct.GetAttr('fv_ctrl','min_gstep')[arm]= 0.002

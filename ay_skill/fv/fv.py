@@ -158,9 +158,10 @@ def Filter1Wrench(ct,l,msg):
   #Broadcast the TF of FV.
   lw_xe= ct.GetAttr('wrist_'+LRToStrs(l.arm),'lx')
   gpos= ct.robot.GripperPos(l.arm)
-  lw_xg= Transform(lw_xe,[0,(-0.5*gpos,+0.5*gpos)[side],0, 0,0,0,1])
-  ct.br.sendTransform(lw_xg[0:3],lw_xg[3:],
-      msg.header.stamp, msg.header.frame_id, ct.robot.EndLink(l.arm))
+  if gpos is not None:
+    lw_xg= Transform(lw_xe,[0,(-0.5*gpos,+0.5*gpos)[side],0, 0,0,0,1])
+    ct.br.sendTransform(lw_xg[0:3],lw_xg[3:],
+        msg.header.stamp, msg.header.frame_id, ct.robot.EndLink(l.arm))
 
 def Filter1ObjInfo(ct,l,msg):
   table= RobotToFV(ct.robot, l.arm)

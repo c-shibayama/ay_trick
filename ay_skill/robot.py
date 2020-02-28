@@ -3,7 +3,7 @@ from core_tool import *
 import tf
 def Help():
   return '''Robot initialization utility.
-  Usage: robot ROBOT_NAME [, OPT1]
+  Usage: robot ROBOT_NAME
     Available ROBOT_NAME:
       'NoRobot',
       'pr2','PR2',
@@ -52,9 +52,6 @@ def Help():
       'gen3dxlo3','Gen3DxlO3',
       'gen3dxlo3s','Gen3DxlO3_SIM',
     If ROBOT_NAME is omitted, we assume 'NoRobot'.
-
-    Definition of OPT1 depends on ROBOT_NAME.
-      'dxlg','mikata','ur*dxlg','ur*thg': Device name (default='/dev/ttyUSB0')
 
   '''
 def Run(ct,*args):
@@ -138,57 +135,38 @@ def Run(ct,*args):
     ct.robot= mod.TRobotRobotiqNB()
 
   elif robot in ('DxlGripper',):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_dxlg')
-    #serial_dev= os.environ['DXLG_DEV'] if 'DXLG_DEV' in os.environ else '/dev/ttyUSB0'
-    ct.robot= mod.TRobotDxlGripper(dev=serial_dev)
+    ct.robot= mod.TRobotDxlGripper()
 
   elif robot in ('RHP12RNGripper',):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_rhp12rn')
-    ct.robot= mod.TRobotRHP12RNGripper(dev=serial_dev)
+    ct.robot= mod.TRobotRHP12RNGripper()
 
   elif robot in ('EZGripper',):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_ezg')
-    ct.robot= mod.TRobotEZGripper(dev=serial_dev)
+    ct.robot= mod.TRobotEZGripper()
 
   elif robot in ('DxlpO2Gripper',):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_dxlpo2')
-    ct.robot= mod.TRobotDxlpO2Gripper(dev=serial_dev)
+    ct.robot= mod.TRobotDxlpO2Gripper()
 
   elif robot in ('DxlO3Gripper',):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_dxlo3')
-    ct.robot= mod.TRobotDxlO3Gripper(dev=serial_dev)
+    ct.robot= mod.TRobotDxlO3Gripper()
 
   elif robot in ('Motoman','Motoman_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_moto')
     ct.robot= mod.TRobotMotoman(is_sim=(robot=='Motoman_SIM'))
 
-  elif robot in ('Mikata','Mikata_SIM'):
-    if robot=='Mikata':
-      CPrint(4,'''We recommend to use Mikata2 (mikata2), where you need to launch:
-$ roslaunch ay_util mikata_rot_real2.launch  # Or, mikata_real2.launch
-Do you want to abort?''')
-      if AskYesNo():  return
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
-    mod= SmartImportReload('ay_py.ros.rbt_mikata')
-    ct.robot= mod.TRobotMikata(dev=serial_dev,is_sim=(robot=='Mikata_SIM'))
-
   elif robot in ('Mikata2',):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_mikata2')
     ct.robot= mod.TRobotMikata2()
 
   elif robot in ('Mikata6','Mikata6_SIM'):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_mikata6')
     ct.robot= mod.TRobotMikata6(is_sim=(robot=='Mikata6_SIM'))
 
   elif robot in ('CraneX7',):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_cranex7')
     ct.robot= mod.TRobotCraneX7()
 
@@ -197,61 +175,52 @@ Do you want to abort?''')
     ct.robot= mod.TRobotUR(name='UR3',ur_series='CB',is_sim=(robot=='UR3_SIM'))
 
   elif robot in ('UR3DxlG','UR3DxlG_SIM'):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urdxlg')
-    ct.robot= mod.TRobotURDxlG(name='UR3DxlG',ur_series='CB',is_sim=(robot=='UR3DxlG_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURDxlG(name='UR3DxlG',ur_series='CB',is_sim=(robot=='UR3DxlG_SIM'))
 
   elif robot in ('UR3ThG','UR3ThG_SIM'):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urthg')
-    ct.robot= mod.TRobotURThG(name='UR3ThG',ur_series='CB',is_sim=(robot=='UR3ThG_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURThG(name='UR3ThG',ur_series='CB',is_sim=(robot=='UR3ThG_SIM'))
 
   elif robot in ('UR3DxlpO2','UR3DxlpO2_SIM'):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urdxlpo2')
-    ct.robot= mod.TRobotURDxlpO2(name='UR3DxlpO2',ur_series='CB',is_sim=(robot=='UR3DxlpO2_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURDxlpO2(name='UR3DxlpO2',ur_series='CB',is_sim=(robot=='UR3DxlpO2_SIM'))
 
   elif robot in ('UR3e','UR3e_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_ur')
     ct.robot= mod.TRobotUR(name='UR3e',ur_series='E',is_sim=(robot=='UR3e_SIM'))
 
   elif robot in ('UR3eThG','UR3eThG_SIM'):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urthg')
-    ct.robot= mod.TRobotURThG(name='UR3eThG',ur_series='E',is_sim=(robot=='UR3eThG_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURThG(name='UR3eThG',ur_series='E',is_sim=(robot=='UR3eThG_SIM'))
 
   elif robot in ('UR3eDxlG','UR3eDxlG_SIM'):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urdxlg')
-    ct.robot= mod.TRobotURDxlG(name='UR3eDxlG',ur_series='E',is_sim=(robot=='UR3eDxlG_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURDxlG(name='UR3eDxlG',ur_series='E',is_sim=(robot=='UR3eDxlG_SIM'))
 
   elif robot in ('UR3eDxlpO2','UR3eDxlpO2_SIM'):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urdxlpo2')
-    ct.robot= mod.TRobotURDxlpO2(name='UR3eDxlpO2',ur_series='E',is_sim=(robot=='UR3eDxlpO2_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURDxlpO2(name='UR3eDxlpO2',ur_series='E',is_sim=(robot=='UR3eDxlpO2_SIM'))
 
   elif robot in ('UR5e','UR5e_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_ur')
     ct.robot= mod.TRobotUR(name='UR5e',ur_series='E',is_sim=(robot=='UR5e_SIM'))
 
   elif robot in ('UR5eThG','UR5eThG_SIM'):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_urthg')
-    ct.robot= mod.TRobotURThG(name='UR5eThG',ur_series='E',is_sim=(robot=='UR5eThG_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotURThG(name='UR5eThG',ur_series='E',is_sim=(robot=='UR5eThG_SIM'))
 
   elif robot in ('Gen3','Gen3_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_gen3')
     ct.robot= mod.TRobotGen3(gen3ns='gen3a', is_sim=(robot=='Gen3_SIM'))
 
   elif robot in ('Gen3ThG','Gen3ThG_SIM'):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_gen3thg')
-    ct.robot= mod.TRobotGen3ThG(gen3ns='gen3a', is_sim=(robot=='Gen3ThG_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotGen3ThG(gen3ns='gen3a', is_sim=(robot=='Gen3ThG_SIM'))
 
   elif robot in ('Gen3DxlO3','Gen3DxlO3_SIM'):
-    serial_dev= args[1] if len(args)>1 else '/dev/ttyUSB0'
     mod= SmartImportReload('ay_py.ros.rbt_gen3dxlo3')
-    ct.robot= mod.TRobotGen3DxlO3(gen3ns='gen3a', is_sim=(robot=='Gen3DxlO3_SIM'),dev=serial_dev)
+    ct.robot= mod.TRobotGen3DxlO3(gen3ns='gen3a', is_sim=(robot=='Gen3DxlO3_SIM'))
 
   elif robot=='NoRobot':
     ct.robot= TFakeRobot()
