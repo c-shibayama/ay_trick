@@ -27,7 +27,7 @@ def DefaultOptions():
   return {
     'types': ['depth'],  #List of subscribing components ('depth','rgb')
     'arm': 0,  #Arm index of the robot on whose wrist the camera is installed.
-    'lx': [-0.035, 0.06, 0.0358, 0, 0, 0, 1],  #Pose of the camera in the wrist frame.
+    'lx': [-0.035, 0.06, 0.0358, 0, 0, 0, 1],  #Pose of the camera (camera_color_optical_frame) in the wrist frame.
     'rs_attr': 'rs',  #Captured data is saved into: ct.GetAttr(TMP,rs_attr)
     }
 
