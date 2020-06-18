@@ -15,7 +15,9 @@ def Help():
       'dxlg','DxlGripper',
       'thg','RHP12RNGripper',
       'ezg','EZGripper',
-      'dxlpo2','DxlpO2Gripper',
+      'dxlpo2_st1','DxlpO2Gripper_Straight1',
+      'dxlpo2_sr1','DxlpO2Gripper_SRound1',
+      'dxlpo2_f1' ,'DxlpO2Gripper_Fork1',
       'dxlo3','DxlO3Gripper',
       'moto','Motoman',
       'motos','Motoman_SIM',
@@ -31,16 +33,24 @@ def Help():
       'ur3dxlgs','UR3DxlG_SIM',
       'ur3thg','UR3ThG',
       'ur3thgs','UR3ThG_SIM',
-      'ur3dxlpo2','UR3DxlpO2',
-      'ur3dxlpo2s','UR3DxlpO2_SIM',
+      'ur3dxlpo2_st1','UR3DxlpO2_Straight1',
+      'ur3dxlpo2_sr1','UR3DxlpO2_SRound1',
+      'ur3dxlpo2_f1' ,'UR3DxlpO2_Fork1',
+      'ur3dxlpo2_st1s','UR3DxlpO2_Straight1_SIM',
+      'ur3dxlpo2_sr1s','UR3DxlpO2_SRound1_SIM',
+      'ur3dxlpo2_f1s' ,'UR3DxlpO2_Fork1_SIM',
       'ur3e','UR3e',
       'ur3es','UR3e_SIM',
       'ur3ethg','UR3eThG',
       'ur3ethgs','UR3eThG_SIM',
       'ur3edxlg','UR3eDxlG',
       'ur3edxlgs','UR3eDxlG_SIM',
-      'ur3edxlpo2','UR3eDxlpO2',
-      'ur3edxlpo2s','UR3eDxlpO2_SIM',
+      'ur3edxlpo2_st1','UR3eDxlpO2_Straight1',
+      'ur3edxlpo2_sr1','UR3eDxlpO2_SRound1',
+      'ur3edxlpo2_f1' ,'UR3eDxlpO2_Fork1',
+      'ur3edxlpo2_st1s','UR3eDxlpO2_Straight1_SIM',
+      'ur3edxlpo2_sr1s','UR3eDxlpO2_SRound1_SIM',
+      'ur3edxlpo2_f1s' ,'UR3eDxlpO2_Fork1_SIM',
       'ur5e','UR5e',
       'ur5es','UR5e_SIM',
       'ur5ethg','UR5eThG',
@@ -67,7 +77,9 @@ def Run(ct,*args):
       'dxlg':'DxlGripper',
       'thg':'RHP12RNGripper',
       'ezg':'EZGripper',
-      'dxlpo2':'DxlpO2Gripper',
+      'dxlpo2_st1':'DxlpO2Gripper_Straight1',
+      'dxlpo2_sr1':'DxlpO2Gripper_SRound1',
+      'dxlpo2_f1' :'DxlpO2Gripper_Fork1',
       'dxlo3':'DxlO3Gripper',
       'moto':'Motoman',
       'motos':'Motoman_SIM',
@@ -83,16 +95,24 @@ def Run(ct,*args):
       'ur3dxlgs':'UR3DxlG_SIM',
       'ur3thg':'UR3ThG',
       'ur3thgs':'UR3ThG_SIM',
-      'ur3dxlpo2':'UR3DxlpO2',
-      'ur3dxlpo2s':'UR3DxlpO2_SIM',
+      'ur3dxlpo2_st1':'UR3DxlpO2_Straight1',
+      'ur3dxlpo2_sr1':'UR3DxlpO2_SRound1',
+      'ur3dxlpo2_f1' :'UR3DxlpO2_Fork1',
+      'ur3dxlpo2_st1s':'UR3DxlpO2_Straight1_SIM',
+      'ur3dxlpo2_sr1s':'UR3DxlpO2_SRound1_SIM',
+      'ur3dxlpo2_f1s' :'UR3DxlpO2_Fork1_SIM',
       'ur3e':'UR3e',
       'ur3es':'UR3e_SIM',
       'ur3ethg':'UR3eThG',
       'ur3ethgs':'UR3eThG_SIM',
       'ur3edxlg':'UR3eDxlG',
       'ur3edxlgs':'UR3eDxlG_SIM',
-      'ur3edxlpo2':'UR3eDxlpO2',
-      'ur3edxlpo2s':'UR3eDxlpO2_SIM',
+      'ur3edxlpo2_st1':'UR3eDxlpO2_Straight1',
+      'ur3edxlpo2_sr1':'UR3eDxlpO2_SRound1',
+      'ur3edxlpo2_f1' :'UR3eDxlpO2_Fork1',
+      'ur3edxlpo2_st1s':'UR3eDxlpO2_Straight1_SIM',
+      'ur3edxlpo2_sr1s':'UR3eDxlpO2_SRound1_SIM',
+      'ur3edxlpo2_f1s' :'UR3eDxlpO2_Fork1_SIM',
       'ur5e':'UR5e',
       'ur5es':'UR5e_SIM',
       'ur5ethg':'UR5eThG',
@@ -146,9 +166,9 @@ def Run(ct,*args):
     mod= SmartImportReload('ay_py.ros.rbt_ezg')
     ct.robot= mod.TRobotEZGripper()
 
-  elif robot in ('DxlpO2Gripper',):
+  elif robot in ('DxlpO2Gripper_Straight1','DxlpO2Gripper_SRound1','DxlpO2Gripper_Fork1'):
     mod= SmartImportReload('ay_py.ros.rbt_dxlpo2')
-    ct.robot= mod.TRobotDxlpO2Gripper()
+    ct.robot= mod.TRobotDxlpO2Gripper(finger_type=robot.split('_')[1])
 
   elif robot in ('DxlO3Gripper',):
     mod= SmartImportReload('ay_py.ros.rbt_dxlo3')
@@ -182,9 +202,13 @@ def Run(ct,*args):
     mod= SmartImportReload('ay_py.ros.rbt_urthg')
     ct.robot= mod.TRobotURThG(name='UR3ThG',ur_series='CB',is_sim=(robot=='UR3ThG_SIM'))
 
-  elif robot in ('UR3DxlpO2','UR3DxlpO2_SIM'):
+  elif robot in ('UR3DxlpO2_Straight1','UR3DxlpO2_SRound1','UR3DxlpO2_Fork1', 'UR3DxlpO2_Straight1_SIM','UR3DxlpO2_SRound1_SIM','UR3DxlpO2_Fork1_SIM'):
+    codes= robot.split('_')
+    robot_code= codes[0]
+    finger_type= codes[1]
+    is_sim= (len(codes)>=3 and codes[2]=='SIM')
     mod= SmartImportReload('ay_py.ros.rbt_urdxlpo2')
-    ct.robot= mod.TRobotURDxlpO2(name='UR3DxlpO2',ur_series='CB',is_sim=(robot=='UR3DxlpO2_SIM'))
+    ct.robot= mod.TRobotURDxlpO2(name='UR3DxlpO2',ur_series='CB',finger_type=finger_type,is_sim=is_sim)
 
   elif robot in ('UR3e','UR3e_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_ur')
@@ -198,9 +222,13 @@ def Run(ct,*args):
     mod= SmartImportReload('ay_py.ros.rbt_urdxlg')
     ct.robot= mod.TRobotURDxlG(name='UR3eDxlG',ur_series='E',is_sim=(robot=='UR3eDxlG_SIM'))
 
-  elif robot in ('UR3eDxlpO2','UR3eDxlpO2_SIM'):
+  elif robot in ('UR3eDxlpO2_Straight1','UR3eDxlpO2_SRound1','UR3eDxlpO2_Fork1', 'UR3eDxlpO2_Straight1_SIM','UR3eDxlpO2_SRound1_SIM','UR3eDxlpO2_Fork1_SIM'):
+    codes= robot.split('_')
+    robot_code= codes[0]
+    finger_type= codes[1]
+    is_sim= (len(codes)>=3 and codes[2]=='SIM')
     mod= SmartImportReload('ay_py.ros.rbt_urdxlpo2')
-    ct.robot= mod.TRobotURDxlpO2(name='UR3eDxlpO2',ur_series='E',is_sim=(robot=='UR3eDxlpO2_SIM'))
+    ct.robot= mod.TRobotURDxlpO2(name='UR3eDxlpO2',ur_series='E',finger_type=finger_type,is_sim=is_sim)
 
   elif robot in ('UR5e','UR5e_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_ur')
@@ -267,8 +295,12 @@ def Run(ct,*args):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_thg.yaml'))
   elif ct.robot.Is('EZGripper'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ezg.yaml'))
-  elif ct.robot.Is('DxlpO2Gripper'):
-    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlpo2.yaml'))
+  elif ct.robot.Is('DxlpO2Gripper_Straight1'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlpo2_st1.yaml'))
+  elif ct.robot.Is('DxlpO2Gripper_SRound1'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlpo2_sr1.yaml'))
+  elif ct.robot.Is('DxlpO2Gripper_Fork1'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlpo2_f1.yaml'))
   elif ct.robot.Is('DxlO3Gripper'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlo3.yaml'))
   elif ct.robot.Is('Motoman'):
@@ -279,14 +311,22 @@ def Run(ct,*args):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3dxlg.yaml'))
   elif ct.robot.Is('UR3ThG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3thg.yaml'))
-  elif ct.robot.Is('UR3DxlpO2'):
-    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3dxlpo2.yaml'))
+  elif ct.robot.Is('UR3DxlpO2_Straight1'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3dxlpo2_st1.yaml'))
+  elif ct.robot.Is('UR3DxlpO2_SRound1'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3dxlpo2_sr1.yaml'))
+  elif ct.robot.Is('UR3DxlpO2_Fork1'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3dxlpo2_f1.yaml'))
   elif ct.robot.Is('UR3eThG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3ethg.yaml'))
   elif ct.robot.Is('UR3eDxlG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3edxlg.yaml'))
-  elif ct.robot.Is('UR3eDxlpO2'):
-    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3edxlpo2.yaml'))
+  elif ct.robot.Is('UR3eDxlpO2_Straight1'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3edxlpo2_st1.yaml'))
+  elif ct.robot.Is('UR3eDxlpO2_SRound1'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3edxlpo2_sr1.yaml'))
+  elif ct.robot.Is('UR3eDxlpO2_Fork1'):
+    ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3edxlpo2_f1.yaml'))
   elif ct.robot.Is('UR5eThG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur5ethg.yaml'))
   elif ct.robot.Is('Gen3ThG'):
