@@ -31,13 +31,13 @@ def DefaultOptions():
     'rs_attr': 'rs',  #Captured data is saved into: ct.GetAttr(TMP,rs_attr)
     }
 
-def GetCameraProjectionMatrix():
+def GetCameraProjectionMatrix(cam_info_topic='/camera/aligned_depth_to_color/camera_info'):
   try:
-    cam_info= rospy.wait_for_message('/camera/aligned_depth_to_color/camera_info', sensor_msgs.msg.CameraInfo, 5.0)
+    cam_info= rospy.wait_for_message(cam_info_topic, sensor_msgs.msg.CameraInfo, 5.0)
     proj_mat= np.array(cam_info.P).reshape(3,4) #get camera projection matrix from ros topic
     return proj_mat
   except (rospy.ROSException, rospy.ROSInterruptException):
-    raise Exception('Failed to read topic: /camera/aligned_depth_to_color/camera_info')
+    raise Exception('Failed to read topic: {cam_info_topic}'.format(cam_info_topic=cam_info_topic))
 
 def ReceiveDepth(ct,l,lh,msg):
   with lh.thread_locker:
