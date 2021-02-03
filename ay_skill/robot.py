@@ -295,11 +295,11 @@ def Run(ct,*args):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_thg.yaml'))
   elif ct.robot.Is('EZGripper'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ezg.yaml'))
-  elif ct.robot.Is('DxlpO2Gripper') and robot=='DxlpO2Gripper_Straight1':
+  elif ct.robot.Is('DxlpO2Gripper') and robot.find('DxlpO2Gripper_Straight1')==0:
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlpo2_st1.yaml'))
-  elif ct.robot.Is('DxlpO2Gripper') and robot=='DxlpO2Gripper_SRound1':
+  elif ct.robot.Is('DxlpO2Gripper') and robot.find('DxlpO2Gripper_SRound1')==0:
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlpo2_sr1.yaml'))
-  elif ct.robot.Is('DxlpO2Gripper') and robot=='DxlpO2Gripper_Fork1':
+  elif ct.robot.Is('DxlpO2Gripper') and robot.find('DxlpO2Gripper_Fork1')==0:
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlpo2_f1.yaml'))
   elif ct.robot.Is('DxlO3Gripper'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_dxlo3.yaml'))
@@ -311,21 +311,21 @@ def Run(ct,*args):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3dxlg.yaml'))
   elif ct.robot.Is('UR3ThG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3thg.yaml'))
-  elif ct.robot.Is('UR3DxlpO2') and robot=='UR3DxlpO2_Straight1':
+  elif ct.robot.Is('UR3DxlpO2') and robot.find('UR3DxlpO2_Straight1')==0:
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3dxlpo2_st1.yaml'))
-  elif ct.robot.Is('UR3DxlpO2') and robot=='UR3DxlpO2_SRound1':
+  elif ct.robot.Is('UR3DxlpO2') and robot.find('UR3DxlpO2_SRound1')==0:
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3dxlpo2_sr1.yaml'))
-  elif ct.robot.Is('UR3DxlpO2') and robot=='UR3DxlpO2_Fork1':
+  elif ct.robot.Is('UR3DxlpO2') and robot.find('UR3DxlpO2_Fork1')==0:
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3dxlpo2_f1.yaml'))
   elif ct.robot.Is('UR3eThG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3ethg.yaml'))
   elif ct.robot.Is('UR3eDxlG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3edxlg.yaml'))
-  elif ct.robot.Is('UR3eDxlpO2') and robot=='UR3eDxlpO2_Straight1':
+  elif ct.robot.Is('UR3eDxlpO2') and robot.find('UR3eDxlpO2_Straight1')==0:
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3edxlpo2_st1.yaml'))
-  elif ct.robot.Is('UR3eDxlpO2') and robot=='UR3eDxlpO2_SRound1':
+  elif ct.robot.Is('UR3eDxlpO2') and robot.find('UR3eDxlpO2_SRound1')==0:
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3edxlpo2_sr1.yaml'))
-  elif ct.robot.Is('UR3eDxlpO2') and robot=='UR3eDxlpO2_Fork1':
+  elif ct.robot.Is('UR3eDxlpO2') and robot.find('UR3eDxlpO2_Fork1')==0:
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur3edxlpo2_f1.yaml'))
   elif ct.robot.Is('UR5eThG'):
     ct.AddDictAttr(LoadYAML(model_dir+'/robot/gripper_ur5ethg.yaml'))
