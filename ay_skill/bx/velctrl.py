@@ -20,8 +20,8 @@ class TVelCtrl(object):
 
   #ct: core_tool.
   #rate: Control time cycle in Hz.
-  def __init__(self, arm, ct, rate=500):
-    self.rate= rate
+  def __init__(self, arm, ct, rate=None):
+    self.rate= rate if rate is not None else 500
     self.ct= ct
     self.arm= arm
     ct.AddPub('js_rate', 'robot/joint_state_publish_rate', std_msgs.msg.UInt16)

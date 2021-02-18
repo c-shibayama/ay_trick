@@ -23,8 +23,8 @@ class TVelCtrl(object):
   #dq_lim: Limit of joint angular velocity (rad/s).
   #ddq_lim: Limit of joint angular acceleration (rad/s**2).
   #q_limit_th: Threshold to detect if a joint angle is on the limit.
-  def __init__(self, arm, ct, rate=125, dq_lim=40.0, ddq_lim=3.0, q_limit_th=0.02):
-    self.rate= rate
+  def __init__(self, arm, ct, rate=None, dq_lim=40.0, ddq_lim=3.0, q_limit_th=0.02):
+    self.rate= rate if rate is not None else 125
     self.dq_lim= dq_lim
     self.ddq_lim= ddq_lim
     self.q_limit_th= q_limit_th

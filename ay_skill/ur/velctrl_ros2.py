@@ -25,18 +25,18 @@ class TVelCtrl(object):
   #dq_lim: Limit of joint angular velocity (rad/s).
   #ddq_lim: Limit of joint angular acceleration (rad/s**2).
   #q_limit_th: Threshold to detect if a joint angle is on the limit.
-  def __init__(self, arm, ct, rate=125, dq_lim=40.0, ddq_lim=3.0, q_limit_th=0.02):
-    self.rate= rate
+  def __init__(self, arm, ct, rate=None, dq_lim=40.0, ddq_lim=3.0, q_limit_th=0.02):
+    self.rate= rate if rate is not None else 125
     self.dq_lim= dq_lim
     self.ddq_lim= ddq_lim
     self.q_limit_th= q_limit_th
     self.ct= ct
     self.arm= arm
     self.rate_adjuster= rospy.Rate(self.rate)
-    self.last_dq= [0.0]*ct.robot.DoF(self.arm)
+    self.last_dq= [0.0]*self.ct.robot.DoF(self.arm)
 
     self.msg= std_msgs.msg.Float64MultiArray()
-    self.msg.data= [0.0]*6
+    self.msg.data= [0.0]*self.ct.robot.DoF(self.arm)
     self.msg.layout.data_offset= 1
     self.mode= 'traj'
 
@@ -71,8 +71,8 @@ class TVelCtrl(object):
     '''
 
     if not ct.robot.IsNormal():
-      #self.Finish()  #Do not call self.Finish since it deletes the singleton instance.
-      self.velctrl.Finish()
+      #self.Finish()  #NOTE: Do not call self.Finish since it deletes the singleton instance.
+      self.StopVelCtrlMode()
       raise Exception('TVelCtrl has stopped as the robot is not normal state.')
 
     #Limit accelerations:
@@ -113,13 +113,11 @@ class TVelCtrl(object):
   def Finish(self):
     self.__class__.Delete(self.arm)
     if self.__class__.NumReferences(self.arm)>0:  return
-    ct= self.ct
-    self.msg.data= [0.0]*ct.robot.DoF(self.arm)
-    ct.robot.pub.joint_vel.publish(self.msg)
     self.StopVelCtrlMode()
 
   def StartVelCtrlMode(self):
     if self.mode=='vel':  return
+    #Switch the control mode (traj --> vel):
     sw_ctrl_req= controller_manager_msgs.srv.SwitchControllerRequest()
     sw_ctrl_req.strictness= sw_ctrl_req.STRICT
     sw_ctrl_req.stop_controllers= ['scaled_pos_joint_traj_controller']
@@ -132,7 +130,11 @@ class TVelCtrl(object):
 
   def StopVelCtrlMode(self):
     if self.mode=='traj':  return
-    self.Step([0.0]*6)
+    #Make sure to stop the robot:
+    #self.Step([0.0]*self.ct.robot.DoF(self.arm))  #NOTE: Do not run Step since it does not work in non normal state.
+    self.msg.data= [0.0]*self.ct.robot.DoF(self.arm)
+    self.ct.robot.pub.joint_vel.publish(self.msg)
+    #Switch the control mode (vel --> traj):
     sw_ctrl_req= controller_manager_msgs.srv.SwitchControllerRequest()
     sw_ctrl_req.strictness= sw_ctrl_req.STRICT
     sw_ctrl_req.stop_controllers= ['joint_group_vel_controller']

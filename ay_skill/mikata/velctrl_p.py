@@ -20,8 +20,8 @@ class TVelCtrl(object):
 
   #ct: core_tool.
   #rate: Control time cycle in Hz.
-  def __init__(self, arm, ct, rate=50):
-    self.rate= rate
+  def __init__(self, arm, ct, rate=None):
+    self.rate= rate if rate is not None else 50
     self.ct= ct
     self.arm= arm
     self.rate_adjuster= rospy.Rate(self.rate)
