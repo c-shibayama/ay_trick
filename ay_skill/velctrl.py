@@ -23,6 +23,7 @@ def Run(ct,*args):
   arm= args[0] if len(args)>0 else ct.robot.Arm
   rate= args[1] if len(args)>1 else None
 
+  velctrl= None
   if ct.robot.Is('Baxter'):
     if 'velctrl' not in ct.m or ct.m.velctrl.TVelCtrl.NumReferences(arm)==0:
       ct.m.velctrl= ct.Load('bx.velctrl')
