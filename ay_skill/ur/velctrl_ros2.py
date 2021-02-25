@@ -41,6 +41,7 @@ class TVelCtrl(object):
     self.mode= 'traj'
 
     self.StartVelCtrlMode()
+    #self.ct.AddPub('debug_loosingrt', '/debug_loosingrt', std_msgs.msg.Empty)  #DEBUG
 
   def Rate(self):
     return self.rate
@@ -108,6 +109,7 @@ class TVelCtrl(object):
     #print self.rate_adjuster.remaining().to_sec()
     if self.rate_adjuster.remaining().to_sec()<0:
       CPrint(4,'Loosing real-time control:', self.rate_adjuster.remaining().to_sec())
+      #self.ct.pub.debug_loosingrt.publish(std_msgs.msg.Empty())  #DEBUG
     if sleep:  self.rate_adjuster.sleep()
 
   def Finish(self):
