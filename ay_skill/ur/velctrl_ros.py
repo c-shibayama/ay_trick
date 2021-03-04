@@ -93,7 +93,7 @@ class TVelCtrl(object):
 
     ct.pub.trg_vel.publish(self.traj)
     self.last_dq= dq
-    print self.rate_adjuster.remaining().to_sec()
+    #print self.rate_adjuster.remaining().to_sec()
     if self.rate_adjuster.remaining().to_sec()<0:
       CPrint(4,'Loosing real-time control:', self.rate_adjuster.remaining().to_sec())
     if sleep:  self.rate_adjuster.sleep()
