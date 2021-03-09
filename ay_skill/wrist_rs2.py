@@ -53,7 +53,7 @@ def ReceiveDepth(ct,l,lh,msg):
     with lh.thread_locker:
       l.xw= ct.robot.FK(arm=l.arm)
     ct.br.sendTransform(l.lw_x_camera_link[0:3],l.lw_x_camera_link[3:],
-        rospy.Time.now(), 'camera_link', ct.robot.EndLink(l.arm))
+        rospy.Time.now(), 'camera_link', l.frame)
   if ct.callback.rs is not None:
     ct.callback.rs('depth',l,lh)
 
@@ -70,7 +70,7 @@ def ReceiveRGB(ct,l,lh,msg):
     with lh.thread_locker:
       l.xw= ct.robot.FK(arm=l.arm)
     ct.br.sendTransform(l.lw_x_camera_link[0:3],l.lw_x_camera_link[3:],
-        rospy.Time.now(), 'camera_link', ct.robot.EndLink(l.arm))
+        rospy.Time.now(), 'camera_link', l.frame)
   if ct.callback.rs is not None:
     ct.callback.rs('rgb',l,lh)
 
@@ -109,6 +109,7 @@ def Run(ct,*args):
     #Arm on which the RealSense is attached.
     l.arm= options['arm']
     #Pose of RealSense (camera_color_optical_frame) in the wrist frame.
+    l.frame= ct.robot.EndLink(l.arm)
     l.lx= options['lx']
     l.lw_x_camera_link= TransformRightInv(l.lx,ct.Run('tf_once','camera_link','camera_color_optical_frame'))
     #Wrist pose at the observation. If both depth and rgb are observed, xw is measured only when depth is observed.
