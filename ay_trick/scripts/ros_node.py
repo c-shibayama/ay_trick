@@ -16,7 +16,7 @@ import std_srvs.srv
 import ay_trick_msgs.srv
 from core_tool import TCoreTool
 from cui_tool import SetCT,ParseAndRun
-from ay_py.core import CPrint, PrintException, ToStdType, yamldump, YDumper
+from ay_py.core import CPrint, PrintException, ToStdType, yamldump, YDumper, yamlload, YLoader
 
 ct= None
 
@@ -42,8 +42,10 @@ class TROSNode(object):
     finally:
       self._running= False
 
-    self.srv_wait= rospy.Service('~wait_finish', std_srvs.srv.Empty, self.WaitFinish)
-    self.srv_wait= rospy.Service('~get_result_as_yaml', ay_trick_msgs.srv.GetString, self.GetResultAsYAML)
+    self.srv_wait_finish= rospy.Service('~wait_finish', std_srvs.srv.Empty, self.WaitFinish)
+    self.srv_get_result_as_yaml= rospy.Service('~get_result_as_yaml', ay_trick_msgs.srv.GetString, self.GetResultAsYAML)
+    self.srv_get_attr_as_yaml= rospy.Service('~get_attr_as_yaml', ay_trick_msgs.srv.GetAttrAsString, self.GetAttrAsYAML)
+    self.srv_set_attr_with_yaml= rospy.Service('~set_attr_with_yaml', ay_trick_msgs.srv.SetAttrWithString, self.SetAttrWithYAML)
     self.sub_cmd= rospy.Subscriber('~command', std_msgs.msg.String, self.CommandCallback)
 
   def __del__(self):
@@ -92,6 +94,28 @@ class TROSNode(object):
     res= ay_trick_msgs.srv.GetStringResponse()
     data= self._result
     res.result= yamldump(ToStdType(data), Dumper=YDumper)
+    return res
+
+  def GetAttrAsYAML(self, req):
+    global ct
+    res= ay_trick_msgs.srv.GetAttrAsStringResponse()
+    data= ct.GetAttrOr(None, *req.keys)
+    res.result= yamldump(ToStdType(data), Dumper=YDumper)
+    return res
+
+  def SetAttrWithYAML(self, req):
+    global ct
+    res= ay_trick_msgs.srv.SetAttrWithStringResponse()
+    res.success= True
+    try:
+      value= yamlload(req.value, Loader=YLoader)
+      if isinstance(value,dict):
+        ct.AddDictAttr(*(list(req.keys)+[value]))
+      else:
+        ct.SetAttr(*(list(req.keys)+[value]))
+    except Exception as e:
+      PrintException(e,' in ROSNode')
+      res.success= False
     return res
 
 if __name__=='__main__':
