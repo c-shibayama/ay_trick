@@ -9,6 +9,10 @@ import threading
 #Instance of TCoreTool()
 ct= None
 
+def SetCT(ct2):
+  global ct
+  ct= ct2
+
 def Eval(eval_line):
   return eval(eval_line,globals(),globals())
 

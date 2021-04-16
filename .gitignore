@@ -21,3 +21,4 @@ srv_gen
 .trick_hist
 scripts/lib/_default.py
 scripts/lib/_exit.py
+ay_trick_msgs/src/ay_trick_msgs

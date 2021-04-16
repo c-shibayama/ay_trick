@@ -1,0 +1,15 @@
+<package>
+  <description brief="ay_trick_msgs">
+
+     ay_trick_msgs
+
+  </description>
+  <author>Akihiko Yamaguchi</author>
+  <license>Described in LICENSE</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://akihikoy.net</url>
+  <depend package="std_msgs"/>
+
+</package>
+
+
