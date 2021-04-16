@@ -27,6 +27,8 @@ class TROSNode(object):
     SetCT(ct)
     self._running= False
     self._result= None
+    self._success= False
+    self._message= ''
 
     try:
       if ct.Exists('_default'):
@@ -68,13 +70,20 @@ class TROSNode(object):
   def RunCommand(self, cmd):
     global ct
     try:
+      self._result= None
+      self._success= False
+      self._message= ''
       CPrint(2,'+++Start running:',cmd)
       self._running= True
       res= ParseAndRun(ct, cmd)
       self._result= res
+      self._success= True
+      self._message= ''
       if res!=None:  print 'Result:',res
       CPrint(2,'+++Finished running:',cmd)
     except Exception as e:
+      self._success= False
+      self._message= repr(e)
       PrintException(e,' in ROSNode')
     finally:
       self._running= False
@@ -94,28 +103,40 @@ class TROSNode(object):
     res= ay_trick_msgs.srv.GetStringResponse()
     data= self._result
     res.result= yamldump(ToStdType(data), Dumper=YDumper)
+    res.success= self._success
+    res.message= self._message
     return res
 
   def GetAttrAsYAML(self, req):
     global ct
     res= ay_trick_msgs.srv.GetAttrAsStringResponse()
-    data= ct.GetAttrOr(None, *req.keys)
+    res.success= False
+    res.message= ''
+    data= None
+    try:
+      data= ct.GetAttr(*req.keys)
+      res.success= True
+    except Exception as e:
+      res.message= repr(e)
+      PrintException(e,' in ROSNode')
     res.result= yamldump(ToStdType(data), Dumper=YDumper)
     return res
 
   def SetAttrWithYAML(self, req):
     global ct
     res= ay_trick_msgs.srv.SetAttrWithStringResponse()
-    res.success= True
+    res.success= False
+    res.message= ''
     try:
       value= yamlload(req.value, Loader=YLoader)
       if isinstance(value,dict):
         ct.AddDictAttr(*(list(req.keys)+[value]))
       else:
         ct.SetAttr(*(list(req.keys)+[value]))
+      res.success= True
     except Exception as e:
+      res.message= repr(e)
       PrintException(e,' in ROSNode')
-      res.success= False
     return res
 
 if __name__=='__main__':

@@ -1,3 +1,5 @@
 string[] keys
 ---
 string result
+bool success
+string message
