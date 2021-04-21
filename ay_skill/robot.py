@@ -40,14 +40,20 @@ def Help():
       'ur3dxlpo2_sr1s','UR3DxlpO2_SRound1_SIM',
       'ur3dxlpo2_f1s' ,'UR3DxlpO2_Fork1_SIM',
       'ur3e','UR3e',
+      'ur3e125','UR3e125hz',
       'ur3es','UR3e_SIM',
       'ur3ethg','UR3eThG',
+      'ur3e125thg','UR3e125hzThG',
       'ur3ethgs','UR3eThG_SIM',
       'ur3edxlg','UR3eDxlG',
+      'ur3e125dxlg','UR3e125hzDxlG',
       'ur3edxlgs','UR3eDxlG_SIM',
       'ur3edxlpo2_st1','UR3eDxlpO2_Straight1',
       'ur3edxlpo2_sr1','UR3eDxlpO2_SRound1',
       'ur3edxlpo2_f1' ,'UR3eDxlpO2_Fork1',
+      'ur3e125dxlpo2_st1','UR3e125hzDxlpO2_Straight1',
+      'ur3e125dxlpo2_sr1','UR3e125hzDxlpO2_SRound1',
+      'ur3e125dxlpo2_f1' ,'UR3e125hzDxlpO2_Fork1',
       'ur3edxlpo2_st1s','UR3eDxlpO2_Straight1_SIM',
       'ur3edxlpo2_sr1s','UR3eDxlpO2_SRound1_SIM',
       'ur3edxlpo2_f1s' ,'UR3eDxlpO2_Fork1_SIM',
@@ -102,14 +108,20 @@ def Run(ct,*args):
       'ur3dxlpo2_sr1s':'UR3DxlpO2_SRound1_SIM',
       'ur3dxlpo2_f1s' :'UR3DxlpO2_Fork1_SIM',
       'ur3e':'UR3e',
+      'ur3e125':'UR3e125hz',
       'ur3es':'UR3e_SIM',
       'ur3ethg':'UR3eThG',
+      'ur3e125thg':'UR3e125hzThG',
       'ur3ethgs':'UR3eThG_SIM',
       'ur3edxlg':'UR3eDxlG',
+      'ur3e125dxlg':'UR3e125hzDxlG',
       'ur3edxlgs':'UR3eDxlG_SIM',
       'ur3edxlpo2_st1':'UR3eDxlpO2_Straight1',
       'ur3edxlpo2_sr1':'UR3eDxlpO2_SRound1',
       'ur3edxlpo2_f1' :'UR3eDxlpO2_Fork1',
+      'ur3e125dxlpo2_st1':'UR3e125hzDxlpO2_Straight1',
+      'ur3e125dxlpo2_sr1':'UR3e125hzDxlpO2_SRound1',
+      'ur3e125dxlpo2_f1' :'UR3e125hzDxlpO2_Fork1',
       'ur3edxlpo2_st1s':'UR3eDxlpO2_Straight1_SIM',
       'ur3edxlpo2_sr1s':'UR3eDxlpO2_SRound1_SIM',
       'ur3edxlpo2_f1s' :'UR3eDxlpO2_Fork1_SIM',
@@ -210,19 +222,21 @@ def Run(ct,*args):
     mod= SmartImportReload('ay_py.ros.rbt_urdxlpo2')
     ct.robot= mod.TRobotURDxlpO2(name='UR3DxlpO2',ur_series='CB',finger_type=finger_type,is_sim=is_sim)
 
-  elif robot in ('UR3e','UR3e_SIM'):
+  elif robot in ('UR3e','UR3e125hz','UR3e_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_ur')
     ct.robot= mod.TRobotUR(name='UR3e',ur_series='E',is_sim=(robot=='UR3e_SIM'))
 
-  elif robot in ('UR3eThG','UR3eThG_SIM'):
+  elif robot in ('UR3eThG','UR3e125hzThG','UR3eThG_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_urthg')
     ct.robot= mod.TRobotURThG(name='UR3eThG',ur_series='E',is_sim=(robot=='UR3eThG_SIM'))
 
-  elif robot in ('UR3eDxlG','UR3eDxlG_SIM'):
+  elif robot in ('UR3eDxlG','UR3e125hzDxlG','UR3eDxlG_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_urdxlg')
     ct.robot= mod.TRobotURDxlG(name='UR3eDxlG',ur_series='E',is_sim=(robot=='UR3eDxlG_SIM'))
 
-  elif robot in ('UR3eDxlpO2_Straight1','UR3eDxlpO2_SRound1','UR3eDxlpO2_Fork1', 'UR3eDxlpO2_Straight1_SIM','UR3eDxlpO2_SRound1_SIM','UR3eDxlpO2_Fork1_SIM'):
+  elif robot in ('UR3eDxlpO2_Straight1','UR3eDxlpO2_SRound1','UR3eDxlpO2_Fork1',\
+                 'UR3e125hzDxlpO2_Straight1','UR3e125hzDxlpO2_SRound1','UR3e125hzDxlpO2_Fork1',\
+                 'UR3eDxlpO2_Straight1_SIM','UR3eDxlpO2_SRound1_SIM','UR3eDxlpO2_Fork1_SIM'):
     codes= robot.split('_')
     robot_code= codes[0]
     finger_type= codes[1]
