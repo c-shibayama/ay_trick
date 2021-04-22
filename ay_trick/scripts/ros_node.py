@@ -13,7 +13,7 @@ roslib.load_manifest('ay_py')
 import rospy
 import std_msgs.msg
 import std_srvs.srv
-#import ay_trick_msgs.msg
+import ay_trick_msgs.msg
 import ay_trick_msgs.srv
 from core_tool import TCoreTool
 from cui_tool import SetCT,ParseAndRun
@@ -114,6 +114,7 @@ class TROSNode(object):
     self._result= None
     self._success= False
     self._message= ''
+    self._mode= ay_trick_msgs.msg.ROSNodeMode(ay_trick_msgs.msg.ROSNodeMode.BUSY)
 
     try:
       if ct.Exists('_default'):
@@ -130,7 +131,7 @@ class TROSNode(object):
       self._running= False
 
     self.key_buffer= []
-    self.pub_node_status= rospy.Publisher('~node_status', std_msgs.msg.Bool, queue_size=10)
+    self.pub_node_status= rospy.Publisher('~node_status', ay_trick_msgs.msg.ROSNodeMode, queue_size=10)
     self.pub_stdout= rospy.Publisher('~stdout', std_msgs.msg.String, queue_size=100)
     self.srv_wait_finish= rospy.Service('~wait_finish', std_srvs.srv.Empty, self.WaitFinish)
     self.srv_get_result_as_yaml= rospy.Service('~get_result_as_yaml', ay_trick_msgs.srv.GetString, self.GetResultAsYAML)
@@ -138,6 +139,8 @@ class TROSNode(object):
     self.srv_set_attr_with_yaml= rospy.Service('~set_attr_with_yaml', ay_trick_msgs.srv.SetAttrWithString, self.SetAttrWithYAML)
     self.sub_key= rospy.Subscriber('~stdin', std_msgs.msg.String, self.StdInCallback)
     self.sub_cmd= rospy.Subscriber('~command', std_msgs.msg.String, self.CommandCallback)
+
+    self._mode.mode= ay_trick_msgs.msg.ROSNodeMode.READY
 
   def __del__(self):
     global ct
@@ -160,6 +163,7 @@ class TROSNode(object):
     global ct
     self.WaitFinish()
     try:
+      self._mode.mode= ay_trick_msgs.msg.ROSNodeMode.PROGRAM_RUNNING
       self._result= None
       self._success= False
       self._message= ''
@@ -179,6 +183,7 @@ class TROSNode(object):
       PrintException(e,' in ROSNode')
     finally:
       self._running= False
+      self._mode.mode= ay_trick_msgs.msg.ROSNodeMode.READY
 
   def CommandCallback(self, msg):
     self.RunCommand(msg.data)
@@ -189,7 +194,7 @@ class TROSNode(object):
   def WaitFinish(self, req=None):
     global ct
     rate= rospy.Rate(50)
-    while self._running:
+    while not rospy.is_shutdown() and self._running:
       rate.sleep()
     return std_srvs.srv.EmptyResponse()
 
@@ -241,5 +246,5 @@ if __name__=='__main__':
   #rospy.spin()
   rate= rospy.Rate(20)
   while not rospy.is_shutdown():
-    ros_node.pub_node_status.publish(std_msgs.msg.Bool(True))
+    ros_node.pub_node_status.publish(ros_node._mode)
     rate.sleep()

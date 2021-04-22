@@ -1,0 +1,5 @@
+int8 BUSY=0
+int8 READY=1
+int8 PROGRAM_RUNNING=2
+
+int8 mode
