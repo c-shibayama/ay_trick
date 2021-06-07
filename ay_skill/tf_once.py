@@ -14,12 +14,12 @@ def Run(ct,*args):
     return ct.GetAttr(*attr_keys)
 
   listener= tf.TransformListener()
-  listener.waitForTransform(trg_frame, src_frame, rospy.Time(), rospy.Duration(4.0))
   try:
+    listener.waitForTransform(trg_frame, src_frame, rospy.Time(), rospy.Duration(4.0))
     (trans,rot)= listener.lookupTransform(trg_frame, src_frame, rospy.Time(0))
-  except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-    CPrint(0,'transformation not found')
-    return
+  except Exception:
+    CPrint(0,'transformation not found:', trg_frame, src_frame)
+    return None
   trans_rot= trans+rot
   if attr_keys is not None:
     ct.SetAttr(*(attr_keys + (trans_rot,)))
