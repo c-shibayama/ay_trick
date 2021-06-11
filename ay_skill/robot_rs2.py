@@ -42,6 +42,7 @@ def ReceiveDepth(ct,l,lh,msg):
     with lh.thread_locker:
       #convert ros image to cv image (matrix) 16bit monochrome
       l.img_depth= lh.cvbridge.imgmsg_to_cv2(msg, '16UC1')
+      if len(l.img_depth.shape)==3:  l.img_depth= l.img_depth.reshape(l.img_depth.shape[0],-1)  #NOTE: For the compatibility of cvbridge version difference(?)
   except CvBridgeError as e:
     print e
   with lh.thread_locker:
