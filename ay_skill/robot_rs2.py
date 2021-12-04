@@ -25,12 +25,14 @@ def Help():
     robot_rs2 'show' [, RS_ATTR]
       Display the received images.
       RS_ATTR: Attribute name to access the data; default:'rs' (ct.GetAttr(TMP,RS_ATTR)).
-  '''
+  DefaultOptions:
+    {DefaultOptions}
+  '''.format(DefaultOptions=DefaultOptions())
 
 def DefaultOptions():
   return {
-    'types': ['depth'],  #List of subscribing components ('depth','rgb')
-    'lx': [-0.035, 0.06, 0.0358, 0, 0, 0, 1],  #Pose of the camera (camera_color_optical_frame) in the robot frame.
+    'types': ['depth','rgb'],  #List of subscribing components ('depth','rgb')
+    'lx': [0.35, 0.05, 0.70]+list(MultiplyQ(QFromAxisAngle([0,0,1],0.5*math.pi),[0,1,0,0])),  #Pose of the camera (camera_color_optical_frame) in the robot frame.
     'rs_attr': 'rs',  #Captured data is saved into: ct.GetAttr(TMP,rs_attr)
     }
 

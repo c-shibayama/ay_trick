@@ -21,7 +21,9 @@ def Help():
     wrist_rs2 'show' [, RS_ATTR]
       Display the received images.
       RS_ATTR: Attribute name to access the data; default:'rs' (ct.GetAttr(TMP,RS_ATTR)).
-  '''
+  DefaultOptions:
+    {DefaultOptions}
+  '''.format(DefaultOptions=DefaultOptions())
 
 def DefaultOptions():
   return {
