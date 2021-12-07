@@ -68,12 +68,12 @@ def GetFVSrvDict(fv_names, node_names=None):
         fv_names[LEFT]:     LEFT,
         }
   if table['srv_separated']:
-    for srv in sum((srv for _,srv in SRV_TABLE),()):
-      table[srv+'_r']= '/fingervision/{}/clear_obj'.format(node_names[RIGHT]),
-      table[srv+'_l']= '/fingervision/{}/clear_obj'.format(node_names[LEFT]),
+    for srv in sum((srvs for _,srvs in SRV_TABLE),()):
+      table[srv+'_r']= '/fingervision/{}/{}'.format(node_names[RIGHT],srv)
+      table[srv+'_l']= '/fingervision/{}/{}'.format(node_names[LEFT],srv)
   else:
-    for srv in sum((srv for _,srv in SRV_TABLE),()):
-      table[srv]= '/fingervision/{}/clear_obj'.format(node_names),
+    for srv in sum((srvs for _,srvs in SRV_TABLE),()):
+      table[srv]= '/fingervision/{}/srv'.format(node_names,srv)
   return table
 
 #Return a table of FV topics and services for each (robot, arm).
@@ -145,7 +145,7 @@ def Run(ct,*args):
   def read_arms(args):
     arms= []
     for a in args if args is not None and len(args)>0 else ['all']:
-      if a in (LEFT,RIGT):  arms.append(a)
+      if a in (LEFT,RIGHT):  arms.append(a)
       elif a=='all':  arms+= list(range(ct.robot.NumArms))
       else:  raise Exception('Too many arguments.')
     return set(arms)
@@ -154,7 +154,7 @@ def Run(ct,*args):
     arms= []
     fv_names,node_names= None,None
     for a in args:
-      if a in (LEFT,RIGT):  arms.append(a)
+      if a in (LEFT,RIGHT):  arms.append(a)
       elif a=='all':  arms+= list(range(ct.robot.NumArms))
       elif fv_names is None:  fv_names= a
       elif node_names is None:  node_names= a
@@ -191,19 +191,21 @@ def Run(ct,*args):
       l.tm_last_topic= [None,None,None,None]  #ros time of last topic receiving. wrench-r,l, objinfo-r,l
       l.running= True
 
-      if fv_names is None or fv_names[arm] is None:
+      if fv_names is None or arm_S not in fv_names or fv_names[arm_S] is None:
         table= RobotToFV(ct.robot, arm)
       else:
-        table= GetFVSrvDict(fv_names[arm],node_names[arm] if node_names is not None and arm in node_names else None)
+        table= GetFVSrvDict(fv_names[arm_S],node_names[arm_S] if node_names is not None and arm_S in node_names else None)
       ct.SetAttr(TMP,'fvconf'+arm_S, table)
       armstr= ct.robot.ArmStr(arm)+'_'
       if table['srv_separated']:
-        for srvtype,srv in SRV_TABLE:
-          ct.AddSrvP(armstr+srv+'_l', table[srv+'_l'], srvtype, persistent=False, time_out=3.0)
-          ct.AddSrvP(armstr+srv+'_r', table[srv+'_r'], srvtype, persistent=False, time_out=3.0)
+        for srvtype,srvs in SRV_TABLE:
+          for srv in srvs:
+            ct.AddSrvP(armstr+srv+'_l', table[srv+'_l'], srvtype, persistent=False, time_out=3.0)
+            ct.AddSrvP(armstr+srv+'_r', table[srv+'_r'], srvtype, persistent=False, time_out=3.0)
       else:
-        for srvtype,srv in SRV_TABLE:
-          ct.AddSrvP(armstr+srv, table[srv], srvtype, persistent=False, time_out=3.0)
+        for srvtype,srvs in SRV_TABLE:
+          for srv in srvs:
+            ct.AddSrvP(armstr+srv, table[srv], srvtype, persistent=False, time_out=3.0)
 
       if table['srv_separated']:
         ct.srvp[armstr+'start_detect_obj_r'](std_srvs.srv.EmptyRequest())
@@ -230,11 +232,11 @@ def Run(ct,*args):
       for srv in ('fv_filter1_wrench','fv_filter1_objinfo'):
         ct.DelSub(srv)
       if table['srv_separated']:
-        for srv in sum((srv for _,srv in SRV_TABLE),()):
+        for srv in sum((srvs for _,srvs in SRV_TABLE),()):
           ct.DelSrvP(armstr+srv+'_r')
           ct.DelSrvP(armstr+srv+'_l')
       else:
-        for srv in sum((srv for _,srv in SRV_TABLE),()):
+        for srv in sum((srvs for _,srvs in SRV_TABLE),()):
           ct.DelSrvP(armstr+srv)
 
   elif command=='is_active':
@@ -287,9 +289,9 @@ def Run(ct,*args):
       armstr= ct.robot.ArmStr(arm)+'_'
       files[arm]= []
       if table['srv_separated']:
-        files[arm]+= ct.srvp[armstr+'take_snapshot_r'](set_frame_skip_req).files
-        files[arm]+= ct.srvp[armstr+'take_snapshot_l'](set_frame_skip_req).files
+        files[arm]+= ct.srvp[armstr+'take_snapshot_r'](take_snapshot_req).files
+        files[arm]+= ct.srvp[armstr+'take_snapshot_l'](take_snapshot_req).files
       else:
-        files[arm]= ct.srvp[armstr+'take_snapshot'](set_frame_skip_req).files
+        files[arm]= ct.srvp[armstr+'take_snapshot'](take_snapshot_req).files
     return files
 
