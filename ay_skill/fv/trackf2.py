@@ -82,6 +82,7 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
 
   try:
     velctrl= ct.Run('velctrl',arm)
+    print velctrl
     wrist= ['wrist_r','wrist_l'][arm]
     while th_info.IsRunning() and not rospy.is_shutdown():
       if out_of_track():

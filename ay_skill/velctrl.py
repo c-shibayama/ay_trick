@@ -44,10 +44,9 @@ def Run(ct,*args):
         #velctrl= ct.m.velctrl.TVelCtrl(arm,ct)
         ct.m.velctrl= ct.Load('ur.velctrl_ros2')
         if rate is None: rate= 500 if ct.robot.Is('E') else 125
-        velctrl= ct.m.velctrl.TVelCtrl(arm,ct,rate=rate)
       else:
         ct.m.velctrl= ct.Load('ur.velctrl_ros')
-        velctrl= ct.m.velctrl.TVelCtrl(arm,ct,rate=rate)
+    velctrl= ct.m.velctrl.TVelCtrl(arm,ct,rate=rate)
   elif ct.robot.Is('Gen3'):
     if 'velctrl' not in ct.m or ct.m.velctrl.TVelCtrl.NumReferences(arm)==0:
       ct.m.velctrl= ct.Load('gen3.velctrl')
