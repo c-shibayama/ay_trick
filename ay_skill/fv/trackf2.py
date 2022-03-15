@@ -72,9 +72,9 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
 
   def out_of_track():
     #return False
-    obj_area= 0.5*(fv_data.obj_area[0] + fv_data.obj_area[1])
-    #print obj_area
-    if obj_area < 0.02:  return True
+    obj_area= max(fv_data.obj_area[0],fv_data.obj_area[1])
+    print obj_area
+    if obj_area < 0.01:  return True
     return False
 
   vx_list= []  #List of target task space velocities for temporal filtering.
