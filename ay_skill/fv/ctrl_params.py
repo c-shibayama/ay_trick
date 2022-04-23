@@ -27,7 +27,7 @@ def Run(ct,*args):
       ct.SetAttr('fv_ctrl','pickup2a_gtimeout1', 40)  #Ctrl step=50Hz(Mikata), 500Hz(Bx)
       ct.SetAttr('fv_ctrl','pickup2a_gtimeout2', 50)
     elif ct.robot.EndEff(arm).Is('ThGripper'):
-      ct.GetAttr('fv_ctrl','min_gstep')[arm]= 0.001
+      ct.GetAttr('fv_ctrl','min_gstep')[arm]= 0.0005
       ct.GetAttr('fv_ctrl','effort')[arm]= 100.0
       ct.SetAttr('fv_ctrl','pickup2a_gtimeout1', 40)  #Ctrl step=50Hz(Mikata), 500Hz(Bx)
       ct.SetAttr('fv_ctrl','pickup2a_gtimeout2', 50)

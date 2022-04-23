@@ -93,8 +93,13 @@ def RobotToFV(robot, arm, no_exception=False):
     raise Exception('fv.fv: No info in the RobotToFV for: {robot}=Arm-{arm}'.format(robot=robot.Name,arm=robot.ArmStr(arm)))
   return None
 
-def Filter1Wrench(ct,l,msg):
-  table= ct.GetAttr(TMP,'fvconf'+ct.robot.ArmStrS(l.arm))
+def Filter1Wrench(ct,arms,msg):
+  for arm in arms:
+    arm_S= ct.robot.ArmStrS(arm)
+    table= ct.GetAttr(TMP,'fvconf'+arm_S)
+    if msg.fv in table:
+      l= ct.GetAttr(TMP,'fv'+arm_S)
+      break
   side= table[msg.fv]
   l.posforce_array[side]= np.array(msg.posforce_array).reshape(len(msg.posforce_array)/5,5).tolist()
   l.force_array[side]= np.array(msg.force_array).reshape(len(msg.force_array)/6,6).tolist()
@@ -114,8 +119,13 @@ def Filter1Wrench(ct,l,msg):
     ct.br.sendTransform(lw_xg[0:3],lw_xg[3:],
         msg.header.stamp, msg.header.frame_id, ct.robot.EndLink(l.arm))
 
-def Filter1ObjInfo(ct,l,msg):
-  table= ct.GetAttr(TMP,'fvconf'+ct.robot.ArmStrS(l.arm))
+def Filter1ObjInfo(ct,arms,msg):
+  for arm in arms:
+    arm_S= ct.robot.ArmStrS(arm)
+    table= ct.GetAttr(TMP,'fvconf'+arm_S)
+    if msg.fv in table:
+      l= ct.GetAttr(TMP,'fv'+arm_S)
+      break
   side= table[msg.fv]
   l.obj_s[side]= msg.obj_s
   l.mv_s[side]= msg.mv_s
@@ -213,8 +223,8 @@ def Run(ct,*args):
       else:
         ct.srvp[armstr+'start_detect_obj'](std_srvs.srv.EmptyRequest())
 
-    ct.AddSubW('fv_filter1_wrench', '/fingervision/fv_filter1_wrench', fingervision_msgs.msg.Filter1Wrench, lambda msg,l=l:Filter1Wrench(ct,l,msg), time_out=3.0)
-    ct.AddSubW('fv_filter1_objinfo', '/fingervision/fv_filter1_objinfo', fingervision_msgs.msg.Filter1ObjInfo, lambda msg,l=l:Filter1ObjInfo(ct,l,msg), time_out=3.0)
+    ct.AddSubW('fv_filter1_wrench', '/fingervision/fv_filter1_wrench', fingervision_msgs.msg.Filter1Wrench, lambda msg,arms=arms:Filter1Wrench(ct,arms,msg), time_out=3.0)
+    ct.AddSubW('fv_filter1_objinfo', '/fingervision/fv_filter1_objinfo', fingervision_msgs.msg.Filter1ObjInfo, lambda msg,arms=arms:Filter1ObjInfo(ct,arms,msg), time_out=3.0)
 
   elif command=='clear':
     arms= read_arms(args)

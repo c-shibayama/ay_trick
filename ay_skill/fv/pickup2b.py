@@ -25,10 +25,10 @@ def Help():
 def PickupLoopDefaultOptions(ct):
   ct.Run('fv.ctrl_params')
   return {
-    'sensitivity_slip': 0.04,  #Sensitivity of slip detection (smaller is more sensitive).
-    'sensitivity_oc':0.1,  #Sensitivity of object-center-movement detection (smaller is more sensitive).
+    'sensitivity_slip': 0.08,  #Sensitivity of slip detection (smaller is more sensitive).
+    'sensitivity_oc':0.2,  #Sensitivity of object-center-movement detection (smaller is more sensitive).
     'sensitivity_oo':0.5,  #Sensitivity of object-orientation-movement detection (smaller is more sensitive).
-    'sensitivity_oa':0.2,  #Sensitivity of object-area-change detection (smaller is more sensitive).
+    'sensitivity_oa':0.4,  #Sensitivity of object-area-change detection (smaller is more sensitive).
     #'area_drop_rate': 0.8,
     'area_drop_rate': 0.6,  #If object area becomes smaller than this rate, it's considered as dropped.
     'z_final': ct.GetAttr('fv_ctrl','pickup2a_z_final'),  #Final height (offset from the beginning).
