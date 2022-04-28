@@ -73,7 +73,7 @@ def GetFVSrvDict(fv_names, node_names=None):
       table[srv+'_l']= '/fingervision/{}/{}'.format(node_names[LEFT],srv)
   else:
     for srv in sum((srvs for _,srvs in SRV_TABLE),()):
-      table[srv]= '/fingervision/{}/srv'.format(node_names,srv)
+      table[srv]= '/fingervision/{}/{}'.format(node_names,srv)
   return table
 
 #Return a table of FV topics and services for each (robot, arm).
@@ -170,6 +170,10 @@ def Run(ct,*args):
       elif node_names is None:  node_names= a
       else:  raise Exception('Too many arguments.')
     arms= set(arms)
+    print '''Setup FV:
+    arms: {arms}
+    fv_names: {fv_names}
+    node_names: {node_names}'''.format(arms=arms,fv_names=fv_names,node_names=node_names)
 
     for arm in arms:
       arm_S= ct.robot.ArmStrS(arm)
@@ -203,8 +207,10 @@ def Run(ct,*args):
 
       if fv_names is None or arm_S not in fv_names or fv_names[arm_S] is None:
         table= RobotToFV(ct.robot, arm)
+        print 'Found info for: {robot}=Arm-{arm}'.format(robot=ct.robot.Name,arm=ct.robot.ArmStr(arm))
       else:
         table= GetFVSrvDict(fv_names[arm_S],node_names[arm_S] if node_names is not None and arm_S in node_names else None)
+        print 'Configured info with:',fv_names[arm_S],node_names[arm_S] if node_names is not None and arm_S in node_names else None
       ct.SetAttr(TMP,'fvconf'+arm_S, table)
       armstr= ct.robot.ArmStr(arm)+'_'
       if table['srv_separated']:
