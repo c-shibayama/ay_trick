@@ -42,10 +42,12 @@ def Run(ct,*args):
       ct.SetAttr('fv_ctrl','pickup2a_gtimeout1', 40)  #Ctrl step=50Hz(Mikata), 500Hz(Bx)
       ct.SetAttr('fv_ctrl','pickup2a_gtimeout2', 50)
   if ct.robot.Is('Mikata'):
+    for arm in range(ct.robot.NumArms):
+      ct.GetAttr('fv_ctrl','min_gstep')[arm]= 0.002
     ct.SetAttr('fv_ctrl','tracko_gain', [[0.1,0.1,0.1]])
-    ct.SetAttr('fv_ctrl','pickup2a_kp', [1.0,1.0, 5.0,  1.0,1.0,1.0])
+    ct.SetAttr('fv_ctrl','pickup2a_kp', [1.0,1.0, 10.0,  1.0,1.0,1.0])
     ct.SetAttr('fv_ctrl','pickup2a_kd', [0.1,0.1, 1.0,  0.1,0.1,0.1])
-    #ct.SetAttr('fv_ctrl','pickup2a_lowgain', 0.9)
+    ct.SetAttr('fv_ctrl','pickup2a_lowgain', 0.1)
     ct.SetAttr('fv_ctrl','pickup2a_z_final', 0.05)
   elif ct.robot.Is('UR'):
     ct.SetAttr('fv_ctrl','pickup2a_kp', [1.0,1.0, 4.0,  1.0,1.0,1.0])
