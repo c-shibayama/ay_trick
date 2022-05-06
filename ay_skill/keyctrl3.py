@@ -97,6 +97,7 @@ def Run(ct,*args):
   speed_gain= 1.0
   if ct.robot.Is('UR'):  speed_gain= 0.4
   if ct.robot.Is('Gen3'):  speed_gain= 0.4
+  if ct.robot.Is('Mikata'):  speed_gain= 0.2
 
   arm= ct.robot.Arm
 

@@ -114,7 +114,7 @@ def TrackingLoop(th_info, ct, arm, ctrl_type):
         vx0= J * vq0
         #kv= np.diag([0.3,0.5,0.5])
         #vx= ToList(MCVec(vp) - kv*vx0[:3])+[0.0,0.0,0.0]
-        vx= ct.GetAttr('fv_ctrl','trackf2_kp')*MCVec(fd)
+        vx= MCVec(ct.GetAttr('fv_ctrl','trackf2_kp')*np.array(fd))
         if smoothing_filter_len>1:
           vx_list.append(vx)
           if len(vx_list)>smoothing_filter_len:  vx_list.pop(0)
