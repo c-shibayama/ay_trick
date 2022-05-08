@@ -22,11 +22,13 @@ def Run(ct,*args):
       ['fv.fv', 'on', 'all', fv_names, node_names],
       ['mikata.effort', 100],
       ['viz',''],
+      ['mikata.move_to_init'],
       ]
   elif mode=='sim':
     command_list=[
-      ['robot', 'mikatas'],
+      ['robot', 'mikata2s'],
       ['viz',''],
+      ['mikata.move_to_init'],
       ]
   else:  raise Exception('Invalid mode:',mode)
   for cmd in command_list:

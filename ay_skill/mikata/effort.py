@@ -7,5 +7,9 @@ def Help():
 def Run(ct,*args):
   effort= args[0]
   ct.robot.mikata.MoveTo({jname:q for (jname,q) in zip(ct.robot.JointNames(),ct.robot.Q(arm=0))}, blocking=False)
-  ct.robot.mikata.SetPWM({jname:effort for jname in ct.robot.JointNames()})
-  ct.robot.EndEff().Move(ct.robot.EndEff().Position(), max_effort=effort)
+  if isinstance(effort,(int,float)):
+    ct.robot.mikata.SetPWM({jname:effort for jname in ct.robot.JointNames()})
+    ct.robot.EndEff().Move(ct.robot.EndEff().Position(), max_effort=effort)
+  else:
+    ct.robot.mikata.SetPWM({jname:e for jname,e in zip(ct.robot.JointNames(),effort)})
+    ct.robot.EndEff().Move(ct.robot.EndEff().Position(), max_effort=effort[-1])

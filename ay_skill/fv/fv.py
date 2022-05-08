@@ -242,7 +242,7 @@ def Run(ct,*args):
       if 'fv_wrench' in ct.callback:  ct.callback.fv_wrench[arm_S]= [None,None]
       if 'fv_objinfo' in ct.callback:  ct.callback.fv_objinfo[arm_S]= [None,None]
 
-      table= ct.GetAttr(TMP,'fvconf'+arm_S)
+      table= ct.GetAttrOr(None,TMP,'fvconf'+arm_S)
       if table is None:  continue
       armstr= ct.robot.ArmStr(arm)+'_'
       for srv in ('fv_filter1_wrench','fv_filter1_objinfo'):

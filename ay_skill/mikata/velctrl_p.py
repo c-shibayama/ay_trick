@@ -68,7 +68,7 @@ class TVelCtrl(object):
     #traj= ToROSTrajectory(ct.robot.JointNames(arm), q_traj, t_traj, dq_traj)
     with ct.robot.control_locker:
       #ct.robot.pub.joint_path_command.publish(traj)
-      if ct.robot.Is('Mikata2'):
+      if ct.robot.Is('Mikata2') and not ct.robot.Is('sim'):
         ct.robot.mikata.MoveTo(dict(zip(ct.robot.JointNames(arm),q2)), blocking=False)
       else:
         t_traj= [0.0, dt]

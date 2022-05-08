@@ -30,7 +30,7 @@ def PickupLoopDefaultOptions(ct):
     'sensitivity_oo':0.5,  #Sensitivity of object-orientation-movement detection (smaller is more sensitive).
     'sensitivity_oa':0.4,  #Sensitivity of object-area-change detection (smaller is more sensitive).
     #'area_drop_rate': 0.8,
-    'area_drop_rate': 0.6,  #If object area becomes smaller than this rate, it's considered as dropped.
+    'area_drop_rate': 0.3,  #If object area becomes smaller than this rate, it's considered as dropped.
     'z_final': ct.GetAttr('fv_ctrl','pickup2a_z_final'),  #Final height (offset from the beginning).
     'obj_area_filter_len': 5,  #Filter length for obj_area.
     'auto_stop': False,  #Whether automatically stops when pickup is completed.
@@ -257,7 +257,7 @@ def PickupLoop(th_info, ct, arm, options):
 
       if any(np.concatenate([np.abs(x_err[:2])>0.01, np.abs(x_err[3:])>0.05])):
         CPrint(4,'fv.pickup2b: Too large pose error:',x_err)
-        PrintLog('Stop by too large x_err',x_err)
+        CPrint(3,'Stop by too large x_err',x_err)
         velctrl.Step([0.0]*ct.robot.DoF(arm))
         raise Exception('fv.pickup2b: Too large pose error')
 

@@ -24,6 +24,7 @@ def Help():
       'mikata','Mikata',
       'mikatas','Mikata_SIM',
       'mikata2','Mikata2',
+      'mikata2s','Mikata2_SIM',
       'mikata6','Mikata6',
       'mikata6s','Mikata6_SIM',
       'cx7','CraneX7',
@@ -92,6 +93,7 @@ def Run(ct,*args):
       'mikata':'Mikata',
       'mikatas':'Mikata_SIM',
       'mikata2':'Mikata2',
+      'mikata2s':'Mikata2_SIM',
       'mikata6':'Mikata6',
       'mikata6s':'Mikata6_SIM',
       'cx7':'CraneX7',
@@ -190,9 +192,9 @@ def Run(ct,*args):
     mod= SmartImportReload('ay_py.ros.rbt_moto')
     ct.robot= mod.TRobotMotoman(is_sim=(robot=='Motoman_SIM'))
 
-  elif robot in ('Mikata2',):
+  elif robot in ('Mikata2','Mikata2_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_mikata2')
-    ct.robot= mod.TRobotMikata2()
+    ct.robot= mod.TRobotMikata2(is_sim=(robot=='Mikata2_SIM'))
 
   elif robot in ('Mikata6','Mikata6_SIM'):
     mod= SmartImportReload('ay_py.ros.rbt_mikata6')
