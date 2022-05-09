@@ -45,7 +45,7 @@ def Run(ct,*args):
     for arm in range(ct.robot.NumArms):
       ct.GetAttr('fv_ctrl','min_gstep')[arm]= 0.002
     ct.SetAttr('fv_ctrl','trackf2_flen', 10)
-    ct.SetAttr('fv_ctrl','trackf2_kp', [0,0.1,0.1, 0.1,0.1,0.1])
+    ct.SetAttr('fv_ctrl','trackf2_kp', [0,0.3,0.3, 0.1,0.1,0.1])
     ct.SetAttr('fv_ctrl','tracko_gain', [[0.1,0.1,0.1]])
     ct.SetAttr('fv_ctrl','pickup2a_kp', [1.0,1.0, 10.0,  1.0,1.0,1.0])
     ct.SetAttr('fv_ctrl','pickup2a_kd', [0.1,0.1, 1.0,  0.1,0.1,0.1])
