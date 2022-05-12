@@ -33,14 +33,6 @@ def DefaultOptions():
     'rs_attr': 'rs',  #Captured data is saved into: ct.GetAttr(TMP,rs_attr)
     }
 
-def GetCameraProjectionMatrix(cam_info_topic='/camera/aligned_depth_to_color/camera_info'):
-  try:
-    cam_info= rospy.wait_for_message(cam_info_topic, sensor_msgs.msg.CameraInfo, 5.0)
-    proj_mat= np.array(cam_info.P).reshape(3,4) #get camera projection matrix from ros topic
-    return proj_mat
-  except (rospy.ROSException, rospy.ROSInterruptException):
-    raise Exception('Failed to read topic: {cam_info_topic}'.format(cam_info_topic=cam_info_topic))
-
 def ReceiveDepth(ct,l,lh,msg):
   with lh.thread_locker:
     l.msg_depth= msg
@@ -94,29 +86,17 @@ def Run(ct,*args):
     InsertDict(options, user_options)
     UnSubscribe(options['rs_attr'])
 
-    ct.SetAttr(TMP,'{rs_attr}_helper'.format(rs_attr=options['rs_attr']), TContainer())
-    lh= ct.GetAttr(TMP,'{rs_attr}_helper'.format(rs_attr=options['rs_attr']))
-    lh.cvbridge= CvBridge()
-    lh.thread_locker= threading.RLock()
-    ct.SetAttr(TMP,options['rs_attr'], TContainer())
-    l= ct.GetAttr(TMP,options['rs_attr'])
+    l,lh= GetEmptyRSContainer(with_helper=True)
+    ct.SetAttr(TMP,options['rs_attr'], l)
+    ct.SetAttr(TMP,'{rs_attr}_helper'.format(rs_attr=options['rs_attr']), lh)
     l.options= options
     l.proj_mat= GetCameraProjectionMatrix()
-    l.msg_depth= None  #Original depth message.
-    l.img_depth= None  #Depth image (for OpenCV).
-    l.stamp_depth= None  #Stamp of the depth message.
-    l.msg_rgb= None  #Original rgb message.
-    l.img_rgb= None  #RGB image (for OpenCV).
-    l.stamp_rgb= None  #Stamp of the rgb message.
     ct.callback.rs= None
-    #Arm on which the RealSense is attached.
-    l.arm= options['arm']
-    #Pose of RealSense (camera_color_optical_frame) in the wrist frame.
-    l.frame= ct.robot.EndLink(l.arm)
-    l.lx= options['lx']
+    l.arm= options['arm']  #Arm on which the RealSense is attached.
+    l.frame= ct.robot.EndLink(l.arm)  #wrist frame
+    l.lx= options['lx']  #Pose of RealSense (camera_color_optical_frame) in the wrist frame.
     l.lw_x_camera_link= TransformRightInv(l.lx,ct.Run('tf_once','camera_link','camera_color_optical_frame'))
-    #Wrist pose at the observation. If both depth and rgb are observed, xw is measured only when depth is observed.
-    l.xw= None
+    l.xw= None  #Wrist pose at the observation. If both depth and rgb are observed, xw is measured only when depth is observed.
 
     if 'depth' in options['types']:
       ct.AddSubW('{rs_attr}_depth'.format(rs_attr=options['rs_attr']),

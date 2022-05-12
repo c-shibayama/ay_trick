@@ -5,9 +5,6 @@ import cv2
 import sensor_msgs.msg
 from cv_bridge import CvBridge, CvBridgeError
 
-m_wrist_rs2= SmartImportReload('wrist_rs2')
-GetCameraProjectionMatrix= m_wrist_rs2.GetCameraProjectionMatrix
-
 def Help():
   return '''RealSense2 camera utility installed on the robot frame.
     NOTE: This utility is alternative to wrist_rs2.
@@ -87,27 +84,16 @@ def Run(ct,*args):
     InsertDict(options, user_options)
     UnSubscribe(options['rs_attr'])
 
-    ct.SetAttr(TMP,'{rs_attr}_helper'.format(rs_attr=options['rs_attr']), TContainer())
-    lh= ct.GetAttr(TMP,'{rs_attr}_helper'.format(rs_attr=options['rs_attr']))
-    lh.cvbridge= CvBridge()
-    lh.thread_locker= threading.RLock()
-    ct.SetAttr(TMP,options['rs_attr'], TContainer())
-    l= ct.GetAttr(TMP,options['rs_attr'])
+    l,lh= GetEmptyRSContainer(with_helper=True)
+    ct.SetAttr(TMP,options['rs_attr'], l)
+    ct.SetAttr(TMP,'{rs_attr}_helper'.format(rs_attr=options['rs_attr']), lh)
     l.options= options
     l.proj_mat= GetCameraProjectionMatrix()
-    l.msg_depth= None  #Original depth message.
-    l.img_depth= None  #Depth image (for OpenCV).
-    l.stamp_depth= None  #Stamp of the depth message.
-    l.msg_rgb= None  #Original rgb message.
-    l.img_rgb= None  #RGB image (for OpenCV).
-    l.stamp_rgb= None  #Stamp of the rgb message.
     ct.callback.rs= None
-    #Pose of RealSense (camera_color_optical_frame) in the wrist frame.
     l.frame= ct.robot.BaseFrame
     l.lx= options['lx']
     l.lw_x_camera_link= TransformRightInv(l.lx,ct.Run('tf_once','camera_link','camera_color_optical_frame'))
-    #Wrist pose at the observation. If both depth and rgb are observed, xw is measured only when depth is observed.
-    l.xw= None
+    l.xw= None  #Wrist pose at the observation. If both depth and rgb are observed, xw is measured only when depth is observed.
 
     if 'depth' in options['types']:
       ct.AddSubW('{rs_attr}_depth'.format(rs_attr=options['rs_attr']),
