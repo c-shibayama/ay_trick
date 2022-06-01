@@ -42,7 +42,7 @@ def Run(ct,*args):
       ct.SetAttr('fv_ctrl','pickup2a_gtimeout1', 40)  #Ctrl step=50Hz(Mikata), 500Hz(Bx)
       ct.SetAttr('fv_ctrl','pickup2a_gtimeout2', 50)
     elif ct.robot.EndEff(arm).Is('DxlpY1Gripper'):
-      ct.GetAttr('fv_ctrl','min_gstep')[arm]= 0.002
+      ct.GetAttr('fv_ctrl','min_gstep')[arm]= 0.005
   if ct.robot.Is('Mikata'):
     for arm in range(ct.robot.NumArms):
       ct.GetAttr('fv_ctrl','min_gstep')[arm]= 0.002
