@@ -22,17 +22,17 @@ def Help():
       OPTIONS: Options of PickupLoop (see PickupLoopDefaultOptions).
 '''
 
-def PickupLoopDefaultOptions(ct):
-  ct.Run('fv.ctrl_params')
+def PickupLoopDefaultOptions():
   return {
     'sensitivity_slip': 0.08,  #Sensitivity of slip detection (smaller is more sensitive).
     'sensitivity_oc':0.2,  #Sensitivity of object-center-movement detection (smaller is more sensitive).
     'sensitivity_oo':0.5,  #Sensitivity of object-orientation-movement detection (smaller is more sensitive).
     'sensitivity_oa':0.4,  #Sensitivity of object-area-change detection (smaller is more sensitive).
-    #'area_drop_rate': 0.8,
-    'area_drop_rate': 0.3,  #If object area becomes smaller than this rate, it's considered as dropped.
-    'z_final': ct.GetAttr('fv_ctrl','pickup2a_z_final'),  #Final height (offset from the beginning).
+    #'area_drop_ratio': 0.8,
+    'area_drop_ratio': 0.3,  #If object area becomes smaller than this ratio, it's considered as dropped.
+    'z_final': 0.07,  #Final height (offset from the beginning).
     'obj_area_filter_len': 5,  #Filter length for obj_area.
+    'auto_retry': False,  #Whether automatically retrying grasp when failed.
     'auto_stop': False,  #Whether automatically stops when pickup is completed.
     'time_out': None,  #Timeout in seconds, or no timeout (None).
     'resume_detect_obj': False,  #Restart object detection after execution.
@@ -41,8 +41,19 @@ def PickupLoopDefaultOptions(ct):
     'log': {},  #[output] Execution results are stored into this dictionary.
     }
 
-def PickupLoop(th_info, ct, arm, options):
+def PickupLoop(th_info, ct, arm, user_options):
   ct.Run('fv.ctrl_params')
+  options= PickupLoopDefaultOptions()
+  #Merge options from fv.ctrl_params:
+  for opt in ('sensitivity_slip','sensitivity_oc','sensitivity_oo','sensitivity_oa'):
+    options[opt]= ct.GetAttr('fv_ctrl','hold_{}'.format(opt))
+  for opt in ('area_drop_ratio','z_final','obj_area_filter_len'):
+    options[opt]= ct.GetAttr('fv_ctrl','pickup2a_{}'.format(opt))
+  #Merge user_options:
+  InsertDict(options, user_options)
+  if 'log' in user_options:  options['log']= user_options['log']
+
+  #Observation objects:
   fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
 
   #Get object center computed as a sum of object centers from both fingers
@@ -111,7 +122,7 @@ def PickupLoop(th_info, ct, arm, options):
   def IsDropped():
     #sum --> max for robustness.
     print 'area:',max(fv_data.obj_area_filtered),max(l.obj_area0),max(fv_data.obj_area_filtered)/max(max(l.obj_area0),1.0e-6)
-    if max(fv_data.obj_area_filtered) < options['area_drop_rate']*max(l.obj_area0):
+    if max(fv_data.obj_area_filtered) < options['area_drop_ratio']*max(l.obj_area0):
       l.log['grasped']= False
       return True
     return False
@@ -303,9 +314,14 @@ def PickupLoop(th_info, ct, arm, options):
   sm['grasp_init'].EntryAction= lambda: (LogGripperPos(), SetGrasp(l.g_pos_log[0], speed=100.0, exclusive=True))
   sm['grasp_init'].NewAction()
   sm['grasp_init'].Actions[-1]= action_quit
-  sm['grasp_init'].NewAction()
-  sm['grasp_init'].Actions[-1].Condition= lambda: l.g_motion==0
-  sm['grasp_init'].Actions[-1].NextState= 'to_initial'
+  if options['auto_retry']:
+    sm['grasp_init'].NewAction()
+    sm['grasp_init'].Actions[-1].Condition= lambda: l.g_motion==0
+    sm['grasp_init'].Actions[-1].NextState= 'to_initial'
+  elif options['auto_stop']:
+    sm['grasp_init'].NewAction()
+    sm['grasp_init'].Actions[-1].Condition= lambda: l.g_motion==0
+    sm['grasp_init'].Actions[-1].NextState= EXIT_STATE
   sm['grasp_init'].ElseAction= action_ctrlstep
 
   sm.NewState('to_initial')
@@ -412,10 +428,6 @@ def Run(ct,*args):
     arm= args[0] if len(args)>0 else ct.robot.Arm
     user_options= args[1] if len(args)>1 else {}
 
-    options= PickupLoopDefaultOptions(ct)
-    InsertDict(options, user_options)
-    if 'log' in user_options:  options['log']= user_options['log']
-
     if 'vs_pickup2b'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_pickup2b'+LRToStrS(arm),'is already on'
 
@@ -423,7 +435,7 @@ def Run(ct,*args):
       ct.Run('fv.fv','on',arm)
 
     CPrint(1,'Turn on:','vs_pickup2b'+LRToStrS(arm))
-    ct.thread_manager.Add(name='vs_pickup2b'+LRToStrS(arm), target=lambda th_info: PickupLoop(th_info,ct,arm,options))
+    ct.thread_manager.Add(name='vs_pickup2b'+LRToStrS(arm), target=lambda th_info: PickupLoop(th_info,ct,arm,user_options))
 
   elif command=='off':
     arm= args[0] if len(args)>0 else ct.robot.Arm
@@ -439,14 +451,10 @@ def Run(ct,*args):
   elif command=='once':
     arm= args[0] if len(args)>0 else ct.robot.Arm
     user_options= args[1] if len(args)>1 else {}
-
-    options= PickupLoopDefaultOptions(ct)
-    InsertDict(options, user_options)
-    if 'log' in user_options:  options['log']= user_options['log']
-    options['auto_stop']= True
+    user_options['auto_stop']= True
 
     if not all(ct.Run('fv.fv','is_active',arm)):
       ct.Run('fv.fv','on',arm)
 
-    PickupLoop(None, ct, arm, options=options)
+    PickupLoop(None, ct, arm, options=user_options)
 

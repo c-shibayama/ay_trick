@@ -18,11 +18,11 @@ def Help():
 def HoldLoop(th_info, ct, arm):
   ct.Run('fv.ctrl_params')
   fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
-  #slip_detect1= lambda: (sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>0.06,)  #0.1
-  slip_detect2= lambda: ((sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>0.06,  #0.1
-                          np.max(fv_data.d_obj_center_filtered)>0.2,
-                          np.max(fv_data.d_obj_orientation_filtered)>0.7,
-                          np.max(fv_data.d_obj_area_filtered)>0.3))
+  #slip_detect1= lambda: (sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>ct.GetAttr('fv_ctrl','hold_sensitivity_slip'),)
+  slip_detect2= lambda: ((sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>ct.GetAttr('fv_ctrl','hold_sensitivity_slip'),
+                          np.max(fv_data.d_obj_center_filtered)>ct.GetAttr('fv_ctrl','hold_sensitivity_oc'),
+                          np.max(fv_data.d_obj_orientation_filtered)>ct.GetAttr('fv_ctrl','hold_sensitivity_oo'),
+                          np.max(fv_data.d_obj_area_filtered)>ct.GetAttr('fv_ctrl','hold_sensitivity_oa')))
 
   #Stop object detection
   ct.Run('fv.fv','stop_detect_obj',arm)

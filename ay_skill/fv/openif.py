@@ -23,13 +23,23 @@ def OpeningLoopDefaultOptions():
     'sensitivity_oc':0.4,  #Sensitivity of object-center-movement detection (smaller is more sensitive).
     'sensitivity_oo':4.0,  #Sensitivity of object-orientation-movement detection (smaller is more sensitive).
     'sensitivity_oa':0.6,  #Sensitivity of object-area-change detection (smaller is more sensitive).
+    'sensitivity_force':0.9,  #Sensitivity of each force element; if the norm of force change is larger than this threshold, the point is counted as a force change point.
     'nforce_threshold': 20,  #Threshold of number of force changing points to open the gripper.
     'dw_grip': 0.02,  #Displacement of gripper movement.
     'log': {},  #[output] Execution results are stored into this dictionary.
     }
 
-def OpeningLoop(th_info, ct, arm, options):
+def OpeningLoop(th_info, ct, arm, user_options):
   ct.Run('fv.ctrl_params')
+  options= OpeningLoopDefaultOptions()
+  #Merge options from fv.ctrl_params:
+  for opt in ('sensitivity_slip','sensitivity_oc','sensitivity_oo','sensitivity_oa','sensitivity_force','nforce_threshold','dw_grip'):
+    options[opt]= ct.GetAttr('fv_ctrl','openif_{}'.format(opt))
+  #Merge user_options:
+  InsertDict(options, user_options)
+  if 'log' in user_options:  options['log']= user_options['log']
+
+  #Observation objects:
   fv_data= ct.GetAttr(TMP,'fv'+ct.robot.ArmStrS(arm))
 
   #Stop object detection
@@ -40,7 +50,7 @@ def OpeningLoop(th_info, ct, arm, options):
 
   fa0= copy.deepcopy(fv_data.force_array)
   #FIXME: This should be a distance of (x,y) or (x,y,z) (z is estimated by x,y though...). Do not use torque.
-  n_change= lambda side: sum([1 if Dist(f[:6],f0[:6])>0.9 else 0 for f,f0 in zip(fv_data.force_array[side],fa0[side])])
+  n_change= lambda side: sum([1 if Dist(f[:6],f0[:6])>options['sensitivity_force'] else 0 for f,f0 in zip(fv_data.force_array[side],fa0[side])])
   #dth= 5
   slip_detect2= lambda: ((sum(fv_data.mv_s[0])+sum(fv_data.mv_s[1])>options['sensitivity_slip'],
                           np.max(fv_data.d_obj_center_filtered)>options['sensitivity_oc'],
@@ -81,10 +91,6 @@ def Run(ct,*args):
     arm= args[0] if len(args)>0 else ct.robot.Arm
     user_options= args[1] if len(args)>1 else {}
 
-    options= OpeningLoopDefaultOptions()
-    InsertDict(options, user_options)
-    if 'log' in user_options:  options['log']= user_options['log']
-
     if 'vs_openif'+LRToStrS(arm) in ct.thread_manager.thread_list:
       print 'vs_openif'+LRToStrS(arm),'is already on'
 
@@ -95,7 +101,7 @@ def Run(ct,*args):
     ct.Run('fv.hold','off',arm)
 
     CPrint(1,'Turn on:','vs_openif'+LRToStrS(arm))
-    ct.thread_manager.Add(name='vs_openif'+LRToStrS(arm), target=lambda th_info: OpeningLoop(th_info,ct,arm,options))
+    ct.thread_manager.Add(name='vs_openif'+LRToStrS(arm), target=lambda th_info: OpeningLoop(th_info,ct,arm,user_options))
 
   elif command=='off':
     arm= args[0] if len(args)>0 else ct.robot.Arm

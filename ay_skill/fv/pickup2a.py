@@ -26,8 +26,8 @@ def PickupLoopDefaultOptions(ct):
   ct.Run('fv.ctrl_params')
   return {
     'slip_sensitivity': 0.4,  #Slip sensitivity (smaller is more sensitive).
-    #'area_drop_rate': 0.8,
-    'area_drop_rate': 0.6,  #If object area becomes smaller than this rate, it's considered as dropped.
+    #'area_drop_ratio': 0.8,
+    'area_drop_ratio': 0.6,  #If object area becomes smaller than this ratio, it's considered as dropped.
     'z_final': ct.GetAttr('fv_ctrl','pickup2a_z_final'),  #Final height (offset from the beginning).
     'obj_area_filter_len': 5,  #Filter length for obj_area.
     'auto_stop': False,  #Whether automatically stops when pickup is completed.
@@ -137,7 +137,7 @@ def PickupLoop(th_info, ct, arm, options):
   def IsDropped():
     #sum --> max for robustness.
     print 'area:',max(fv_data.obj_area_filtered),max(l.obj_area0),max(fv_data.obj_area_filtered)/max(max(l.obj_area0),1.0e-6)
-    if max(fv_data.obj_area_filtered) < options['area_drop_rate']*max(l.obj_area0):  return True
+    if max(fv_data.obj_area_filtered) < options['area_drop_ratio']*max(l.obj_area0):  return True
     return False
 
   def SetZOffset(z_offset):
