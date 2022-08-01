@@ -31,17 +31,18 @@ def HoldLoop(th_info, ct, arm):
     #ct.robot.EndEff(arm).StartHolding()
 
   g_pos= ct.robot.GripperPos(arm)
+  get_value= lambda lst,idx: lst[idx] if isinstance(lst,list) else lst
   while th_info.IsRunning() and not rospy.is_shutdown():
     if any(slip_detect2()):
       print 'slip',slip_detect2(),rospy.Time.now().to_sec()
       #g_pos-= 0.0005 if arm==LEFT else 0.002
-      g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
+      g_pos-= get_value(ct.GetAttr('fv_ctrl','min_gstep'),arm)
       #ct.robot.MoveGripper(pos=g_pos, arm=arm, speed=100.0, blocking=False)
       #rospy.sleep(0.001)
       #g_pos= ct.robot.GripperPos(arm)
       ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=1.0, blocking=False)
       for i in range(100):  #100
-        if abs(ct.robot.GripperPos(arm)-g_pos)<0.5*ct.GetAttr('fv_ctrl','min_gstep')[arm]:  break
+        if abs(ct.robot.GripperPos(arm)-g_pos)<0.5*get_value(ct.GetAttr('fv_ctrl','min_gstep'),arm):  break
         rospy.sleep(0.0001)
       g_pos= ct.robot.GripperPos(arm)
     else:

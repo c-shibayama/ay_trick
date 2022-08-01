@@ -171,7 +171,8 @@ def PickupLoop(th_info, ct, arm, options):
     count_wait_gmove= ct.GetAttr('fv_ctrl','pickup2a_gtimeout1')
     ##l.g_pos-= 0.0005 if arm==LEFT else 0.002
     #l.g_pos-= 0.0007 if arm==LEFT else 0.003
-    l.g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
+    get_value= lambda lst,idx: lst[idx] if isinstance(lst,list) else lst
+    l.g_pos-= get_value(ct.GetAttr('fv_ctrl','min_gstep'),arm)
     #ct.robot.MoveGripper(pos=l.g_pos, arm=arm, speed=100.0, blocking=False)
     #rospy.sleep(0.001)
     #l.g_pos= ct.robot.GripperPos(arm)
@@ -233,7 +234,8 @@ def PickupLoop(th_info, ct, arm, options):
     if l.g_motion>0:
       print rospy.Time.now().to_sec(), abs(ct.robot.GripperPos(arm)-l.g_pos), abs(ct.robot.GripperPos(arm)-l.g_pos)<0.0005
       #if abs(ct.robot.GripperPos(arm)-l.g_pos)<0.0005:  l.g_motion= 0
-      if abs(ct.robot.GripperPos(arm)-l.g_pos)<0.5*ct.GetAttr('fv_ctrl','min_gstep')[arm]:  l.g_motion= 0
+      get_value= lambda lst,idx: lst[idx] if isinstance(lst,list) else lst
+      if abs(ct.robot.GripperPos(arm)-l.g_pos)<0.5*get_value(ct.GetAttr('fv_ctrl','min_gstep'),arm):  l.g_motion= 0
       else:  l.g_motion-= 1
       if l.g_motion==0:  l.suppress_z_ctrl= False
 

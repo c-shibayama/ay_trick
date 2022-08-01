@@ -111,16 +111,17 @@ def GraspLoop(th_info, ct, arm):
 
   try:
     g_pos= ct.robot.GripperPos(arm)
+    get_value= lambda lst,idx: lst[idx] if isinstance(lst,list) else lst
     while th_info.IsRunning() and not rospy.is_shutdown():
       if g_pos<0.001 or force_detector.IsDetected():
         print 'Done'
         break
 
       if force_detector.IsInitialized():
-        g_pos-= ct.GetAttr('fv_ctrl','min_gstep')[arm]
-        ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=ct.GetAttr('fv_ctrl','effort')[arm], speed=1.0, blocking=False)
+        g_pos-= get_value(ct.GetAttr('fv_ctrl','min_gstep'),arm)
+        ct.robot.MoveGripper(pos=g_pos, arm=arm, max_effort=get_value(ct.GetAttr('fv_ctrl','effort'),arm), speed=1.0, blocking=False)
         for i in range(100):
-          if abs(ct.robot.GripperPos(arm)-g_pos)<0.5*ct.GetAttr('fv_ctrl','min_gstep')[arm]:  break
+          if abs(ct.robot.GripperPos(arm)-g_pos)<0.5*get_value(ct.GetAttr('fv_ctrl','min_gstep'),arm):  break
           rospy.sleep(0.0001)
         #rospy.sleep(0.1)
         g_pos= ct.robot.GripperPos(arm)
