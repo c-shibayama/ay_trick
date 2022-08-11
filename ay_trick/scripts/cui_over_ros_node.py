@@ -116,15 +116,16 @@ class TCUIOverROSNode(object):
         c1,c2,ce= ACol.I(4,1,None)
         print '%sCheck the command line: %s%s %s' % (c1, c2,cmd_raw, ce)
 
-    self.Exit('the end of TCUITool.Interface',wait_cui=False)
+    self.Exit('the end of TCUIOverROSNode.Interface',wait_cui=False)
 
   def StdOutCallback(self, msg):
     sys.stdout.write(msg.data)
     sys.stdout.flush()
 
 if __name__ == '__main__':
-  rospy.init_node('cui_over_ros_node')
+  rospy.init_node('cui_over_ros_node{}'.format(os.getpid()))
   cui= TCUIOverROSNode()
+  print 'CUIOverROSNode:',rospy.get_name()
   cui.Start()
   rospy.spin()
   cui.Exit('__main__')

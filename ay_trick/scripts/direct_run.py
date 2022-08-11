@@ -17,7 +17,7 @@ Usage:
       scripts/direct_run.py 'test.test 3.14' 'test.test'
       scripts/direct_run.py 'robot "dxlg"' j
 '''
-import sys
+import sys,os,re
 import roslib; roslib.load_manifest('ay_trick')
 import rospy
 from core_tool import TCoreTool, CPrint, PrintException
@@ -26,13 +26,15 @@ from cui_tool import ParseAndRun
 if __name__ == '__main__':
   #motions= (' '.join(sys.argv[1:])).split(';')
   motions= sys.argv[1:]
+  rosarg= re.compile(r'^[a-zA-Z0-9_\/]+\:=.*')
+  motions= [motion for motion in motions if not rosarg.match(motion)]
   print motions
-  #motions= ['tsim2.test_replay']
 
   try:
 
-    rospy.init_node('direct_run')
+    rospy.init_node('direct_run{}'.format(os.getpid()))
     ct= TCoreTool()
+    print 'DirectRun:',rospy.get_name()
 
     if ct.Exists('_default'):
       print 'Running _default...'

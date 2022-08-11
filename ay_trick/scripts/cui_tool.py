@@ -144,9 +144,9 @@ class TCUITool(object):
 
 
 if __name__ == '__main__':
-  rospy.init_node('cui_tool')
+  rospy.init_node('cui_tool{}'.format(os.getpid()))
   cui= TCUITool()
+  print 'CUITool:',rospy.get_name()
   cui.Start()
   rospy.spin()
   cui.Exit('__main__')
-
