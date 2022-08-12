@@ -12,15 +12,7 @@ def Run(ct,*args):
   attr_keys= args[2] if len(args)>2 else None
   if attr_keys not in (None,[]) and ct.HasAttr(*attr_keys):
     return ct.GetAttr(*attr_keys)
-
-  listener= tf.TransformListener()
-  try:
-    listener.waitForTransform(trg_frame, src_frame, rospy.Time(), rospy.Duration(4.0))
-    (trans,rot)= listener.lookupTransform(trg_frame, src_frame, rospy.Time(0))
-  except Exception:
-    CPrint(0,'transformation not found:', trg_frame, src_frame)
-    return None
-  trans_rot= trans+rot
+  trans_rot= TfOnce(trg_frame, src_frame, time_out=4.0)
   if attr_keys is not None:
     ct.SetAttr(*(attr_keys + (trans_rot,)))
   return trans_rot
