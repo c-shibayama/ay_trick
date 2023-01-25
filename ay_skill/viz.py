@@ -14,7 +14,7 @@ def VizLoop(th_info, ct, objs):
   objs= objs-set(('',))
   objs= objs.union(ct.GetAttrOr([],TMP,'scene'))
   #tmpfp= file('/tmp/m_viz_state','w')
-  viz= TSimpleVisualizer(rospy.Duration(1.0), name_space='visualizer_viz', frame=ct.GetAttr('default_frame'))
+  viz= TSimpleVisualizerArray(rospy.Duration(1.0), name_space='visualizer_viz', frame=ct.GetAttr('default_frame'))
   m_infer= ct.Load('adv.infer_x')
   try:
     while th_info.IsRunning() and not rospy.is_shutdown():
@@ -153,6 +153,7 @@ def VizLoop(th_info, ct, objs):
         mid= viz.AddCoord(x_m_wrist, scale=[0.04,0.002], alpha=0.5, mid=mid)
       '''
 
+      viz.Publish()
       #Sleep until next visualization frame...
       rospy.sleep(100.0e-3)
       #End of: while Running...
