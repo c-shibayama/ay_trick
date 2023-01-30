@@ -65,7 +65,7 @@ def Run(ct,*args):
 
     if displavel>0:  CPrint(3, 'Making scene:',objs,'ignoring:',ign_objs,'margin:',bb_margin)
 
-    ct.viz.scene= TSimpleVisualizer(name_space='visualizer_scene')
+    ct.viz.scene= TSimpleVisualizer(rospy.Duration(10.0), name_space='visualizer_scene')
     ct.viz.scene.viz_frame= ct.robot.BaseFrame
 
     ct.state_validity_checker.InitToMakeScene()
@@ -152,7 +152,8 @@ def Run(ct,*args):
         ign_combinations= (('base_link','shoulder_link'),('shoulder_link','upper_arm_link'),
                            ('upper_arm_link','forearm_link'),('forearm_link','wrist_1_link'),
                            ('wrist_1_link','wrist_2_link'),('wrist_2_link','wrist_3_link'),
-                           ('wrist_3_link','ee_link'))
+                           ('wrist_3_link','ee_link'),
+                           ('base_link_inertia','shoulder_link'),('wrist_3_link','wrist_r'))
       for i1,i2 in ign_combinations:
         if displavel>0:  CPrint(3, '  ignoring collision between %r and %r'%(i1,i2))
         ct.state_validity_checker.IgnoreCollision(i1,i2)
