@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from core_tool import *
 import tf
+import tf2_ros
 ROBOT_NAME_ALIAS={
   'none':'NoRobot',
   'pr2':'PR2',
@@ -236,6 +237,8 @@ def Run(ct,*args):
     raise Exception('Unknown robot: %s'%robot)
 
   ct.br= tf.TransformBroadcaster()
+  ct.sbr= tf2_ros.StaticTransformBroadcaster()
+  ct.sbr.sendTransform2= lambda translation, rotation, time, child, parent, ct=ct: ct.sbr.sendTransform(geometry_msgs.msg.TransformStamped(std_msgs.msg.Header(0,time,parent),child,geometry_msgs.msg.Transform(PToGVector3(translation),QToGQuaternion(rotation))))
   if robot=='NoRobot' or ct.robot is None:  return
 
   robots_with_state_validity_checker= ('PR2','Baxter','Motoman','Mikata','UR','Gen3')

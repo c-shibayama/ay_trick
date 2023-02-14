@@ -62,8 +62,8 @@ class TCoreTool(TROSUtil):
     Other utility variables:
     '''
 
-    #tf broad caster.
-    self.br= None
+    self.br= None  #tf broad caster.
+    self.sbr= None  #tf static broad caster.
 
 
   def __del__(self):

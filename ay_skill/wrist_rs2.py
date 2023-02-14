@@ -47,7 +47,7 @@ def ReceiveDepth(ct,l,lh,msg):
   if ct.robot is not None:
     with lh.thread_locker:
       l.xw= ct.robot.FK(arm=l.arm)
-    ct.br.sendTransform(l.lw_x_camera_link[0:3],l.lw_x_camera_link[3:],
+    ct.sbr.sendTransform2(l.lw_x_camera_link[0:3],l.lw_x_camera_link[3:],
         rospy.Time.now(), 'camera_link', l.frame)
   if ct.callback.rs is not None:
     ct.callback.rs('depth',l,lh)
@@ -64,7 +64,7 @@ def ReceiveRGB(ct,l,lh,msg):
   if ct.robot is not None and 'depth' not in l.options['types']:
     with lh.thread_locker:
       l.xw= ct.robot.FK(arm=l.arm)
-    ct.br.sendTransform(l.lw_x_camera_link[0:3],l.lw_x_camera_link[3:],
+    ct.sbr.sendTransform2(l.lw_x_camera_link[0:3],l.lw_x_camera_link[3:],
         rospy.Time.now(), 'camera_link', l.frame)
   if ct.callback.rs is not None:
     ct.callback.rs('rgb',l,lh)
