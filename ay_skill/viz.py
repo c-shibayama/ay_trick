@@ -14,8 +14,12 @@ def VizLoop(th_info, ct, objs):
   objs= objs-set(('',))
   objs= objs.union(ct.GetAttrOr([],TMP,'scene'))
   #tmpfp= file('/tmp/m_viz_state','w')
-  viz= TSimpleVisualizerArray(rospy.Duration(1.0), name_space='visualizer_viz', frame=ct.GetAttr('default_frame'))
+  ct.viz.viz= TSimpleVisualizerArray(rospy.Duration(), name_space='visualizer_viz', frame=ct.GetAttr('default_frame'))
+  viz= ct.viz.viz
+  viz.DeleteAllMarkers()
+  viz.Reset()
   m_infer= ct.Load('adv.infer_x')
+  rate_adjuster= rospy.Rate(20)
   try:
     while th_info.IsRunning() and not rospy.is_shutdown():
       oid= 0
@@ -155,7 +159,7 @@ def VizLoop(th_info, ct, objs):
 
       viz.Publish()
       #Sleep until next visualization frame...
-      rospy.sleep(100.0e-3)
+      rate_adjuster.sleep()
       #End of: while Running...
   except Exception as e:
     PrintException(e, ' in viz')
@@ -166,3 +170,7 @@ def Run(ct,*args):
     ct.thread_manager.Add(name='viz', target=lambda th_info: VizLoop(th_info, ct,args))
   else:
     ct.thread_manager.Stop(name='viz')
+    if 'viz' in ct.viz:
+      ct.viz.viz.DeleteMarkers()
+      ct.viz.viz.Publish()
+      del ct.viz.viz
