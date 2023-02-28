@@ -163,17 +163,22 @@ def Run(ct,*args):
   if command in ('on','setup'):
     arms= []
     fv_names,node_names= None,None
+    no_wrench,no_objinfo= False,False
     for a in args:
       if a in (LEFT,RIGHT):  arms.append(a)
       elif a=='all':  arms+= list(range(ct.robot.NumArms))
+      elif a=='no_wrench':  no_wrench= True
+      elif a=='no_objinfo': no_objinfo= True
       elif fv_names is None:  fv_names= a
       elif node_names is None:  node_names= a
       else:  raise Exception('Too many arguments.')
     arms= set(arms)
     print '''Setup FV:
-    arms: {arms}
-    fv_names: {fv_names}
-    node_names: {node_names}'''.format(arms=arms,fv_names=fv_names,node_names=node_names)
+    arms: {}
+    fv_names: {}
+    node_names: {}
+    no_wrench: {}
+    no_objinfo: {}'''.format(arms,fv_names,node_names,no_wrench,no_objinfo)
 
     for arm in arms:
       arm_S= ct.robot.ArmStrS(arm)
@@ -204,6 +209,8 @@ def Run(ct,*args):
       l.d_obj_area_filtered= [None,None]
       l.tm_last_topic= [None,None,None,None]  #ros time of last topic receiving. wrench-r,l, objinfo-r,l
       l.running= True
+      l.no_wrench= no_wrench
+      l.no_objinfo= no_objinfo
 
       if fv_names is None or arm_S not in fv_names or fv_names[arm_S] is None:
         table= RobotToFV(ct.robot, arm)
@@ -229,8 +236,14 @@ def Run(ct,*args):
       else:
         ct.srvp[armstr+'start_detect_obj'](std_srvs.srv.EmptyRequest())
 
-    ct.AddSubW('fv_filter1_wrench', '/fingervision/fv_filter1_wrench', fingervision_msgs.msg.Filter1Wrench, lambda msg,arms=arms:Filter1Wrench(ct,arms,msg), time_out=3.0)
-    ct.AddSubW('fv_filter1_objinfo', '/fingervision/fv_filter1_objinfo', fingervision_msgs.msg.Filter1ObjInfo, lambda msg,arms=arms:Filter1ObjInfo(ct,arms,msg), time_out=3.0)
+    if no_wrench:
+      ct.AddSub('fv_filter1_wrench', '/fingervision/fv_filter1_wrench', fingervision_msgs.msg.Filter1Wrench, lambda msg,arms=arms:Filter1Wrench(ct,arms,msg))
+    else:
+      ct.AddSubW('fv_filter1_wrench', '/fingervision/fv_filter1_wrench', fingervision_msgs.msg.Filter1Wrench, lambda msg,arms=arms:Filter1Wrench(ct,arms,msg), time_out=3.0)
+    if no_objinfo:
+      ct.AddSub('fv_filter1_objinfo', '/fingervision/fv_filter1_objinfo', fingervision_msgs.msg.Filter1ObjInfo, lambda msg,arms=arms:Filter1ObjInfo(ct,arms,msg))
+    else:
+      ct.AddSubW('fv_filter1_objinfo', '/fingervision/fv_filter1_objinfo', fingervision_msgs.msg.Filter1ObjInfo, lambda msg,arms=arms:Filter1ObjInfo(ct,arms,msg), time_out=3.0)
 
   elif command=='clear':
     arms= read_arms(args)
@@ -263,8 +276,11 @@ def Run(ct,*args):
       if not ct.HasAttr(TMP,'fv'+arm_S):
         is_active[arm]= False
       else:
-        is_active[arm]= None not in ct.GetAttr(TMP,'fv'+arm_S).tm_last_topic \
-          and (rospy.Time.now()-min(ct.GetAttr(TMP,'fv'+arm_S).tm_last_topic)).to_sec()<0.2
+        l= ct.GetAttr(TMP,'fv'+arm_S)
+        tm_last_topic= [] if l.no_wrench else l.tm_last_topic[:2]
+        tm_last_topic+= [] if l.no_objinfo else l.tm_last_topic[2:]
+        is_active[arm]= None not in tm_last_topic and len(tm_last_topic)>0 \
+          and (rospy.Time.now()-min(tm_last_topic)).to_sec()<0.2
     return is_active
 
   elif command in SRV_TABLE[0][1]:
