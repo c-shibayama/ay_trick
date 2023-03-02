@@ -313,7 +313,8 @@ def PickupLoop(th_info, ct, arm, user_options):
   sm['bring_test'].ElseAction= action_ctrlstep
 
   sm.NewState('grasp_init')
-  sm['grasp_init'].EntryAction= lambda: (LogGripperPos(), SetGrasp(l.g_pos_log[0], speed=100.0, exclusive=True))
+  if options['auto_retry']:
+    sm['grasp_init'].EntryAction= lambda: (LogGripperPos(), SetGrasp(l.g_pos_log[0], speed=100.0, exclusive=True))
   sm['grasp_init'].NewAction()
   sm['grasp_init'].Actions[-1]= action_quit
   if options['auto_retry']:
