@@ -389,10 +389,11 @@ def PickupLoop(th_info, ct, arm, user_options):
   sm['bring_up'].EntryAction= lambda: SetZCtrl(options['z_final'],'high')
   sm['bring_up'].NewAction()
   sm['bring_up'].Actions[-1]= action_quit
-  sm['bring_up'].NewAction()
-  sm['bring_up'].Actions[-1].Condition= IsDropped
-  sm['bring_up'].Actions[-1].Action= lambda: (LogGripperPos(), SetGrasp(l.g_pos_log[0], speed=100.0, exclusive=True))
-  sm['bring_up'].Actions[-1].NextState= 'to_initial'
+  if options['auto_retry']:
+    sm['bring_up'].NewAction()
+    sm['bring_up'].Actions[-1].Condition= IsDropped
+    sm['bring_up'].Actions[-1].Action= lambda: (LogGripperPos(), SetGrasp(l.g_pos_log[0], speed=100.0, exclusive=True))
+    sm['bring_up'].Actions[-1].NextState= 'to_initial'
   if options['auto_stop']:
     sm['bring_up'].NewAction()
     sm['bring_up'].Actions[-1].Condition= lambda: abs(ZTrgErr()[1])<0.005
