@@ -231,10 +231,10 @@ def Run(ct,*args):
             ct.AddSrvP(armstr+srv, table[srv], srvtype, persistent=False, time_out=3.0)
 
       if table['srv_separated']:
-        ct.srvp[armstr+'start_detect_obj_r'](std_srvs.srv.EmptyRequest())
-        ct.srvp[armstr+'start_detect_obj_l'](std_srvs.srv.EmptyRequest())
+        if armstr+'start_detect_obj_r' in ct.srvp:  ct.srvp[armstr+'start_detect_obj_r'](std_srvs.srv.EmptyRequest())
+        if armstr+'start_detect_obj_l' in ct.srvp:  ct.srvp[armstr+'start_detect_obj_l'](std_srvs.srv.EmptyRequest())
       else:
-        ct.srvp[armstr+'start_detect_obj'](std_srvs.srv.EmptyRequest())
+        if armstr+'start_detect_obj' in ct.srvp:  ct.srvp[armstr+'start_detect_obj'](std_srvs.srv.EmptyRequest())
 
     if no_wrench:
       ct.AddSub('fv_filter1_wrench', '/fingervision/fv_filter1_wrench', fingervision_msgs.msg.Filter1Wrench, lambda msg,arms=arms:Filter1Wrench(ct,arms,msg))

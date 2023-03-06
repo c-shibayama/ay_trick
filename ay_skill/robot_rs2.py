@@ -80,6 +80,7 @@ def Run(ct,*args):
 
   if command in ('on','setup'):
     user_options= args[0] if len(args)>0 else {}
+    no_wait= args[1] if len(args)>1 else False
     options= DefaultOptions()
     InsertDict(options, user_options)
     UnSubscribe(options['rs_attr'])
@@ -96,11 +97,19 @@ def Run(ct,*args):
     l.xw= None  #Wrist pose at the observation. If both depth and rgb are observed, xw is measured only when depth is observed.
 
     if 'depth' in options['types']:
-      ct.AddSubW('{rs_attr}_depth'.format(rs_attr=options['rs_attr']),
-                 '/camera/aligned_depth_to_color/image_raw', sensor_msgs.msg.Image, lambda msg,ct=ct,l=l,lh=lh:ReceiveDepth(ct,l,lh,msg), time_out=3.0)
+      if not no_wait:
+        ct.AddSubW('{rs_attr}_depth'.format(rs_attr=options['rs_attr']),
+                  '/camera/aligned_depth_to_color/image_raw', sensor_msgs.msg.Image, lambda msg,ct=ct,l=l,lh=lh:ReceiveDepth(ct,l,lh,msg), time_out=3.0)
+      else:
+        ct.AddSub('{rs_attr}_depth'.format(rs_attr=options['rs_attr']),
+                  '/camera/aligned_depth_to_color/image_raw', sensor_msgs.msg.Image, lambda msg,ct=ct,l=l,lh=lh:ReceiveDepth(ct,l,lh,msg))
     if 'rgb' in options['types']:
-      ct.AddSubW('{rs_attr}_rgb'.format(rs_attr=options['rs_attr']),
-                 '/camera/color/image_raw', sensor_msgs.msg.Image, lambda msg,ct=ct,l=l,lh=lh:ReceiveRGB(ct,l,lh,msg), time_out=3.0)
+      if not no_wait:
+        ct.AddSubW('{rs_attr}_rgb'.format(rs_attr=options['rs_attr']),
+                  '/camera/color/image_raw', sensor_msgs.msg.Image, lambda msg,ct=ct,l=l,lh=lh:ReceiveRGB(ct,l,lh,msg), time_out=3.0)
+      else:
+        ct.AddSub('{rs_attr}_rgb'.format(rs_attr=options['rs_attr']),
+                  '/camera/color/image_raw', sensor_msgs.msg.Image, lambda msg,ct=ct,l=l,lh=lh:ReceiveRGB(ct,l,lh,msg))
 
   elif command in ('off','clear'):
     rs_attr= args[0] if len(args)>0 else 'rs'

@@ -38,7 +38,7 @@ class TKBHitToTopic(TKBHit):
 
   def kbhit_loop(self):
     lock= threading.Lock()
-    while self.thread_running and self.IsActive():
+    while self.thread_running and self.IsActive() and not rospy.is_shutdown():
       with lock:
         key= self.KBHit()
         if key is not None:
