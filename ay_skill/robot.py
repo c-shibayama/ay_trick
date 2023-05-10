@@ -85,7 +85,11 @@ def Help():
   '''.format('\n'.join('      {}, {},'.format(s,ROBOT_NAME_ALIAS[s]) for s in sorted(ROBOT_NAME_ALIAS.iterkeys())))
 
 def Run(ct,*args):
-  robot= args[0] if len(args)>0 else 'NoRobot'
+  try:
+    robot_code= rospy.get_param('robot_code')
+  except KeyError:
+    robot_code= 'NoRobot'
+  robot= args[0] if len(args)>0 else robot_code
 
   if robot in ROBOT_NAME_ALIAS:  robot= ROBOT_NAME_ALIAS[robot]
 
@@ -255,7 +259,7 @@ def Run(ct,*args):
     ra(ct.state_validity_checker.Init(ct.robot))
 
   if False in res:
-    CPrint(4, 'Failed to setup robot:',robot)
+    raise Exception('Failed to setup robot: {}'.format(robot))
 
   # Is this attribute ('environment') used?? --> OBSOLETE_CANDIDATE
   if not ct.robot.Is('sim'):
