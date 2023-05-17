@@ -12,7 +12,10 @@ def Help():
     DATA_DIR: Directory to store the data files (default: ct.DataBaseDir()+'tmp').
     RS_ATTR: RealSense attribute (default: 'rs').
     PREFIX,SUFFIX: Prefix and suffix of a data file (default:'rs','.dat').
-  NOTE: We do not use Python gzip module due to its slowness, but use the system gzip command.'''
+  NOTE: We do not use Python gzip module due to its slowness, but use the system gzip command.
+  NOTE: The depth and RGB images are also saved in similar filenames for the convenience (they are included in the pickled data).
+  NOTE: In order to read the depth image (1ch, uint16) from OpenCV, use imread like:
+    > cv2.imread('rsxxx-depth.png', cv2.IMREAD_ANYDEPTH)'''
 
 def Run(ct,*args):
   data_dir= args[0] if len(args)>0 else ct.DataBaseDir()+'tmp'
@@ -45,13 +48,20 @@ def Run(ct,*args):
           t_start= rospy.Time.now()
           with ct.GetAttr(TMP,'rs_helper').thread_locker:
             rs= copy.deepcopy(ct.GetAttr(TMP,rs_attr))
-          #Reduce the data size
+          timestamp= TimeStr('short2')
+          #Save images:
+          depth_file_name= '{}/{}{}-depth{}'.format(data_dir, prefix, timestamp, '.png')
+          rgb_file_name=   '{}/{}{}-rgb{}'.format(data_dir, prefix, timestamp, '.png')
+          cv2.imwrite(depth_file_name, rs.img_depth)
+          cv2.imwrite(rgb_file_name, rs.img_rgb)
+          CPrint(3,'Saved:',depth_file_name)
+          CPrint(3,'Saved:',rgb_file_name)
+          #Reduce the data size of rs object (TContainer):
           rs.msg_depth_header= rs.msg_depth.header
           rs.msg_rgb_header= rs.msg_rgb.header
           rs.msg_depth= None
           rs.msg_rgb= None
-          #Save
-          timestamp= TimeStr('short2')
+          #Save rs object (TContainer):
           log_file_name= '{}/{}{}{}'.format(data_dir, prefix, timestamp, suffix)
           with open(log_file_name, 'w') as log_fp:
             pickle.dump(rs,log_fp)
