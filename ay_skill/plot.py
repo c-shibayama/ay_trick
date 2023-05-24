@@ -1,5 +1,8 @@
 #!/usr/bin/python
 from core_tool import *
+import matplotlib
+matplotlib.use('Agg', warn=False, force=True)  #Options: ['TKAgg','GTKAgg','Qt4Agg','WXAgg']
+print 'Current backend:',matplotlib.get_backend()
 import matplotlib.pyplot as plt
 
 def Help():
