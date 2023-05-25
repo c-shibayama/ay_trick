@@ -14,11 +14,16 @@ def Help():
     ur.ur_mngr 'clear'
     ur.ur_mngr 'off'
       Disconnect from the dashboard.
+    ur.ur_mngr 'is_prepared'
+      Return if the UR manager is ready to use.
     ur.ur_mngr 'is_protective_stop'
       Return if the robot state is protective stop.
     ur.ur_mngr 'recover_from_protective_stop'
       Recover from protective stop, and start running the (external control) program.
   '''
+
+def IsPrepared(ct):
+  return ct.HasAttr(TMP,'ur_mngr') and isinstance(ct.GetAttr(TMP,'ur_mngr'),TURManager) and bool(ct.GetAttr(TMP,'ur_mngr').srvp_ur_dashboard)
 
 def Run(ct,*args):
   if len(args)==0:
@@ -28,6 +33,7 @@ def Run(ct,*args):
     args= args[1:]
 
   if command in ('on','setup'):
+    if IsPrepared(ct):  return
     ur_mngr= TURManager()
     ur_mngr.ConnectToURDashboard()
     ct.SetAttr(TMP,'ur_mngr', ur_mngr)
@@ -37,6 +43,9 @@ def Run(ct,*args):
       raise Exception('Not connected to ur_mngr')
     ct.GetAttr(TMP,'ur_mngr').DisconnectUR()
     ct.DelAttr(TMP,'ur_mngr')
+
+  elif command=='is_prepared':
+    return IsPrepared(ct)
 
   elif command=='is_protective_stop':
     if not ct.HasAttr(TMP,'ur_mngr'):
