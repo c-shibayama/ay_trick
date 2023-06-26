@@ -33,26 +33,31 @@ def Run(ct,*args):
     args= args[1:]
 
   if command in ('on','setup'):
+    if ct.robot.Is('sim'):  return
     if IsPrepared(ct):  return
     ur_mngr= TURManager()
     ur_mngr.ConnectToURDashboard()
     ct.SetAttr(TMP,'ur_mngr', ur_mngr)
 
   elif command in ('off','clear'):
+    if ct.robot.Is('sim'):  return
     if not ct.HasAttr(TMP,'ur_mngr'):
       raise Exception('Not connected to ur_mngr')
     ct.GetAttr(TMP,'ur_mngr').DisconnectUR()
     ct.DelAttr(TMP,'ur_mngr')
 
   elif command=='is_prepared':
+    if ct.robot.Is('sim'):  return False
     return IsPrepared(ct)
 
   elif command=='is_protective_stop':
+    if ct.robot.Is('sim'):  return False
     if not ct.HasAttr(TMP,'ur_mngr'):
       raise Exception('Not connected to ur_mngr')
     return ct.GetAttr(TMP,'ur_mngr').ur_safety_mode==ur_dashboard_msgs.msg.SafetyMode.PROTECTIVE_STOP
 
   elif command=='recover_from_protective_stop':
+    if ct.robot.Is('sim'):  return
     if not ct.HasAttr(TMP,'ur_mngr'):
       raise Exception('Not connected to ur_mngr')
     ur_mngr= ct.GetAttr(TMP,'ur_mngr')
