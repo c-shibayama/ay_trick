@@ -111,9 +111,9 @@ def Run(ct,*args):
   state= ['run', 'no_cmd', arm, False]  #run/quit, no_cmd/CMD, ARM, ACTIVE_BTN
 
   gstate_range= [ct.robot.GripperRange(a) for a in range(ct.robot.NumArms)]
-  gstate= [ct.robot.GripperPos(a) if ct.robot.EndEff(a).IsInitialized else 0.0 for a in range(ct.robot.NumArms)]
+  gstate= [ct.robot.GripperPos(a) if ct.robot.EndEff(a).IsInitialized() else 0.0 for a in range(ct.robot.NumArms)]
   for a in range(ct.robot.NumArms):
-    if ct.robot.EndEff(a).IsInitialized:
+    if ct.robot.EndEff(a).IsInitialized():
       ct.robot.MoveGripper(gstate[a],arm=a)
 
   ct.AddSub('joy', 'joy', sensor_msgs.msg.Joy, lambda msg: Callback(state, steps, wsteps, gsteps, msg))
