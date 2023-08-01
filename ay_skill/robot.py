@@ -247,7 +247,8 @@ def Run(ct,*args):
 
   robots_with_state_validity_checker= ('PR2','Baxter','Motoman','Mikata','UR','Gen3')
   if any([ct.robot.Is(rbt) for rbt in robots_with_state_validity_checker]):
-    ct.state_validity_checker= TStateValidityCheckerMI()
+    # ct.state_validity_checker= TStateValidityCheckerMI()
+    pass
   else:
     ct.state_validity_checker= None
 
@@ -256,7 +257,8 @@ def Run(ct,*args):
 
   ra(ct.robot.Init())
   if ct.state_validity_checker is not None:
-    ra(ct.state_validity_checker.Init(ct.robot))
+    # ra(ct.state_validity_checker.Init(ct.robot))
+    pass
 
   if False in res:
     raise Exception('Failed to setup robot: {}'.format(robot))
