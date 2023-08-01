@@ -256,10 +256,7 @@ def Run(ct,*args):
 
   ra(ct.robot.Init())
   if ct.state_validity_checker is not None:
-    print("DDDDDDDDDDDDDd")
-    # comment out
-    # ra(ct.state_validity_checker.Init(ct.robot))
-    pass
+    ra(ct.state_validity_checker.Init(ct.robot))
 
   if False in res:
     raise Exception('Failed to setup robot: {}'.format(robot))
